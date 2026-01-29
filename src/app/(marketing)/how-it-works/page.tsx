@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, Search, Filter, Target, FolderOpen, Bell, Sparkles } from 'lucide-react'
+import { ArrowRight, Search, Filter, Target, FolderOpen, Bell } from 'lucide-react'
 
 const steps = [
   {
@@ -82,41 +82,74 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      {/* Steps - Vertical Timeline */}
+      {/* Asymmetric bento - large featured card + 4 smaller cards */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto">
-          <div className="relative">
-            {/* Vertical line */}
-            <div className="absolute left-6 md:left-8 top-0 bottom-0 w-px bg-gradient-to-b from-pulse-accent/50 via-pulse-accent/20 to-transparent" />
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-4">
+            {/* Featured first step - spans 2 rows */}
+            <div className="md:row-span-2 group relative overflow-hidden rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-transparent transition-all duration-300">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pulse-accent to-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
 
-            <div className="space-y-8">
-              {steps.map((step, index) => {
-                const Icon = step.icon
-                return (
-                  <div key={step.number} className="relative flex gap-6 md:gap-8">
-                    {/* Icon node */}
-                    <div className="relative z-10 shrink-0">
-                      <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-pulse-bg border border-white/[0.08] flex items-center justify-center">
-                        <Icon className="w-6 h-6 md:w-7 md:h-7 text-pulse-accent" />
-                      </div>
-                      <span className="absolute -top-2 -right-2 w-6 h-6 rounded-md bg-pulse-accent flex items-center justify-center text-xs font-bold text-pulse-bg">
-                        {step.number}
-                      </span>
-                    </div>
+              <div className="p-8 h-full flex flex-col">
+                <div className="flex items-center justify-between mb-6">
+                  <span className="text-sm font-mono text-pulse-accent bg-pulse-accent/10 px-3 py-1 rounded-lg">
+                    Step 01
+                  </span>
+                </div>
 
-                    {/* Content */}
-                    <div className="flex-1 pt-2 pb-4">
-                      <h3 className="text-xl font-semibold text-pulse-text mb-2">
-                        {step.title}
-                      </h3>
-                      <p className="text-pulse-text-secondary leading-relaxed">
-                        {step.description}
-                      </p>
+                <div className="w-16 h-16 rounded-2xl bg-pulse-accent/10 flex items-center justify-center mb-6 group-hover:bg-pulse-accent/20 transition-colors">
+                  <Search className="w-8 h-8 text-pulse-accent" />
+                </div>
+
+                <h3 className="text-2xl font-semibold text-pulse-text mb-4 group-hover:text-pulse-accent transition-colors">
+                  Search
+                </h3>
+                <p className="text-pulse-text-secondary leading-relaxed flex-1">
+                  Enter keywords or describe what you need. Our AI instantly searches 50+ databases with 20,000+ active grants.
+                </p>
+
+                {/* Visual element */}
+                <div className="mt-6 pt-6 border-t border-white/[0.06]">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-2 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className="h-full w-3/4 bg-gradient-to-r from-pulse-accent to-emerald-400 rounded-full" />
                     </div>
+                    <span className="text-xs text-pulse-accent font-mono">AI Powered</span>
                   </div>
-                )
-              })}
+                </div>
+              </div>
             </div>
+
+            {/* Remaining 4 cards in 2x2 grid */}
+            {steps.slice(1).map((step) => {
+              const Icon = step.icon
+              return (
+                <div
+                  key={step.number}
+                  className="group relative overflow-hidden rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-transparent transition-all duration-300"
+                >
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pulse-accent to-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-sm font-mono text-pulse-accent bg-pulse-accent/10 px-3 py-1 rounded-lg">
+                        Step {step.number}
+                      </span>
+                      <div className="w-10 h-10 rounded-lg bg-white/[0.03] border border-white/[0.06] flex items-center justify-center group-hover:bg-pulse-accent/10 group-hover:border-pulse-accent/20 transition-all">
+                        <Icon className="w-5 h-5 text-pulse-accent" />
+                      </div>
+                    </div>
+
+                    <h3 className="text-lg font-semibold text-pulse-text mb-2 group-hover:text-pulse-accent transition-colors">
+                      {step.title}
+                    </h3>
+                    <p className="text-pulse-text-secondary text-sm leading-relaxed">
+                      {step.description}
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -147,17 +180,12 @@ export default function HowItWorksPage() {
         </div>
 
         <div className="max-w-3xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-6">
-            <Sparkles className="w-4 h-4 text-pulse-accent" />
-            <span className="text-sm text-pulse-text-secondary">Ready to start?</span>
-          </div>
-
           <h2 className="text-3xl md:text-4xl font-bold text-pulse-text mb-4">
             Start finding grants <span className="text-pulse-accent">today</span>
           </h2>
 
           <p className="text-lg text-pulse-text-secondary mb-8 max-w-xl mx-auto">
-            Join 15,000+ organizations discovering funding with GrantEase. Free to start.
+            Join 15,000+ organizations discovering funding with GrantEase.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4">

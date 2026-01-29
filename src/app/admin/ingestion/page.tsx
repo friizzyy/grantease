@@ -326,6 +326,9 @@ export default function IngestionPage() {
 
                     <button
                       onClick={() => toggleSource(source.id)}
+                      role="switch"
+                      aria-checked={source.enabled}
+                      aria-label={`${source.enabled ? 'Disable' : 'Enable'} ${source.name} data source`}
                       className={`relative w-11 h-6 rounded-full transition-colors ${
                         source.enabled ? 'bg-pulse-accent' : 'bg-pulse-border'
                       }`}
@@ -334,6 +337,7 @@ export default function IngestionPage() {
                         className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
                           source.enabled ? 'translate-x-5' : ''
                         }`}
+                        aria-hidden="true"
                       />
                     </button>
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef } from 'react'
 import { useMotion } from '@/lib/motion/motion-context'
 import { lerp, clamp } from '@/lib/motion/animations'
 
@@ -15,7 +15,6 @@ interface GlowState {
 export function PulseGridBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const glowState = useRef<GlowState>({ x: 0.5, y: 0.4, targetX: 0.5, targetY: 0.4, intensity: 1 })
-  const navigationBurst = useRef({ active: false, progress: 0 })
 
   // Use motion context for reactivity
   let motionState = {
@@ -23,7 +22,6 @@ export function PulseGridBackground() {
     scrollY: 0,
     scrollVelocity: 0,
     mousePosition: { x: 0, y: 0 },
-    isNavigating: false
   }
 
   try {
@@ -33,20 +31,13 @@ export function PulseGridBackground() {
       scrollY: motion.scrollY,
       scrollVelocity: motion.scrollVelocity,
       mousePosition: motion.mousePosition,
-      isNavigating: motion.isNavigating,
     }
   } catch {
     // MotionProvider not available yet, use defaults
   }
 
-  const { reducedMotion, scrollY, scrollVelocity, mousePosition, isNavigating } = motionState
+  const { reducedMotion, scrollY, scrollVelocity, mousePosition } = motionState
 
-  // Trigger navigation burst effect
-  useEffect(() => {
-    if (isNavigating && !reducedMotion) {
-      navigationBurst.current = { active: true, progress: 0 }
-    }
-  }, [isNavigating, reducedMotion])
 
   useEffect(() => {
     if (reducedMotion) return
@@ -93,14 +84,6 @@ export function PulseGridBackground() {
       const scrollProgress = scrollY / (document.documentElement.scrollHeight - window.innerHeight || 1)
       const edgeIntensity = 1 + Math.sin(scrollProgress * Math.PI) * 0.3
 
-      // Navigation burst effect
-      if (navigationBurst.current.active) {
-        navigationBurst.current.progress += 0.02
-        if (navigationBurst.current.progress >= 1) {
-          navigationBurst.current.active = false
-          navigationBurst.current.progress = 0
-        }
-      }
 
       // Draw subtle grid with parallax
       const gridSize = 60
@@ -150,23 +133,6 @@ export function PulseGridBackground() {
         }
       }
 
-      // Draw navigation burst effect
-      if (navigationBurst.current.active) {
-        const progress = navigationBurst.current.progress
-        const burstRadius = progress * Math.max(width, height) * 0.8
-        const burstOpacity = (1 - progress) * 0.15
-
-        const burstGradient = ctx.createRadialGradient(
-          width * 0.5, height * 0.5, 0,
-          width * 0.5, height * 0.5, burstRadius
-        )
-        burstGradient.addColorStop(0, 'transparent')
-        burstGradient.addColorStop(0.7, `rgba(64, 255, 170, ${burstOpacity})`)
-        burstGradient.addColorStop(1, 'transparent')
-        ctx.fillStyle = burstGradient
-        ctx.fillRect(0, 0, width, height)
-      }
-
       // Draw ambient glow that follows mouse
       const glowX = glow.x * width + Math.sin(time * 0.5) * 30
       const glowY = glow.y * height + Math.cos(time * 0.3) * 20
@@ -209,7 +175,7 @@ export function PulseGridBackground() {
       window.removeEventListener('resize', resize)
       cancelAnimationFrame(animationId)
     }
-  }, [reducedMotion, scrollY, scrollVelocity, mousePosition, isNavigating])
+  }, [reducedMotion, scrollY, scrollVelocity, mousePosition])
 
   if (reducedMotion) {
     // Fallback for reduced motion - static gradient

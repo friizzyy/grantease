@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { ArrowRight, Search, CheckCircle2, DollarSign, X, Check, Bell, FolderOpen, Target } from 'lucide-react'
+import { ArrowRight, Search, CheckCircle2, X, Check, Bell, FolderOpen, Target } from 'lucide-react'
+import { AnimatedLogo } from '@/components/ui/animated-logo'
 
 export default function HomePage() {
   return (
@@ -45,7 +46,7 @@ export default function HomePage() {
               Find grants for your
               <br />
               <span className="bg-gradient-to-r from-pulse-accent via-emerald-400 to-teal-400 bg-clip-text text-transparent">
-                nonprofit in seconds
+                organization in seconds
               </span>
             </h1>
 
@@ -88,22 +89,20 @@ export default function HomePage() {
                       { name: 'Environmental Justice Grant', amount: '$100K - $750K', match: 89, deadline: '30 days' },
                       { name: 'Green Communities Initiative', amount: '$250K - $1M', match: 85, deadline: '60 days' },
                     ].map((grant, i) => (
-                      <div key={i} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/[0.04] rounded-xl hover:border-pulse-accent/20 transition-colors cursor-pointer">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-lg bg-pulse-accent/10 flex items-center justify-center">
-                            <DollarSign className="w-5 h-5 text-pulse-accent" />
-                          </div>
-                          <div>
-                            <div className="font-medium text-pulse-text">{grant.name}</div>
-                            <div className="text-sm text-pulse-text-tertiary">{grant.amount}</div>
+                      <div key={i} className="flex items-center justify-between gap-4 p-4 bg-white/[0.02] border border-white/[0.04] rounded-xl hover:border-pulse-accent/20 transition-colors cursor-pointer">
+                        <div className="flex items-center gap-4 min-w-0 flex-1">
+                          <AnimatedLogo size="md" className="text-pulse-accent shrink-0" />
+                          <div className="min-w-0 -ml-2">
+                            <div className="font-medium text-pulse-text truncate">{grant.name}</div>
+                            <div className="text-sm text-pulse-accent font-medium">{grant.amount}</div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-4 sm:gap-6 shrink-0">
                           <div className="text-right hidden sm:block">
                             <div className="text-sm text-pulse-text">{grant.deadline}</div>
                             <div className="text-xs text-pulse-text-tertiary">remaining</div>
                           </div>
-                          <div className="text-2xl font-bold text-pulse-accent">{grant.match}%</div>
+                          <div className="text-xl sm:text-2xl font-bold text-pulse-accent">{grant.match}%</div>
                         </div>
                       </div>
                     ))}

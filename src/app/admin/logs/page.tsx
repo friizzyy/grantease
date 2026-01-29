@@ -342,6 +342,8 @@ export default function LogsPage() {
                 <div key={log.id}>
                   <button
                     onClick={() => hasDetails && toggleExpanded(log.id)}
+                    aria-expanded={hasDetails ? isExpanded : undefined}
+                    aria-label={hasDetails ? `${isExpanded ? 'Collapse' : 'Expand'} log entry: ${log.message}` : undefined}
                     className={`w-full flex items-start gap-3 p-3 rounded-lg text-left transition-colors ${
                       hasDetails ? 'hover:bg-pulse-surface/50 cursor-pointer' : 'cursor-default'
                     }`}

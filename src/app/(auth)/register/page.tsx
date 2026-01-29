@@ -68,8 +68,8 @@ export default function RegisterPage() {
     // Simulate registration
     await new Promise(resolve => setTimeout(resolve, 1000))
 
-    // Redirect to app
-    router.push('/app')
+    // Redirect to onboarding flow for new users
+    router.push('/onboarding')
   }
 
   return (

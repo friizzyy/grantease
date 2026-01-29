@@ -37,11 +37,12 @@ export function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-8" role="navigation" aria-label="Main navigation">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={pathname === item.href ? 'page' : undefined}
                 className={cn(
                   'text-sm font-medium transition-colors relative py-1',
                   pathname === item.href
@@ -51,7 +52,7 @@ export function Header() {
               >
                 {item.label}
                 {pathname === item.href && (
-                  <span className="absolute -bottom-1 left-0 right-0 h-px bg-pulse-accent" />
+                  <span className="absolute -bottom-1 left-0 right-0 h-px bg-pulse-accent" aria-hidden="true" />
                 )}
               </Link>
             ))}
@@ -71,14 +72,17 @@ export function Header() {
           <button
             className="md:hidden p-2 text-pulse-text-secondary hover:text-pulse-text"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-expanded={mobileMenuOpen}
+            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-controls="mobile-menu"
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
           </button>
         </div>
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-pulse-border">
+          <div id="mobile-menu" className="md:hidden py-4 border-t border-pulse-border" role="navigation" aria-label="Mobile navigation">
             <div className="flex flex-col gap-2">
               {navItems.map((item) => (
                 <Link

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from '@/lib/motion/animations'
+import { AnimatedLogo } from '@/components/ui/animated-logo'
 
 const mainNav = [
   { label: 'Dashboard', href: '/app', icon: LayoutDashboard },
@@ -41,24 +42,7 @@ export function AppSidebar({ isAdmin = false }: AppSidebarProps) {
         {/* Logo */}
         <div className="p-6 border-b border-pulse-border">
           <Link href="/" className="flex items-center gap-3 group">
-            <motion.div
-              className="w-8 h-8 rounded-lg border border-pulse-accent/30 flex items-center justify-center relative overflow-hidden"
-              whileHover={{ scale: 1.05, borderColor: 'rgba(64, 255, 170, 0.5)' }}
-              transition={{ duration: 0.2 }}
-            >
-              <motion.div
-                className="w-full h-0.5 bg-pulse-accent/50"
-                animate={{
-                  scaleX: [1, 1.2, 1],
-                  opacity: [0.5, 0.8, 0.5],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
-              />
-            </motion.div>
+            <AnimatedLogo className="text-pulse-accent" />
             <span className="font-serif text-xl text-pulse-text group-hover:text-pulse-accent transition-colors">
               GrantEase
             </span>
@@ -66,7 +50,7 @@ export function AppSidebar({ isAdmin = false }: AppSidebarProps) {
         </div>
 
         {/* Main Navigation */}
-        <nav className="flex-1 p-4 space-y-1 relative">
+        <nav className="flex-1 p-4 space-y-1 relative" aria-label="Main navigation">
           {mainNav.map((item) => {
             const isActive = pathname === item.href ||
               (item.href !== '/app' && pathname?.startsWith(item.href))
@@ -124,8 +108,9 @@ export function AppSidebar({ isAdmin = false }: AppSidebarProps) {
             className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-pulse-text-secondary hover:text-pulse-error hover:bg-pulse-error/10 transition-all duration-200 w-full relative overflow-hidden"
             whileHover={{ x: 2 }}
             whileTap={{ scale: 0.98 }}
+            aria-label="Sign out of your account"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-4 h-4" aria-hidden="true" />
             Sign Out
           </motion.button>
         </div>
@@ -143,7 +128,7 @@ interface NavItemProps {
 
 function NavItem({ href, label, icon: Icon, isActive }: NavItemProps) {
   return (
-    <Link href={href} className="block relative">
+    <Link href={href} className="block relative" aria-current={isActive ? 'page' : undefined}>
       <motion.div
         className={cn(
           'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 relative',
@@ -184,7 +169,7 @@ function NavItem({ href, label, icon: Icon, isActive }: NavItemProps) {
           animate={isActive ? { scale: [1, 1.1, 1] } : {}}
           transition={{ duration: 0.3 }}
         >
-          <Icon className="w-4 h-4" />
+          <Icon className="w-4 h-4" aria-hidden="true" />
         </motion.div>
 
         {/* Label */}

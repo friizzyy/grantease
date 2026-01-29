@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import '@/styles/globals.css'
 import { MotionProvider } from '@/lib/motion/motion-context'
+import { Agentation } from 'agentation'
 
 export const metadata: Metadata = {
   title: {
@@ -56,6 +57,7 @@ export default function RootLayout({
         <MotionProvider>
           {children}
         </MotionProvider>
+        {process.env.NODE_ENV === 'development' && <Agentation />}
       </body>
     </html>
   )

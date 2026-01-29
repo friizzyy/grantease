@@ -26,6 +26,43 @@ model User {
   savedGrants   SavedGrant[]
   savedSearches SavedSearch[]
   workspaces    Workspace[]
+  profile       UserProfile?
+}
+
+// ==================== USER PROFILE (ONBOARDING) ====================
+
+model UserProfile {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Step 1: Entity Type & Geography
+  entityType            String   // Individual, Nonprofit, Small Business, For-Profit, Educational, Government, Tribal
+  country               String   @default("US")
+  state                 String?
+
+  // Step 2: Industry/Domain (stored as JSON array in SQLite)
+  industryTags          String   @default("[]") // JSON array: ["Technology", "Education", etc.]
+
+  // Step 3: Size & Stage
+  sizeBand              String?  // solo, small (2-10), medium (11-50), large (50+)
+  stage                 String?  // idea, early, growth, established
+  annualBudget          String?  // <100k, 100k-500k, 500k-1M, 1M-5M, 5M+
+
+  // Step 4: Industry-specific attributes (JSON for flexibility)
+  industryAttributes    String   @default("{}") // JSON: { hasResearchFocus: true, servesK12: true }
+
+  // Step 5: Grant Preferences (JSON)
+  grantPreferences      String   @default("{}") // JSON: { preferredSize, timeline, complexity }
+
+  // Meta
+  onboardingCompleted   Boolean  @default(false)
+  onboardingCompletedAt DateTime?
+  onboardingStep        Int      @default(1) // Track progress for resume
+  confidenceScore       Float    @default(0.5) // How confident we are in the profile
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
 
 model Account {
