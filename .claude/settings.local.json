@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "WebFetch(domain:21st.dev)",
+      "WebFetch(domain:www.shadcn.io)",
+      "WebFetch(domain:magicui.design)",
+      "Bash(npm run dev:*)",
+      "Bash(pkill:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)",
+      "Bash(git -C /Users/frizzy/Desktop/grantease status)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
