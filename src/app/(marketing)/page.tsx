@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { ArrowRight, Search, CheckCircle2, DollarSign, X, Check, Bell, FolderOpen, Target } from 'lucide-react'
+import { ArrowRight, CheckCircle2, X, Check, Bell, FolderOpen, Target, Search } from 'lucide-react'
+import { HeroSearch } from '@/components/marketing/HeroSearch'
 
 export default function HomePage() {
   return (
@@ -54,75 +55,8 @@ export default function HomePage() {
               One search. All the funding opportunities.
             </p>
 
-            {/* Live Search Preview - Glass Card */}
-            <div className="max-w-3xl mx-auto">
-              <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-2xl overflow-hidden shadow-2xl shadow-black/30">
-                {/* Search input */}
-                <div className="p-5 border-b border-white/[0.06]">
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1 flex items-center gap-3 px-4 py-3 bg-white/[0.03] border border-white/[0.06] rounded-xl">
-                      <Search className="w-5 h-5 text-pulse-text-tertiary" />
-                      <span className="text-pulse-text">climate nonprofit california</span>
-                    </div>
-                    <Link
-                      href="/register"
-                      className="flex items-center gap-2 px-6 py-3 bg-pulse-accent text-pulse-bg font-semibold rounded-xl hover:bg-pulse-accent/90 transition-colors"
-                    >
-                      Search
-                    </Link>
-                  </div>
-                </div>
-
-                {/* Results */}
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm text-pulse-text-secondary">
-                      Found <span className="text-pulse-accent font-bold">847</span> matching grants
-                    </span>
-                    <span className="text-xs text-pulse-text-tertiary">0.3s</span>
-                  </div>
-
-                  <div className="space-y-3">
-                    {[
-                      { name: 'CA Climate Action Fund', amount: '$500K - $2M', match: 94, deadline: '45 days' },
-                      { name: 'Environmental Justice Grant', amount: '$100K - $750K', match: 89, deadline: '30 days' },
-                      { name: 'Green Communities Initiative', amount: '$250K - $1M', match: 85, deadline: '60 days' },
-                    ].map((grant, i) => (
-                      <div key={i} className="flex items-center justify-between gap-4 p-4 bg-white/[0.02] border border-white/[0.04] rounded-xl hover:border-pulse-accent/20 transition-colors cursor-pointer">
-                        <div className="flex items-center gap-4 min-w-0 flex-1">
-                          <div className="w-10 h-10 rounded-lg bg-pulse-accent/10 flex items-center justify-center shrink-0">
-                            <DollarSign className="w-5 h-5 text-pulse-accent" />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="font-medium text-pulse-text truncate">{grant.name}</div>
-                            <div className="text-sm text-pulse-accent font-medium">{grant.amount}</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4 sm:gap-6 shrink-0">
-                          <div className="text-right hidden sm:block">
-                            <div className="text-sm text-pulse-text">{grant.deadline}</div>
-                            <div className="text-xs text-pulse-text-tertiary">remaining</div>
-                          </div>
-                          <div className="text-xl sm:text-2xl font-bold text-pulse-accent">{grant.match}%</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* CTA fade */}
-                  <div className="relative mt-4 pt-6">
-                    <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-t from-transparent to-pulse-bg/50 pointer-events-none" />
-                    <Link
-                      href="/register"
-                      className="inline-flex items-center gap-2 text-pulse-accent font-semibold hover:underline"
-                    >
-                      Sign up free to see all results
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* Interactive Search Component */}
+            <HeroSearch />
 
             {/* Trust indicators */}
             <div className="flex flex-wrap justify-center gap-8 mt-10 text-sm text-pulse-text-tertiary">
