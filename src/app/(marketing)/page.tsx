@@ -1,6 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, Search, CheckCircle2, X, Check, Bell, FolderOpen, Target } from 'lucide-react'
-import { AnimatedLogo } from '@/components/ui/animated-logo'
+import { ArrowRight, Search, CheckCircle2, DollarSign, X, Check, Bell, FolderOpen, Target } from 'lucide-react'
 
 export default function HomePage() {
   return (
@@ -91,8 +90,10 @@ export default function HomePage() {
                     ].map((grant, i) => (
                       <div key={i} className="flex items-center justify-between gap-4 p-4 bg-white/[0.02] border border-white/[0.04] rounded-xl hover:border-pulse-accent/20 transition-colors cursor-pointer">
                         <div className="flex items-center gap-4 min-w-0 flex-1">
-                          <AnimatedLogo size="md" className="text-pulse-accent shrink-0" />
-                          <div className="min-w-0 -ml-2">
+                          <div className="w-10 h-10 rounded-lg bg-pulse-accent/10 flex items-center justify-center shrink-0">
+                            <DollarSign className="w-5 h-5 text-pulse-accent" />
+                          </div>
+                          <div className="min-w-0">
                             <div className="font-medium text-pulse-text truncate">{grant.name}</div>
                             <div className="text-sm text-pulse-accent font-medium">{grant.amount}</div>
                           </div>

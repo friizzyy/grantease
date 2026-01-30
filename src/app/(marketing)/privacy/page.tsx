@@ -1,81 +1,278 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { ArrowRight, Shield, Eye, Lock, Server, Users, Bell, FileText, Mail, ArrowLeft } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy | GrantEase',
   description: 'GrantEase privacy policy and data handling practices.',
 }
 
+const dataCategories = [
+  {
+    icon: Users,
+    title: 'Account Information',
+    description: 'Name, email, organization details, and preferences you provide when creating an account.',
+  },
+  {
+    icon: FileText,
+    title: 'Usage Data',
+    description: 'How you interact with our platform, including searches, saved grants, and application progress.',
+  },
+  {
+    icon: Server,
+    title: 'Technical Data',
+    description: 'Device information, IP address, and browser type to ensure optimal performance.',
+  },
+]
+
+const protections = [
+  {
+    icon: Lock,
+    title: 'Encryption',
+    description: 'All data encrypted in transit (TLS 1.3) and at rest (AES-256).',
+  },
+  {
+    icon: Shield,
+    title: 'Access Controls',
+    description: 'Strict role-based permissions and regular security audits.',
+  },
+  {
+    icon: Eye,
+    title: 'Privacy by Design',
+    description: 'We collect only what we need and never sell your data.',
+  },
+]
+
+const rights = [
+  { title: 'Access', description: 'Request a copy of your personal data' },
+  { title: 'Correction', description: 'Update or correct inaccurate information' },
+  { title: 'Deletion', description: 'Request deletion of your account and data' },
+  { title: 'Portability', description: 'Export your data in a standard format' },
+  { title: 'Opt-out', description: 'Unsubscribe from marketing communications' },
+  { title: 'Restrict', description: 'Limit how we process your information' },
+]
+
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-pulse-bg">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm text-pulse-text-secondary hover:text-pulse-accent transition-colors mb-8"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Home
-        </Link>
+    <main className="pt-20">
+      {/* Hero */}
+      <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {/* Ambient backgrounds */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 right-1/4 w-[800px] h-[800px] rounded-full bg-pulse-accent/[0.06] blur-[150px]" />
+          <div className="absolute bottom-0 left-1/4 w-[600px] h-[600px] rounded-full bg-blue-500/[0.04] blur-[120px]" />
+        </div>
 
-        <h1 className="font-serif text-display text-pulse-text mb-6">Privacy Policy</h1>
+        <div className="max-w-4xl mx-auto relative z-10">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-sm text-pulse-text-secondary hover:text-pulse-accent transition-colors mb-8"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </Link>
 
-        <div className="prose prose-invert max-w-none">
-          <p className="text-pulse-text-secondary text-lg mb-8">
-            Last updated: January 2025
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-6">
+            <Shield className="w-4 h-4 text-pulse-accent" />
+            <span className="text-sm text-pulse-text-secondary">Your Privacy Matters</span>
+          </div>
+
+          <h1 className="text-4xl md:text-5xl font-bold text-pulse-text mb-6 tracking-tight">
+            Privacy <span className="text-pulse-accent">Policy</span>
+          </h1>
+
+          <p className="text-lg text-pulse-text-secondary leading-relaxed mb-4">
+            We&apos;re committed to protecting your privacy and being transparent about how we handle your data.
+            This policy explains what we collect, how we use it, and your rights.
           </p>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-pulse-text mb-4">1. Information We Collect</h2>
-            <p className="text-pulse-text-secondary mb-4">
-              We collect information you provide directly to us, including your name, email address,
-              organization details, and grant preferences when you create an account or use our services.
-            </p>
-          </section>
+          <p className="text-sm text-pulse-text-tertiary">
+            Last updated: January 2025
+          </p>
+        </div>
+      </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-pulse-text mb-4">2. How We Use Your Information</h2>
-            <p className="text-pulse-text-secondary mb-4">
-              We use the information we collect to provide, maintain, and improve our services,
-              including personalized grant recommendations and application tracking features.
+      {/* Data We Collect */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 border-y border-white/[0.04]">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
+              <span className="text-sm text-pulse-accent">Data Collection</span>
+            </div>
+            <h2 className="text-3xl font-bold text-pulse-text mb-4">
+              Information we collect
+            </h2>
+            <p className="text-pulse-text-secondary">
+              We collect information to provide better services and personalized grant recommendations.
             </p>
-          </section>
+          </div>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-pulse-text mb-4">3. Information Sharing</h2>
-            <p className="text-pulse-text-secondary mb-4">
-              We do not sell your personal information. We may share information with service providers
-              who assist in operating our platform, subject to confidentiality agreements.
-            </p>
-          </section>
+          <div className="grid md:grid-cols-3 gap-6">
+            {dataCategories.map((category) => {
+              const Icon = category.icon
+              return (
+                <div
+                  key={category.title}
+                  className="group p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-pulse-accent/10 flex items-center justify-center mb-4 group-hover:bg-pulse-accent/20 transition-colors">
+                    <Icon className="w-6 h-6 text-pulse-accent" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-pulse-text mb-2 group-hover:text-pulse-accent transition-colors">
+                    {category.title}
+                  </h3>
+                  <p className="text-sm text-pulse-text-secondary leading-relaxed">
+                    {category.description}
+                  </p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-pulse-text mb-4">4. Data Security</h2>
-            <p className="text-pulse-text-secondary mb-4">
-              We implement appropriate technical and organizational measures to protect your personal
-              information against unauthorized access, alteration, or destruction.
-            </p>
-          </section>
+      {/* How We Use Data */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
+              <span className="text-sm text-pulse-accent">Data Usage</span>
+            </div>
+            <h2 className="text-3xl font-bold text-pulse-text mb-4">
+              How we use your information
+            </h2>
+          </div>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-pulse-text mb-4">5. Contact Us</h2>
-            <p className="text-pulse-text-secondary mb-4">
-              If you have questions about this Privacy Policy, please contact us at{' '}
-              <a href="mailto:privacy@grantease.com" className="text-pulse-accent hover:underline">
-                privacy@grantease.com
-              </a>
+          <div className="space-y-4">
+            {[
+              { title: 'Personalized Recommendations', description: 'Match you with grants that fit your organization and mission' },
+              { title: 'Platform Improvement', description: 'Analyze usage patterns to enhance features and user experience' },
+              { title: 'Communication', description: 'Send grant alerts, application reminders, and important updates' },
+              { title: 'Security', description: 'Detect and prevent fraud, abuse, and unauthorized access' },
+              { title: 'Legal Compliance', description: 'Meet regulatory requirements and respond to legal requests' },
+            ].map((item, i) => (
+              <div
+                key={item.title}
+                className="flex items-start gap-4 p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all"
+              >
+                <div className="w-8 h-8 rounded-lg bg-pulse-accent/10 flex items-center justify-center shrink-0">
+                  <span className="text-sm font-bold text-pulse-accent">{i + 1}</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-pulse-text mb-1">{item.title}</h3>
+                  <p className="text-sm text-pulse-text-secondary">{item.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Data Protection */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 border-y border-white/[0.04]">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
+              <span className="text-sm text-pulse-accent">Security</span>
+            </div>
+            <h2 className="text-3xl font-bold text-pulse-text mb-4">
+              How we protect your data
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {protections.map((protection) => {
+              const Icon = protection.icon
+              return (
+                <div
+                  key={protection.title}
+                  className="group p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-pulse-accent/10 flex items-center justify-center mb-4 group-hover:bg-pulse-accent/20 transition-colors">
+                    <Icon className="w-6 h-6 text-pulse-accent" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-pulse-text mb-2 group-hover:text-pulse-accent transition-colors">
+                    {protection.title}
+                  </h3>
+                  <p className="text-sm text-pulse-text-secondary leading-relaxed">
+                    {protection.description}
+                  </p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Your Rights */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
+              <span className="text-sm text-pulse-accent">Your Rights</span>
+            </div>
+            <h2 className="text-3xl font-bold text-pulse-text mb-4">
+              Control over your data
+            </h2>
+            <p className="text-pulse-text-secondary">
+              You have rights regarding your personal data. Here&apos;s what you can do:
             </p>
-          </section>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {rights.map((right) => (
+              <div
+                key={right.title}
+                className="group p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all"
+              >
+                <h3 className="font-semibold text-pulse-text mb-1 group-hover:text-pulse-accent transition-colors">
+                  {right.title}
+                </h3>
+                <p className="text-sm text-pulse-text-tertiary">
+                  {right.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Contact CTA */}
+      <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden border-t border-white/[0.04]">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-pulse-accent/[0.06] blur-[150px]" />
         </div>
 
-        <div className="mt-12 pt-8 border-t border-pulse-border">
-          <Button asChild variant="outline">
-            <Link href="/">Return Home</Link>
-          </Button>
+        <div className="max-w-3xl mx-auto text-center relative z-10">
+          <div className="w-16 h-16 rounded-2xl bg-pulse-accent/10 flex items-center justify-center mx-auto mb-6">
+            <Mail className="w-8 h-8 text-pulse-accent" />
+          </div>
+
+          <h2 className="text-3xl font-bold text-pulse-text mb-4">
+            Questions about privacy?
+          </h2>
+
+          <p className="text-lg text-pulse-text-secondary mb-8">
+            We&apos;re here to help. Reach out to our privacy team anytime.
+          </p>
+
+          <div className="flex flex-wrap justify-center gap-4">
+            <a
+              href="mailto:privacy@grantease.com"
+              className="group inline-flex items-center gap-2 px-8 py-4 bg-pulse-accent text-pulse-bg font-semibold rounded-xl hover:bg-pulse-accent/90 transition-all"
+            >
+              Contact Privacy Team
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </a>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white/[0.03] border border-white/[0.08] text-pulse-text font-semibold rounded-xl hover:border-pulse-accent/30 transition-all"
+            >
+              Return Home
+            </Link>
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   )
 }

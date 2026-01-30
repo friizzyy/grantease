@@ -112,8 +112,8 @@ export function OnboardingLayout({
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3">
-            <AnimatedLogo size="lg" />
-            <span className="text-2xl font-bold text-pulse-text">GrantEase</span>
+            <AnimatedLogo size="lg" className="text-pulse-accent" />
+            <span className="font-serif text-2xl text-pulse-text">GrantEase</span>
           </Link>
 
           {/* Center content */}
@@ -192,8 +192,8 @@ export function OnboardingLayout({
         <div className="lg:hidden p-6 border-b border-white/[0.06]">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <AnimatedLogo size="sm" />
-              <span className="text-lg font-bold text-pulse-text">GrantEase</span>
+              <AnimatedLogo size="sm" className="text-pulse-accent" />
+              <span className="font-serif text-lg text-pulse-text">GrantEase</span>
             </Link>
             {showSkipAll && onSkipAll && (
               <button

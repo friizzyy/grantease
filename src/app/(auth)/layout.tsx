@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { PulseGridBackground } from '@/components/pulse-grid/background'
 import { PageTransition } from '@/components/motion/page-transition'
+import { AnimatedLogo } from '@/components/ui/animated-logo'
 
 export default function AuthLayout({
   children,
@@ -14,9 +15,7 @@ export default function AuthLayout({
       {/* Simple Header */}
       <header className="relative z-10 p-6">
         <Link href="/" className="inline-flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-lg bg-pulse-accent/10 border border-pulse-accent/20 flex items-center justify-center">
-            <span className="text-pulse-accent font-mono text-sm font-bold">GE</span>
-          </div>
+          <AnimatedLogo size="md" className="text-pulse-accent" />
           <span className="font-serif text-xl text-pulse-text group-hover:text-pulse-accent transition-colors">
             GrantEase
           </span>

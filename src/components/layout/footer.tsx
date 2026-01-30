@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { AnimatedLogo } from '@/components/ui/animated-logo'
 
 const footerLinks = {
   product: [
@@ -24,9 +25,7 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-lg border border-pulse-accent/30 flex items-center justify-center">
-                <div className="w-full h-0.5 bg-pulse-accent/50" />
-              </div>
+              <AnimatedLogo size="md" className="text-pulse-accent" />
               <span className="font-serif text-xl text-pulse-text">GrantEase</span>
             </Link>
             <p className="text-sm text-pulse-text-tertiary max-w-xs">
