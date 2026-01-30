@@ -284,7 +284,7 @@ export function HeroSearch() {
           <div className="relative mt-4 pt-6">
             <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-t from-transparent to-pulse-bg/50 pointer-events-none" />
             <button
-              onClick={handleResultClick}
+              onClick={() => handleResultClick()}
               className="inline-flex items-center gap-2 text-pulse-accent font-semibold hover:underline"
             >
               Sign up free to see all results
