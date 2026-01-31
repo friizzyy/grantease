@@ -88,6 +88,10 @@ export const rateLimiters = {
   passwordChange: (identifier: string) =>
     checkRateLimit(`pwd:${identifier}`, { interval: 5 * 60 * 1000, maxRequests: 3 }),
 
+  // Account deletion: 3 requests per 10 minutes (stricter limit for destructive action)
+  accountDeletion: (identifier: string) =>
+    checkRateLimit(`del:${identifier}`, { interval: 10 * 60 * 1000, maxRequests: 3 }),
+
   // AI endpoints: 20 requests per minute
   ai: (identifier: string) =>
     checkRateLimit(`ai:${identifier}`, { interval: 60 * 1000, maxRequests: 20 }),

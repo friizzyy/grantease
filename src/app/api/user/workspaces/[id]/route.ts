@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
+import { safeJsonParse } from '@/lib/api-utils'
 
 export async function GET(
   request: NextRequest,
@@ -33,17 +34,17 @@ export async function GET(
       )
     }
 
-    // Parse JSON fields
+    // Parse JSON fields safely
     const parsed = {
       ...workspace,
-      checklist: JSON.parse(workspace.checklist || '[]'),
+      checklist: safeJsonParse<Array<{ id: string; text: string; completed: boolean }>>(workspace.checklist, []),
       grant: {
         ...workspace.grant,
-        categories: JSON.parse(workspace.grant.categories || '[]'),
-        eligibility: JSON.parse(workspace.grant.eligibility || '[]'),
-        locations: JSON.parse(workspace.grant.locations || '[]'),
-        contact: workspace.grant.contact ? JSON.parse(workspace.grant.contact) : null,
-        requirements: workspace.grant.requirements ? JSON.parse(workspace.grant.requirements) : [],
+        categories: safeJsonParse<string[]>(workspace.grant.categories, []),
+        eligibility: safeJsonParse<string[]>(workspace.grant.eligibility, []),
+        locations: safeJsonParse<string[]>(workspace.grant.locations, []),
+        contact: safeJsonParse<Record<string, unknown> | null>(workspace.grant.contact, null),
+        requirements: safeJsonParse<string[]>(workspace.grant.requirements, []),
       },
     }
 
@@ -111,7 +112,7 @@ export async function PATCH(
     return NextResponse.json({
       workspace: {
         ...workspace,
-        checklist: JSON.parse(workspace.checklist || '[]'),
+        checklist: safeJsonParse<Array<{ id: string; text: string; completed: boolean }>>(workspace.checklist, []),
       },
     })
   } catch (error) {

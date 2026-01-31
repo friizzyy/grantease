@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { safeJsonParse } from '@/lib/api-utils'
 
 /**
  * GET /api/dashboard
@@ -128,8 +129,8 @@ export async function GET() {
         href: `/app/grants/${sg.grant.id}`,
       })),
       ...workspaces.map((ws) => {
-        const checklist = ws.checklist ? JSON.parse(ws.checklist) : []
-        const completed = checklist.filter((item: { completed?: boolean }) => item.completed).length
+        const checklist = safeJsonParse<Array<{ completed?: boolean }>>(ws.checklist, [])
+        const completed = checklist.filter((item) => item.completed).length
         const total = checklist.length
         return {
           id: ws.id,
@@ -159,7 +160,7 @@ export async function GET() {
     // Top categories from saved grants
     const categoryCount: Record<string, number> = {}
     savedGrants.forEach((sg) => {
-      const categories = JSON.parse(sg.grant.categories || '[]')
+      const categories = safeJsonParse<string[]>(sg.grant.categories, [])
       categories.forEach((cat: string) => {
         categoryCount[cat] = (categoryCount[cat] || 0) + 1
       })

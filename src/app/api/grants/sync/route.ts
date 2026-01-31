@@ -2,10 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { grantsGovApi, normalizeGrantsGovOpportunity } from '@/lib/services/grants-gov-api'
 
-// Protect this endpoint with admin API key
+// Protect this endpoint with admin API key - require ADMIN_API_KEY to be set
 function isAuthorized(request: NextRequest): boolean {
+  const expectedKey = process.env.ADMIN_API_KEY
+  if (!expectedKey) {
+    console.error('ADMIN_API_KEY not configured - blocking admin requests')
+    return false
+  }
   const apiKey = request.headers.get('x-api-key')
-  return apiKey === process.env.ADMIN_API_KEY
+  return apiKey === expectedKey
 }
 
 /**

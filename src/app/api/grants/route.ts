@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { Prisma } from '@prisma/client'
+import { safeJsonParse } from '@/lib/api-utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,9 +27,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Text search across multiple fields
-    // Note: SQLite doesn't support case-insensitive mode, so we use contains directly
+    // Note: SQLite LIKE is case-insensitive by default for ASCII, so contains works well
+    // For PostgreSQL in production, you may want to add mode: 'insensitive'
     if (query) {
-      const lowerQuery = query.toLowerCase()
       where.OR = [
         { title: { contains: query } },
         { summary: { contains: query } },
@@ -138,12 +139,12 @@ export async function GET(request: NextRequest) {
       prisma.grant.count({ where }),
     ])
 
-    // Parse JSON fields
+    // Parse JSON fields safely
     const parsedGrants = grants.map(grant => ({
       ...grant,
-      categories: JSON.parse(grant.categories || '[]'),
-      eligibility: JSON.parse(grant.eligibility || '[]'),
-      locations: JSON.parse(grant.locations || '[]'),
+      categories: safeJsonParse<string[]>(grant.categories, []),
+      eligibility: safeJsonParse<string[]>(grant.eligibility, []),
+      locations: safeJsonParse<string[]>(grant.locations, []),
     }))
 
     return NextResponse.json({
@@ -153,7 +154,7 @@ export async function GET(request: NextRequest) {
         limit,
         total,
         totalPages: Math.ceil(total / limit),
-        hasMore: skip + grants.length < total,
+        hasMore: grants.length === limit && skip + grants.length < total,
       },
     })
   } catch (error) {

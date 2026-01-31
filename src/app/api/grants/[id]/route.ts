@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { safeJsonParse } from '@/lib/api-utils'
 
 export async function GET(
   request: NextRequest,
@@ -18,14 +19,14 @@ export async function GET(
       )
     }
 
-    // Parse JSON fields
+    // Parse JSON fields safely
     const parsedGrant = {
       ...grant,
-      categories: JSON.parse(grant.categories || '[]'),
-      eligibility: JSON.parse(grant.eligibility || '[]'),
-      locations: JSON.parse(grant.locations || '[]'),
-      contact: grant.contact ? JSON.parse(grant.contact) : null,
-      requirements: grant.requirements ? JSON.parse(grant.requirements) : [],
+      categories: safeJsonParse<string[]>(grant.categories, []),
+      eligibility: safeJsonParse<string[]>(grant.eligibility, []),
+      locations: safeJsonParse<string[]>(grant.locations, []),
+      contact: safeJsonParse<Record<string, unknown> | null>(grant.contact, null),
+      requirements: safeJsonParse<string[]>(grant.requirements, []),
     }
 
     return NextResponse.json(parsedGrant)

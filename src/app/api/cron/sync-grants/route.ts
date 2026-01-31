@@ -23,12 +23,17 @@ export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
 
-  // Check for Vercel cron or manual cron secret
-  const isVercelCron = authHeader === `Bearer ${process.env.CRON_SECRET}`
-  const isManualCron = request.headers.get('x-cron-secret') === cronSecret
-  const isLocalDev = process.env.NODE_ENV === 'development'
+  // CRON_SECRET must be configured in all environments
+  if (!cronSecret) {
+    console.error('[CRON] CRON_SECRET not configured - blocking request')
+    return NextResponse.json({ error: 'Cron not configured' }, { status: 503 })
+  }
 
-  if (!isVercelCron && !isManualCron && !isLocalDev) {
+  // Check for Vercel cron or manual cron secret
+  const isVercelCron = authHeader === `Bearer ${cronSecret}`
+  const isManualCron = request.headers.get('x-cron-secret') === cronSecret
+
+  if (!isVercelCron && !isManualCron) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

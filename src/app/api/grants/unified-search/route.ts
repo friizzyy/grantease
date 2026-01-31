@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { searchAllSources, type GrantSearchParams, type NormalizedGrant } from '@/lib/services/grant-sources'
 import { calculateRelevance, type GrantForRelevance } from '@/lib/relevance/engine'
 import { UserProfile } from '@/lib/types/onboarding'
+import { safeJsonParse } from '@/lib/api-utils'
 
 /**
  * Convert NormalizedGrant to GrantForRelevance format
@@ -106,12 +107,12 @@ export async function GET(request: NextRequest) {
           entityType: dbProfile.entityType as UserProfile['entityType'],
           country: dbProfile.country,
           state: dbProfile.state,
-          industryTags: JSON.parse(dbProfile.industryTags || '[]'),
+          industryTags: safeJsonParse<string[]>(dbProfile.industryTags, []),
           sizeBand: dbProfile.sizeBand as UserProfile['sizeBand'],
           stage: dbProfile.stage as UserProfile['stage'],
           annualBudget: dbProfile.annualBudget as UserProfile['annualBudget'],
-          industryAttributes: JSON.parse(dbProfile.industryAttributes || '{}'),
-          grantPreferences: JSON.parse(dbProfile.grantPreferences || '{}'),
+          industryAttributes: safeJsonParse<Record<string, string | string[] | boolean>>(dbProfile.industryAttributes, {}),
+          grantPreferences: safeJsonParse<UserProfile['grantPreferences']>(dbProfile.grantPreferences, { preferredSize: null, timeline: null, complexity: null }),
           onboardingCompleted: dbProfile.onboardingCompleted,
           onboardingCompletedAt: dbProfile.onboardingCompletedAt,
           onboardingStep: dbProfile.onboardingStep,
@@ -253,12 +254,12 @@ export async function POST(request: NextRequest) {
           entityType: dbProfile.entityType as UserProfile['entityType'],
           country: dbProfile.country,
           state: dbProfile.state,
-          industryTags: JSON.parse(dbProfile.industryTags || '[]'),
+          industryTags: safeJsonParse<string[]>(dbProfile.industryTags, []),
           sizeBand: dbProfile.sizeBand as UserProfile['sizeBand'],
           stage: dbProfile.stage as UserProfile['stage'],
           annualBudget: dbProfile.annualBudget as UserProfile['annualBudget'],
-          industryAttributes: JSON.parse(dbProfile.industryAttributes || '{}'),
-          grantPreferences: JSON.parse(dbProfile.grantPreferences || '{}'),
+          industryAttributes: safeJsonParse<Record<string, string | string[] | boolean>>(dbProfile.industryAttributes, {}),
+          grantPreferences: safeJsonParse<UserProfile['grantPreferences']>(dbProfile.grantPreferences, { preferredSize: null, timeline: null, complexity: null }),
           onboardingCompleted: dbProfile.onboardingCompleted,
           onboardingCompletedAt: dbProfile.onboardingCompletedAt,
           onboardingStep: dbProfile.onboardingStep,

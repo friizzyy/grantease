@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
+import { safeJsonParse } from '@/lib/api-utils'
 
 /**
  * GET /api/export/grants
@@ -59,9 +60,9 @@ export async function GET(request: NextRequest) {
         ...sg.grant,
         savedAt: sg.createdAt,
         notes: sg.notes,
-        categories: JSON.parse(sg.grant.categories || '[]'),
-        eligibility: JSON.parse(sg.grant.eligibility || '[]'),
-        locations: JSON.parse(sg.grant.locations || '[]'),
+        categories: safeJsonParse<string[]>(sg.grant.categories, []),
+        eligibility: safeJsonParse<string[]>(sg.grant.eligibility, []),
+        locations: safeJsonParse<string[]>(sg.grant.locations, []),
       }))
     } else if (type === 'search') {
       const search = searchParams.get('search')
@@ -88,9 +89,9 @@ export async function GET(request: NextRequest) {
 
       grants = dbGrants.map(g => ({
         ...g,
-        categories: JSON.parse(g.categories || '[]'),
-        eligibility: JSON.parse(g.eligibility || '[]'),
-        locations: JSON.parse(g.locations || '[]'),
+        categories: safeJsonParse<string[]>(g.categories, []),
+        eligibility: safeJsonParse<string[]>(g.eligibility, []),
+        locations: safeJsonParse<string[]>(g.locations, []),
       }))
     }
 
@@ -132,32 +133,42 @@ export async function GET(request: NextRequest) {
 }
 
 function generateCSV(data: Record<string, unknown>[], fields: string[]): string {
-  if (data.length === 0) {
+  try {
+    if (data.length === 0) {
+      return fields.join(',') + '\n'
+    }
+
+    // Header row
+    const headers = fields.join(',')
+
+    // Data rows with error handling
+    const rows = data.map(item => {
+      return fields.map(field => {
+        try {
+          const value = item[field]
+          if (value === null || value === undefined) {
+            return ''
+          }
+          if (Array.isArray(value)) {
+            return `"${value.join('; ').replace(/"/g, '""')}"`
+          }
+          if (typeof value === 'object') {
+            return `"${JSON.stringify(value).replace(/"/g, '""')}"`
+          }
+          const strValue = String(value)
+          if (strValue.includes(',') || strValue.includes('"') || strValue.includes('\n')) {
+            return `"${strValue.replace(/"/g, '""')}"`
+          }
+          return strValue
+        } catch {
+          return ''
+        }
+      }).join(',')
+    })
+
+    return [headers, ...rows].join('\n')
+  } catch (error) {
+    console.error('CSV generation error:', error)
     return fields.join(',') + '\n'
   }
-
-  // Header row
-  const headers = fields.join(',')
-
-  // Data rows
-  const rows = data.map(item => {
-    return fields.map(field => {
-      const value = item[field]
-      if (value === null || value === undefined) {
-        return ''
-      }
-      if (Array.isArray(value)) {
-        return `"${value.join('; ')}"`
-      }
-      if (typeof value === 'object') {
-        return `"${JSON.stringify(value).replace(/"/g, '""')}"`
-      }
-      if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
-        return `"${value.replace(/"/g, '""')}"`
-      }
-      return String(value)
-    }).join(',')
-  })
-
-  return [headers, ...rows].join('\n')
 }

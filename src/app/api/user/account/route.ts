@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
+import { rateLimiters, rateLimitExceededResponse, getClientIdentifier } from '@/lib/rate-limit'
 
 /**
  * DELETE /api/user/account
@@ -12,6 +13,13 @@ import bcrypt from 'bcryptjs'
  */
 export async function DELETE(request: NextRequest) {
   try {
+    // Rate limiting for account deletion - prevent brute force attempts
+    const clientId = getClientIdentifier(request)
+    const rateLimit = rateLimiters.auth(clientId)
+    if (!rateLimit.allowed) {
+      return rateLimitExceededResponse(rateLimit.resetAt)
+    }
+
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

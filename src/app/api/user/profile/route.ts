@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { safeJsonParse } from '@/lib/api-utils'
 
 /**
  * GET /api/user/profile
@@ -35,9 +36,9 @@ export async function GET() {
       user,
       profile: profile ? {
         ...profile,
-        industryTags: JSON.parse(profile.industryTags || '[]'),
-        industryAttributes: JSON.parse(profile.industryAttributes || '{}'),
-        grantPreferences: JSON.parse(profile.grantPreferences || '{}'),
+        industryTags: safeJsonParse<string[]>(profile.industryTags, []),
+        industryAttributes: safeJsonParse<Record<string, unknown>>(profile.industryAttributes, {}),
+        grantPreferences: safeJsonParse<Record<string, unknown>>(profile.grantPreferences, {}),
       } : null,
       hasCompletedOnboarding: profile?.onboardingCompleted || false,
     })
@@ -113,9 +114,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       profile: {
         ...profile,
-        industryTags: JSON.parse(profile.industryTags),
-        industryAttributes: JSON.parse(profile.industryAttributes),
-        grantPreferences: JSON.parse(profile.grantPreferences),
+        industryTags: safeJsonParse<string[]>(profile.industryTags, []),
+        industryAttributes: safeJsonParse<Record<string, unknown>>(profile.industryAttributes, {}),
+        grantPreferences: safeJsonParse<Record<string, unknown>>(profile.grantPreferences, {}),
       },
     })
   } catch (error) {
@@ -179,9 +180,9 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({
       profile: {
         ...profile,
-        industryTags: JSON.parse(profile.industryTags),
-        industryAttributes: JSON.parse(profile.industryAttributes),
-        grantPreferences: JSON.parse(profile.grantPreferences),
+        industryTags: safeJsonParse<string[]>(profile.industryTags, []),
+        industryAttributes: safeJsonParse<Record<string, unknown>>(profile.industryAttributes, {}),
+        grantPreferences: safeJsonParse<Record<string, unknown>>(profile.grantPreferences, {}),
       },
     })
   } catch (error) {
@@ -216,11 +217,15 @@ function calculateConfidenceScore(profile: Record<string, unknown>): number {
   if (profile.stage) score += weights.stage
   if (profile.annualBudget) score += weights.annualBudget
 
-  const attrs = typeof profile.industryAttributes === 'object' ? profile.industryAttributes : {}
-  if (Object.keys(attrs || {}).length > 0) score += weights.industryAttributes
+  const attrs = profile.industryAttributes && typeof profile.industryAttributes === 'object' && !Array.isArray(profile.industryAttributes)
+    ? profile.industryAttributes as Record<string, unknown>
+    : {}
+  if (Object.keys(attrs).length > 0) score += weights.industryAttributes
 
-  const prefs = typeof profile.grantPreferences === 'object' ? profile.grantPreferences : {}
-  if (Object.keys(prefs || {}).length > 0) score += weights.grantPreferences
+  const prefs = profile.grantPreferences && typeof profile.grantPreferences === 'object' && !Array.isArray(profile.grantPreferences)
+    ? profile.grantPreferences as Record<string, unknown>
+    : {}
+  if (Object.keys(prefs).length > 0) score += weights.grantPreferences
 
   return Math.min(1, Math.max(0, score))
 }

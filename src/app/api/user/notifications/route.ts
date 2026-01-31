@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
+import { safeJsonParse } from '@/lib/api-utils'
 
 /**
  * GET /api/user/notifications
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
     const unreadOnly = searchParams.get('unread') === 'true'
     const type = searchParams.get('type')
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100)
-    const offset = parseInt(searchParams.get('offset') || '0')
+    const offset = Math.max(0, parseInt(searchParams.get('offset') || '0'))
 
     // Build where clause
     const where: Record<string, unknown> = { userId }
@@ -47,10 +48,10 @@ export async function GET(request: NextRequest) {
       prisma.notification.count({ where: { userId, read: false } }),
     ])
 
-    // Parse metadata JSON
+    // Parse metadata JSON safely
     const parsed = notifications.map(n => ({
       ...n,
-      metadata: n.metadata ? JSON.parse(n.metadata) : null,
+      metadata: safeJsonParse<Record<string, unknown> | null>(n.metadata, null),
     }))
 
     return NextResponse.json({
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       notification: {
         ...notification,
-        metadata: notification.metadata ? JSON.parse(notification.metadata) : null,
+        metadata: safeJsonParse<Record<string, unknown> | null>(notification.metadata, null),
       },
     }, { status: 201 })
   } catch (error) {

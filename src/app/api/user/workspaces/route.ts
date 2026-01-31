@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
+import { safeJsonParse } from '@/lib/api-utils'
 
 export async function GET() {
   try {
@@ -37,10 +38,10 @@ export async function GET() {
       orderBy: { updatedAt: 'desc' },
     })
 
-    // Parse JSON fields
+    // Parse JSON fields safely
     const parsed = workspaces.map(ws => ({
       ...ws,
-      checklist: JSON.parse(ws.checklist || '[]'),
+      checklist: safeJsonParse<Array<{ id: string; text: string; completed: boolean }>>(ws.checklist, []),
     }))
 
     return NextResponse.json({ workspaces: parsed })
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create default checklist from grant requirements
-    const requirements = JSON.parse(grant.requirements || '[]')
+    const requirements = safeJsonParse<string[]>(grant.requirements, [])
     const defaultChecklist = requirements.map((req: string, index: number) => ({
       id: `item-${index + 1}`,
       text: req,
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       workspace: {
         ...workspace,
-        checklist: JSON.parse(workspace.checklist || '[]'),
+        checklist: safeJsonParse<Array<{ id: string; text: string; completed: boolean }>>(workspace.checklist, []),
         documents: [],
       },
     })
