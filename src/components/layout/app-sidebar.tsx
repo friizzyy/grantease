@@ -1,7 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { signOut } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search,
@@ -12,6 +14,7 @@ import {
   LayoutDashboard,
   LogOut,
   Shield,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { springs } from '@/lib/motion/animations'
@@ -35,15 +38,28 @@ interface AppSidebarProps {
 
 export function AppSidebar({ isAdmin = false }: AppSidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
+  const [isSigningOut, setIsSigningOut] = useState(false)
+
+  const handleSignOut = async () => {
+    setIsSigningOut(true)
+    try {
+      await signOut({ redirect: false })
+      router.push('/login')
+    } catch (error) {
+      console.error('Sign out error:', error)
+      setIsSigningOut(false)
+    }
+  }
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-64 bg-pulse-surface/50 border-r border-pulse-border backdrop-blur-sm z-40">
       <div className="flex flex-col h-full">
         {/* Logo */}
         <div className="p-6 border-b border-pulse-border">
-          <Link href="/" className="flex items-center gap-3 group">
+          <Link href="/app" className="flex items-center gap-3 group">
             <AnimatedLogo className="text-pulse-accent" />
-            <span className="font-serif text-xl text-pulse-text group-hover:text-pulse-accent transition-colors">
+            <span className="text-xl font-semibold text-pulse-text group-hover:text-pulse-accent transition-colors">
               GrantEase
             </span>
           </Link>
@@ -105,13 +121,19 @@ export function AppSidebar({ isAdmin = false }: AppSidebarProps) {
           })}
 
           <motion.button
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-pulse-text-secondary hover:text-pulse-error hover:bg-pulse-error/10 transition-all duration-200 w-full relative overflow-hidden"
-            whileHover={{ x: 2 }}
-            whileTap={{ scale: 0.98 }}
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-pulse-text-secondary hover:text-pulse-error hover:bg-pulse-error/10 transition-all duration-200 w-full relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+            whileHover={isSigningOut ? {} : { x: 2 }}
+            whileTap={isSigningOut ? {} : { scale: 0.98 }}
             aria-label="Sign out of your account"
           >
-            <LogOut className="w-4 h-4" aria-hidden="true" />
-            Sign Out
+            {isSigningOut ? (
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <LogOut className="w-4 h-4" aria-hidden="true" />
+            )}
+            {isSigningOut ? 'Signing out...' : 'Sign Out'}
           </motion.button>
         </div>
       </div>

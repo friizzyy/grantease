@@ -16,7 +16,7 @@ export default function AuthLayout({
       <header className="relative z-10 p-6">
         <Link href="/" className="inline-flex items-center gap-2 group">
           <AnimatedLogo size="md" className="text-pulse-accent" />
-          <span className="font-serif text-xl text-pulse-text group-hover:text-pulse-accent transition-colors">
+          <span className="text-xl font-semibold text-pulse-text group-hover:text-pulse-accent transition-colors">
             GrantEase
           </span>
         </Link>

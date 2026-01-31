@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
+import { authOptions } from '@/lib/auth'
 
-// Mock user ID for development
-const MOCK_USER_ID = 'dev-user-123'
-
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const userId = MOCK_USER_ID
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const userId = session.user.id
 
     const workspaces = await prisma.workspace.findMany({
       where: { userId },
@@ -52,7 +55,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = MOCK_USER_ID
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const userId = session.user.id
+
     const body = await request.json()
     const { grantId, name } = body
 

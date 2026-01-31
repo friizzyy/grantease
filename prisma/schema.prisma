@@ -21,12 +21,15 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts      Account[]
-  sessions      Session[]
-  savedGrants   SavedGrant[]
-  savedSearches SavedSearch[]
-  workspaces    Workspace[]
-  profile       UserProfile?
+  accounts                Account[]
+  sessions                Session[]
+  savedGrants             SavedGrant[]
+  savedSearches           SavedSearch[]
+  workspaces              Workspace[]
+  profile                 UserProfile?
+  notifications           Notification[]
+  notificationPreferences NotificationPreferences?
+  collections             GrantCollection[]
 }
 
 // ==================== USER PROFILE (ONBOARDING) ====================
@@ -141,6 +144,7 @@ model Grant {
 
   savedBy         SavedGrant[]
   workspaces      Workspace[]
+  collections     GrantCollectionItem[]
 
   @@unique([sourceName, sourceId])
   @@index([status])
@@ -242,4 +246,85 @@ model IngestionRun {
   completedAt DateTime?
 
   source IngestionSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+}
+
+// ==================== NOTIFICATIONS ====================
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // deadline_reminder, new_match, application_update, system
+  title       String
+  message     String
+  link        String?  // Optional link to relevant page
+  metadata    String?  // JSON for additional data
+  read        Boolean  @default(false)
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+model NotificationPreferences {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+
+  // Email notification settings
+  emailEnabled          Boolean  @default(true)
+  grantAlerts           Boolean  @default(true)  // New grant matches
+  deadlineReminders     Boolean  @default(true)  // Upcoming deadlines
+  weeklyDigest          Boolean  @default(true)  // Weekly summary
+  applicationUpdates    Boolean  @default(true)  // Workspace status changes
+  aiRecommendations     Boolean  @default(false) // AI-powered suggestions
+
+  // Timing preferences
+  deadlineReminderDays  Int      @default(7)     // Days before deadline to remind
+  digestDay             String   @default("monday") // Day to send weekly digest
+
+  // Quiet hours (optional)
+  quietHoursEnabled     Boolean  @default(false)
+  quietHoursStart       String?  // HH:MM format
+  quietHoursEnd         String?  // HH:MM format
+  timezone              String   @default("America/New_York")
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ==================== GRANT COLLECTIONS ====================
+
+model GrantCollection {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  color       String?  // Hex color for UI
+  icon        String?  // Icon name for UI
+  isDefault   Boolean  @default(false) // Cannot be deleted
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user   User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grants GrantCollectionItem[]
+
+  @@index([userId])
+}
+
+model GrantCollectionItem {
+  id           String   @id @default(cuid())
+  collectionId String
+  grantId      String
+  notes        String?
+  addedAt      DateTime @default(now())
+
+  collection GrantCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  grant      Grant           @relation(fields: [grantId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, grantId])
 }

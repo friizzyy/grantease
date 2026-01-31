@@ -9,22 +9,20 @@
  * - Quick action cards
  * - Deadline urgency indicators
  * - GlassCard design throughout
+ * - Real API integration
  */
 
 import Link from 'next/link'
-import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect, useCallback } from 'react'
+import { motion } from 'framer-motion'
 import {
   FolderPlus,
-  Calendar,
   Clock,
   FolderOpen,
   FileText,
   CheckCircle2,
   AlertCircle,
-  TrendingUp,
   Sparkles,
-  MoreHorizontal,
   Play,
   Pause,
   Send,
@@ -33,88 +31,33 @@ import {
   Building2,
   ChevronRight,
   Zap,
+  RefreshCw,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { GlassCard } from '@/components/ui/glass-card'
 import { formatDate } from '@/lib/utils'
 
-// Mock workspaces with enhanced data
-const workspaces = [
-  {
-    id: '1',
-    name: 'SBIR Phase I Application',
-    status: 'in_progress',
-    grant: {
-      id: '1',
-      title: 'Small Business Innovation Research (SBIR) Phase I',
-      sponsor: 'National Science Foundation',
-      deadlineDate: new Date('2024-03-15'),
-      amount: '$275,000',
-    },
-    progress: 75,
-    completedTasks: 9,
-    totalTasks: 12,
-    updatedAt: new Date('2024-01-28'),
-    nextStep: 'Complete budget justification',
-    matchScore: 94,
-  },
-  {
-    id: '2',
-    name: 'Community Development Grant',
-    status: 'in_progress',
-    grant: {
-      id: '2',
-      title: 'Community Development Block Grant Program',
-      sponsor: 'HUD',
-      deadlineDate: new Date('2024-02-28'),
-      amount: '$500,000',
-    },
-    progress: 40,
-    completedTasks: 4,
-    totalTasks: 10,
-    updatedAt: new Date('2024-01-25'),
-    nextStep: 'Upload supporting documents',
-    matchScore: 91,
-  },
-  {
-    id: '3',
-    name: 'EPA Environmental Justice',
-    status: 'submitted',
-    grant: {
-      id: '3',
-      title: 'Environmental Justice Collaborative Problem-Solving',
-      sponsor: 'EPA',
-      deadlineDate: new Date('2024-01-15'),
-      amount: '$150,000',
-    },
-    progress: 100,
-    completedTasks: 8,
-    totalTasks: 8,
-    updatedAt: new Date('2024-01-14'),
-    nextStep: null,
-    matchScore: 87,
-    submittedDate: 'Jan 14, 2024',
-  },
-  {
-    id: '4',
-    name: 'NEA Arts Project Grant',
-    status: 'not_started',
-    grant: {
-      id: '5',
-      title: 'Grants for Arts Projects',
-      sponsor: 'National Endowment for the Arts',
-      deadlineDate: new Date('2024-05-15'),
-      amount: '$100,000',
-    },
-    progress: 0,
-    completedTasks: 0,
-    totalTasks: 10,
-    updatedAt: new Date('2024-01-20'),
-    nextStep: 'Begin project narrative',
-    matchScore: 78,
-  },
-]
+// Types
+interface Workspace {
+  id: string
+  name: string
+  status: string
+  notes: string | null
+  checklist: Array<{ id: string; text: string; completed: boolean; category?: string }>
+  createdAt: string
+  updatedAt: string
+  grant: {
+    id: string
+    title: string
+    sponsor: string
+    deadlineDate: string | null
+    deadlineType: string | null
+    amountMin: number | null
+    amountMax: number | null
+  }
+  documents: Array<{ id: string; name: string; type: string; createdAt: string }>
+}
 
 const statusConfig = {
   not_started: { label: 'Not Started', variant: 'default' as const, icon: Pause, color: 'text-pulse-text-tertiary' },
@@ -122,6 +65,15 @@ const statusConfig = {
   submitted: { label: 'Submitted', variant: 'success' as const, icon: Send, color: 'text-blue-400' },
   awarded: { label: 'Awarded', variant: 'accent' as const, icon: Award, color: 'text-pulse-accent' },
   rejected: { label: 'Not Selected', variant: 'error' as const, icon: XCircle, color: 'text-pulse-error' },
+}
+
+// Format amount
+function formatAmount(min: number | null, max: number | null): string {
+  const amount = max || min
+  if (!amount) return 'Varies'
+  if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`
+  if (amount >= 1000) return `$${Math.round(amount / 1000)}K`
+  return `$${amount.toLocaleString()}`
 }
 
 // Animated progress ring
@@ -164,11 +116,11 @@ function ProgressRing({ progress, size = 56, strokeWidth = 5, color }: {
 }
 
 // Workspace Stats Summary
-function WorkspaceStats() {
+function WorkspaceStats({ workspaces }: { workspaces: Workspace[] }) {
   const inProgress = workspaces.filter(w => w.status === 'in_progress').length
   const submitted = workspaces.filter(w => w.status === 'submitted').length
   const totalPipeline = workspaces.reduce((sum, w) => {
-    const amount = parseInt(w.grant.amount.replace(/[^0-9]/g, '')) || 0
+    const amount = w.grant.amountMax || w.grant.amountMin || 0
     return sum + amount
   }, 0)
 
@@ -203,7 +155,12 @@ function WorkspaceStats() {
             </div>
             <div className="w-px h-10 bg-pulse-border" />
             <div>
-              <p className="text-2xl font-semibold text-pulse-accent">${(totalPipeline / 1000000).toFixed(1)}M</p>
+              <p className="text-2xl font-semibold text-pulse-accent">
+                {totalPipeline >= 1000000
+                  ? `$${(totalPipeline / 1000000).toFixed(1)}M`
+                  : `$${Math.round(totalPipeline / 1000)}K`
+                }
+              </p>
               <p className="text-xs text-pulse-text-tertiary">Pipeline value</p>
             </div>
           </div>
@@ -220,12 +177,17 @@ function WorkspaceStats() {
 }
 
 // AI Insights Card
-function AIInsightsCard() {
+function AIInsightsCard({ workspaces }: { workspaces: Workspace[] }) {
   const urgentCount = workspaces.filter(w => {
     if (!w.grant.deadlineDate) return false
-    const daysLeft = Math.ceil((w.grant.deadlineDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-    return daysLeft <= 30 && w.status !== 'submitted'
+    const daysLeft = Math.ceil((new Date(w.grant.deadlineDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    return daysLeft <= 30 && daysLeft > 0 && w.status !== 'submitted' && w.status !== 'awarded'
   }).length
+
+  const inProgressWorkspace = workspaces.find(w => w.status === 'in_progress')
+  const progress = inProgressWorkspace
+    ? Math.round((inProgressWorkspace.checklist.filter(i => i.completed).length / Math.max(inProgressWorkspace.checklist.length, 1)) * 100)
+    : 0
 
   return (
     <motion.div
@@ -247,9 +209,20 @@ function AIInsightsCard() {
                   <span className="text-pulse-warning font-medium">{urgentCount} application(s)</span> have deadlines within 30 days. Focus on completing these first.
                 </p>
               )}
-              <p className="text-sm text-pulse-text-secondary">
-                Your SBIR Phase I application is <span className="text-pulse-accent font-medium">75% complete</span>. Complete the budget justification to finish strong.
-              </p>
+              {inProgressWorkspace && (
+                <p className="text-sm text-pulse-text-secondary">
+                  Your {inProgressWorkspace.name} is <span className="text-pulse-accent font-medium">{progress}% complete</span>.
+                  {inProgressWorkspace.checklist.find(i => !i.completed)?.text
+                    ? ` Next: ${inProgressWorkspace.checklist.find(i => !i.completed)?.text}`
+                    : ''
+                  }
+                </p>
+              )}
+              {workspaces.length === 0 && (
+                <p className="text-sm text-pulse-text-secondary">
+                  Start by discovering grants that match your profile and creating your first application.
+                </p>
+              )}
             </div>
           </div>
           <Button variant="outline" size="sm">
@@ -263,21 +236,27 @@ function AIInsightsCard() {
 }
 
 // Premium Workspace Card
-function WorkspaceCard({ workspace, index }: { workspace: typeof workspaces[0]; index: number }) {
-  const status = statusConfig[workspace.status as keyof typeof statusConfig]
+function WorkspaceCard({ workspace, index }: { workspace: Workspace; index: number }) {
+  const status = statusConfig[workspace.status as keyof typeof statusConfig] || statusConfig.not_started
   const StatusIcon = status.icon
+
+  const completedTasks = workspace.checklist.filter(i => i.completed).length
+  const totalTasks = workspace.checklist.length
+  const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+
   const daysUntilDeadline = workspace.grant.deadlineDate
-    ? Math.ceil((workspace.grant.deadlineDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    ? Math.ceil((new Date(workspace.grant.deadlineDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : null
 
   const getProgressColor = () => {
-    if (workspace.progress >= 75) return '#40ffaa'
-    if (workspace.progress >= 50) return '#40a0ff'
-    if (workspace.progress >= 25) return '#ffb340'
+    if (progress >= 75) return '#40ffaa'
+    if (progress >= 50) return '#40a0ff'
+    if (progress >= 25) return '#ffb340'
     return '#ff4040'
   }
 
-  const isUrgent = daysUntilDeadline !== null && daysUntilDeadline <= 14 && workspace.status !== 'submitted'
+  const isUrgent = daysUntilDeadline !== null && daysUntilDeadline <= 14 && daysUntilDeadline > 0 && workspace.status !== 'submitted'
+  const nextStep = workspace.checklist.find(i => !i.completed)?.text
 
   return (
     <motion.div
@@ -292,7 +271,7 @@ function WorkspaceCard({ workspace, index }: { workspace: typeof workspaces[0]; 
           <div className="flex items-start gap-5">
             {/* Progress Ring */}
             <div className="shrink-0">
-              <ProgressRing progress={workspace.progress} color={getProgressColor()} />
+              <ProgressRing progress={progress} color={getProgressColor()} />
             </div>
 
             {/* Main Content */}
@@ -328,7 +307,9 @@ function WorkspaceCard({ workspace, index }: { workspace: typeof workspaces[0]; 
                   <Building2 className="w-4 h-4" />
                   {workspace.grant.sponsor}
                 </span>
-                <span className="text-pulse-accent font-medium">{workspace.grant.amount}</span>
+                <span className="text-pulse-accent font-medium">
+                  {formatAmount(workspace.grant.amountMin, workspace.grant.amountMax)}
+                </span>
               </div>
 
               {/* Progress Bar & Tasks */}
@@ -337,7 +318,7 @@ function WorkspaceCard({ workspace, index }: { workspace: typeof workspaces[0]; 
                   <div className="flex items-center gap-4">
                     <span className="text-sm text-pulse-text-tertiary">
                       <CheckCircle2 className="w-4 h-4 inline mr-1.5 text-pulse-accent" />
-                      {workspace.completedTasks}/{workspace.totalTasks} tasks
+                      {completedTasks}/{totalTasks} tasks
                     </span>
                     {daysUntilDeadline !== null && daysUntilDeadline > 0 && (
                       <span className={`text-sm flex items-center gap-1.5 ${
@@ -349,23 +330,23 @@ function WorkspaceCard({ workspace, index }: { workspace: typeof workspaces[0]; 
                         {daysUntilDeadline} days left
                       </span>
                     )}
-                    {workspace.status === 'submitted' && workspace.submittedDate && (
+                    {workspace.status === 'submitted' && (
                       <span className="text-sm text-blue-400">
-                        Submitted {workspace.submittedDate}
+                        Submitted
                       </span>
                     )}
                   </div>
                   <span className="text-xs text-pulse-text-tertiary">
-                    Updated {formatDate(workspace.updatedAt)}
+                    Updated {formatDate(new Date(workspace.updatedAt))}
                   </span>
                 </div>
 
                 {/* Next Step */}
-                {workspace.nextStep && (
+                {nextStep && workspace.status !== 'submitted' && (
                   <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-pulse-surface/50 border border-pulse-border">
                     <Zap className="w-4 h-4 text-pulse-accent shrink-0" />
                     <span className="text-sm text-pulse-text-secondary">
-                      Next: <span className="text-pulse-text">{workspace.nextStep}</span>
+                      Next: <span className="text-pulse-text">{nextStep}</span>
                     </span>
                   </div>
                 )}
@@ -405,10 +386,86 @@ function EmptyWorkspaces() {
   )
 }
 
+// Loading skeleton
+function WorkspacesSkeleton() {
+  return (
+    <div className="p-8 animate-pulse">
+      <div className="mb-8">
+        <div className="h-5 bg-pulse-surface rounded w-32 mb-2" />
+        <div className="h-10 bg-pulse-surface rounded w-64 mb-2" />
+        <div className="h-5 bg-pulse-surface rounded w-96" />
+      </div>
+      <div className="h-20 bg-pulse-surface rounded-2xl mb-6" />
+      <div className="h-24 bg-pulse-surface rounded-2xl mb-6" />
+      <div className="space-y-4">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-40 bg-pulse-surface rounded-2xl" />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Error state
+function WorkspacesError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="p-8 flex items-center justify-center min-h-[60vh]">
+      <GlassCard className="p-8 text-center max-w-md">
+        <div className="w-12 h-12 rounded-full bg-pulse-error/20 flex items-center justify-center mx-auto mb-4">
+          <AlertCircle className="w-6 h-6 text-pulse-error" />
+        </div>
+        <h2 className="text-lg font-semibold text-pulse-text mb-2">
+          Failed to load workspaces
+        </h2>
+        <p className="text-pulse-text-secondary text-sm mb-4">
+          We couldn&apos;t load your workspaces. Please try again.
+        </p>
+        <Button onClick={onRetry}>
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Retry
+        </Button>
+      </GlassCard>
+    </div>
+  )
+}
+
 export default function WorkspacesPage() {
-  const isEmpty = workspaces.length === 0
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'in_progress' | 'submitted'>('all')
 
+  const fetchWorkspaces = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await fetch('/api/user/workspaces')
+      if (!response.ok) {
+        throw new Error('Failed to fetch workspaces')
+      }
+      const data = await response.json()
+      setWorkspaces(data.workspaces || [])
+    } catch (err) {
+      console.error('Workspaces fetch error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load workspaces')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchWorkspaces()
+  }, [fetchWorkspaces])
+
+  if (isLoading) {
+    return <WorkspacesSkeleton />
+  }
+
+  if (error) {
+    return <WorkspacesError onRetry={fetchWorkspaces} />
+  }
+
+  const isEmpty = workspaces.length === 0
   const filteredWorkspaces = filter === 'all'
     ? workspaces
     : workspaces.filter(w => w.status === filter)
@@ -444,10 +501,10 @@ export default function WorkspacesPage() {
       ) : (
         <>
           {/* Stats Summary */}
-          <WorkspaceStats />
+          <WorkspaceStats workspaces={workspaces} />
 
           {/* AI Insights */}
-          <AIInsightsCard />
+          <AIInsightsCard workspaces={workspaces} />
 
           {/* Filter Tabs */}
           <motion.div
@@ -463,7 +520,7 @@ export default function WorkspacesPage() {
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setFilter(tab.id as any)}
+                onClick={() => setFilter(tab.id as 'all' | 'in_progress' | 'submitted')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${
                   filter === tab.id
                     ? 'bg-pulse-accent/10 border-pulse-accent/30 text-pulse-accent'

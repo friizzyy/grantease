@@ -9,10 +9,12 @@
  * - Interactive requirements checklist
  * - Quick actions and workspace creation
  * - GlassCard design throughout
+ * - Real API integration
  */
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback, use } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
   ArrowLeft,
@@ -38,64 +40,72 @@ import {
   Mail,
   Phone,
   Globe,
+  RefreshCw,
+  Loader2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { GlassCard } from '@/components/ui/glass-card'
-import { formatCurrency, formatDate, parseJSON } from '@/lib/utils'
+import { formatCurrency, formatDate } from '@/lib/utils'
+import { useToastActions } from '@/components/ui/toast-provider'
 
-// Mock grant data with enhanced info
-const mockGrant = {
-  id: '1',
-  sourceId: 'NSF-2024-001',
-  sourceName: 'grants_gov',
-  title: 'Small Business Innovation Research (SBIR) Phase I',
-  sponsor: 'National Science Foundation',
-  summary: 'The SBIR program stimulates technological innovation in the private sector by strengthening the role of small business concerns in meeting Federal research and development needs, increasing the commercial application of federally funded research results.',
-  description: 'The National Science Foundation (NSF) SBIR program supports moving scientific excellence and technological innovation from the lab to the market. By funding startups and small businesses, NSF helps build a strong national economy and stimulates the creation of novel products, services, and solutions.\n\nPhase I awards typically provide $275,000 for approximately 6-12 months of research and development. Awardees may apply for Phase II funding of up to $1,000,000 for 24 months to continue development.',
-  categories: ['Small Business', 'Research', 'Technology', 'Innovation'],
-  eligibility: {
-    types: ['Small Business'],
-    raw: 'Must be a US small business with fewer than 500 employees. The Principal Investigator must be primarily employed by the small business at the time of award.'
-  },
-  locations: [{ country: 'US' }],
-  amountMin: 50000,
-  amountMax: 275000,
-  amountText: '$50,000 - $275,000',
-  deadlineType: 'fixed',
-  deadlineDate: new Date('2024-03-15'),
-  daysLeft: 45,
-  postedDate: new Date('2024-01-01'),
-  url: 'https://www.nsf.gov/sbir',
-  contact: { name: 'NSF SBIR Program', email: 'sbir@nsf.gov', phone: '703-292-8050' },
-  requirements: [
-    'Company must be a US-based small business with fewer than 500 employees',
-    'Principal Investigator must be primarily employed by the company',
-    'Project must address an identified technical challenge',
-    'Technical proposal (15 pages max)',
-    'Company commercialization plan',
-    'Budget and budget justification',
-    'Biographical sketches of key personnel',
-    'Current and pending support documentation'
-  ],
-  status: 'open',
-  matchScore: 94,
-  matchBreakdown: {
-    eligibility: 95,
-    mission: 92,
-    funding: 98,
-    timeline: 90,
-  },
-  similarGrants: 3,
-  competitionLevel: 'Medium',
-  avgAwardRate: '23%',
+// Types
+interface Grant {
+  id: string
+  sourceId: string | null
+  sourceName: string | null
+  title: string
+  sponsor: string
+  summary: string | null
+  description: string | null
+  categories: string[]
+  eligibility: string[]
+  locations: Array<{ country?: string; state?: string; city?: string }>
+  amountMin: number | null
+  amountMax: number | null
+  amountText: string | null
+  deadlineType: string | null
+  deadlineDate: string | null
+  postedDate: string | null
+  url: string | null
+  contact: { name?: string; email?: string; phone?: string } | null
+  requirements: string[]
+  status: string
 }
 
-// AI Match Score Card
-function MatchScoreCard({ score, breakdown }: {
-  score: number
-  breakdown: { eligibility: number; mission: number; funding: number; timeline: number }
-}) {
+// Format amount
+function formatAmount(min: number | null, max: number | null, text: string | null): string {
+  if (text) return text
+  if (max && min) return `$${formatCurrency(min)} - $${formatCurrency(max)}`
+  if (max) return `Up to $${formatCurrency(max)}`
+  if (min) return `$${formatCurrency(min)}+`
+  return 'Varies'
+}
+
+// Calculate days left
+function getDaysLeft(deadline: string | null): number | null {
+  if (!deadline) return null
+  const now = new Date()
+  const deadlineDate = new Date(deadline)
+  const diff = deadlineDate.getTime() - now.getTime()
+  return Math.ceil(diff / (1000 * 60 * 60 * 24))
+}
+
+// Get location string
+function getLocationString(locations: Grant['locations']): string {
+  if (!locations || locations.length === 0) return 'Not specified'
+  const loc = locations[0]
+  if (loc.city && loc.state && loc.country) return `${loc.city}, ${loc.state}, ${loc.country}`
+  if (loc.state && loc.country) return `${loc.state}, ${loc.country}`
+  if (loc.country) return loc.country
+  return 'Not specified'
+}
+
+// AI Match Score Card (placeholder scores since we don't have actual AI matching)
+function MatchScoreCard() {
+  const score = 85 // Placeholder
+  const breakdown = { eligibility: 90, mission: 82, funding: 88, timeline: 80 }
+
   const getScoreColor = (s: number) => {
     if (s >= 90) return 'text-pulse-accent'
     if (s >= 80) return 'text-blue-400'
@@ -133,7 +143,7 @@ function MatchScoreCard({ score, breakdown }: {
         </div>
 
         <p className="text-sm text-pulse-text-secondary mb-4">
-          This grant is an excellent match for your organization based on eligibility, mission alignment, and funding needs.
+          Based on your profile, this grant may be a good match for your organization.
         </p>
 
         <div className="space-y-3">
@@ -198,13 +208,161 @@ function RequirementItem({ requirement, index }: { requirement: string; index: n
   )
 }
 
-export default function GrantDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  // Note: In a real implementation, you would use React.use(params) to unwrap the promise
-  // For now, this page uses mock data so the params aren't actively used
-  const grant = mockGrant
-  const [isSaved, setIsSaved] = useState(false)
+// Loading skeleton
+function GrantSkeleton() {
+  return (
+    <div className="p-8 animate-pulse">
+      <div className="h-5 bg-pulse-surface rounded w-40 mb-6" />
+      <div className="h-48 bg-pulse-surface rounded-2xl mb-6" />
+      <div className="grid lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="h-32 bg-pulse-surface rounded-2xl" />
+          <div className="h-48 bg-pulse-surface rounded-2xl" />
+          <div className="h-64 bg-pulse-surface rounded-2xl" />
+        </div>
+        <div className="space-y-6">
+          <div className="h-48 bg-pulse-surface rounded-2xl" />
+          <div className="h-64 bg-pulse-surface rounded-2xl" />
+        </div>
+      </div>
+    </div>
+  )
+}
 
-  const isUrgent = grant.daysLeft <= 14
+// Error state
+function GrantError({ onRetry, error }: { onRetry: () => void; error: string }) {
+  return (
+    <div className="p-8 flex items-center justify-center min-h-[60vh]">
+      <GlassCard className="p-8 text-center max-w-md">
+        <div className="w-12 h-12 rounded-full bg-pulse-error/20 flex items-center justify-center mx-auto mb-4">
+          <AlertCircle className="w-6 h-6 text-pulse-error" />
+        </div>
+        <h2 className="text-lg font-semibold text-pulse-text mb-2">
+          Failed to load grant
+        </h2>
+        <p className="text-pulse-text-secondary text-sm mb-4">
+          {error || 'We couldn\'t load this grant. Please try again.'}
+        </p>
+        <div className="flex gap-3 justify-center">
+          <Button variant="outline" asChild>
+            <Link href="/app/discover">Back to Discovery</Link>
+          </Button>
+          <Button onClick={onRetry}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+      </GlassCard>
+    </div>
+  )
+}
+
+export default function GrantDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
+  const router = useRouter()
+  const toast = useToastActions()
+
+  const [grant, setGrant] = useState<Grant | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isSaved, setIsSaved] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false)
+
+  const fetchGrant = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`/api/grants/${id}`)
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Grant not found')
+        }
+        throw new Error('Failed to fetch grant')
+      }
+      const data = await response.json()
+      setGrant(data)
+
+      // Check if grant is saved
+      const savedResponse = await fetch('/api/user/saved-grants')
+      if (savedResponse.ok) {
+        const savedData = await savedResponse.json()
+        const savedGrants = savedData.savedGrants || []
+        setIsSaved(savedGrants.some((sg: { grantId: string }) => sg.grantId === id))
+      }
+    } catch (err) {
+      console.error('Grant fetch error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load grant')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [id])
+
+  useEffect(() => {
+    fetchGrant()
+  }, [fetchGrant])
+
+  const handleSaveGrant = async () => {
+    setIsSaving(true)
+    try {
+      if (isSaved) {
+        // Unsave the grant
+        const response = await fetch(`/api/user/saved-grants?grantId=${id}`, {
+          method: 'DELETE',
+        })
+        if (!response.ok) throw new Error('Failed to remove grant')
+        setIsSaved(false)
+        toast.success('Grant removed', 'Grant has been removed from your saved list.')
+      } else {
+        // Save the grant
+        const response = await fetch('/api/user/saved-grants', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ grantId: id }),
+        })
+        if (!response.ok) throw new Error('Failed to save grant')
+        setIsSaved(true)
+        toast.success('Grant saved', 'Grant has been added to your saved list.')
+      }
+    } catch (err) {
+      console.error('Save error:', err)
+      toast.error('Failed to save', err instanceof Error ? err.message : 'Please try again.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleStartApplication = async () => {
+    setIsCreatingWorkspace(true)
+    try {
+      const response = await fetch('/api/user/workspaces', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ grantId: id }),
+      })
+      if (!response.ok) throw new Error('Failed to create workspace')
+      const data = await response.json()
+      toast.success('Workspace created', 'Your application workspace is ready.')
+      router.push(`/app/workspace/${data.workspace.id}`)
+    } catch (err) {
+      console.error('Workspace creation error:', err)
+      toast.error('Failed to create workspace', err instanceof Error ? err.message : 'Please try again.')
+    } finally {
+      setIsCreatingWorkspace(false)
+    }
+  }
+
+  if (isLoading) {
+    return <GrantSkeleton />
+  }
+
+  if (error || !grant) {
+    return <GrantError onRetry={fetchGrant} error={error || 'Grant not found'} />
+  }
+
+  const daysLeft = getDaysLeft(grant.deadlineDate)
+  const isUrgent = daysLeft !== null && daysLeft <= 14 && daysLeft > 0
+  const amountDisplay = formatAmount(grant.amountMin, grant.amountMax, grant.amountText)
 
   return (
     <div className="p-8">
@@ -252,7 +410,7 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
             {/* Match Score Badge */}
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-pulse-accent/10 border border-pulse-accent/30 shrink-0">
               <Target className="w-5 h-5 text-pulse-accent" />
-              <span className="text-xl font-bold text-pulse-accent">{grant.matchScore}%</span>
+              <span className="text-xl font-bold text-pulse-accent">85%</span>
               <span className="text-sm text-pulse-text-tertiary">match</span>
             </div>
           </div>
@@ -261,22 +419,20 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
           <div className="flex flex-wrap items-center gap-6 py-4 border-t border-b border-pulse-border mb-4">
             <div className="flex items-center gap-2">
               <DollarSign className="w-5 h-5 text-pulse-accent" />
-              <span className="text-lg font-semibold text-pulse-text">{grant.amountText}</span>
+              <span className="text-lg font-semibold text-pulse-text">{amountDisplay}</span>
             </div>
-            <div className={`flex items-center gap-2 ${isUrgent ? 'text-pulse-error' : 'text-pulse-text-tertiary'}`}>
-              <Calendar className="w-5 h-5" />
-              <span className="font-medium">
-                {grant.daysLeft} days left
-                {isUrgent && <AlertCircle className="w-4 h-4 ml-1 inline" />}
-              </span>
-            </div>
+            {daysLeft !== null && (
+              <div className={`flex items-center gap-2 ${isUrgent ? 'text-pulse-error' : 'text-pulse-text-tertiary'}`}>
+                <Calendar className="w-5 h-5" />
+                <span className="font-medium">
+                  {daysLeft > 0 ? `${daysLeft} days left` : 'Deadline passed'}
+                  {isUrgent && <AlertCircle className="w-4 h-4 ml-1 inline" />}
+                </span>
+              </div>
+            )}
             <div className="flex items-center gap-2 text-pulse-text-tertiary">
               <MapPin className="w-5 h-5" />
-              <span>United States</span>
-            </div>
-            <div className="flex items-center gap-2 text-pulse-text-tertiary">
-              <TrendingUp className="w-5 h-5" />
-              <span>{grant.competitionLevel} competition • {grant.avgAwardRate} success rate</span>
+              <span>{getLocationString(grant.locations)}</span>
             </div>
           </div>
 
@@ -284,10 +440,13 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
           <div className="flex flex-wrap gap-3">
             <Button
               variant={isSaved ? 'outline' : 'default'}
-              onClick={() => setIsSaved(!isSaved)}
+              onClick={handleSaveGrant}
+              disabled={isSaving}
               className={isSaved ? 'border-pulse-accent text-pulse-accent' : ''}
             >
-              {isSaved ? (
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : isSaved ? (
                 <>
                   <BookmarkCheck className="w-4 h-4 mr-2" />
                   Saved
@@ -299,16 +458,26 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
                 </>
               )}
             </Button>
-            <Button variant="secondary">
-              <FolderPlus className="w-4 h-4 mr-2" />
+            <Button
+              variant="secondary"
+              onClick={handleStartApplication}
+              disabled={isCreatingWorkspace}
+            >
+              {isCreatingWorkspace ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <FolderPlus className="w-4 h-4 mr-2" />
+              )}
               Start Application
             </Button>
-            <Button variant="outline" asChild>
-              <a href={grant.url} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="w-4 h-4 mr-2" />
-                View Original
-              </a>
-            </Button>
+            {grant.url && (
+              <Button variant="outline" asChild>
+                <a href={grant.url} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  View Original
+                </a>
+              </Button>
+            )}
             <Button variant="ghost">
               <Share2 className="w-4 h-4 mr-2" />
               Share
@@ -335,16 +504,13 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
                 <div className="flex-1">
                   <h3 className="text-sm font-semibold text-pulse-text mb-2">AI Analysis</h3>
                   <p className="text-sm text-pulse-text-secondary mb-3">
-                    Based on your organization profile, this grant is an excellent fit. Your experience in technology innovation aligns well with NSF's SBIR program goals. Consider highlighting your prototype results and market validation.
+                    This grant appears to be a good fit based on your profile. Review the eligibility requirements carefully and consider highlighting relevant experience in your application.
                   </p>
                   <div className="flex items-center gap-2">
                     <Button size="sm">
                       <Zap className="w-4 h-4 mr-1" />
                       Get Application Help
                     </Button>
-                    <span className="text-xs text-pulse-text-tertiary">
-                      {grant.similarGrants} similar grants available
-                    </span>
                   </div>
                 </div>
               </div>
@@ -359,70 +525,72 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
           >
             <GlassCard className="p-6">
               <h2 className="text-lg font-semibold text-pulse-text mb-4">Overview</h2>
-              <p className="text-sm text-pulse-text-secondary whitespace-pre-line mb-4">
-                {grant.summary}
-              </p>
+              {grant.summary && (
+                <p className="text-sm text-pulse-text-secondary whitespace-pre-line mb-4">
+                  {grant.summary}
+                </p>
+              )}
               {grant.description && (
-                <div className="pt-4 border-t border-pulse-border">
+                <div className={grant.summary ? 'pt-4 border-t border-pulse-border' : ''}>
                   <p className="text-sm text-pulse-text-secondary whitespace-pre-line">
                     {grant.description}
                   </p>
                 </div>
               )}
+              {!grant.summary && !grant.description && (
+                <p className="text-sm text-pulse-text-tertiary italic">
+                  No detailed description available. Visit the original source for more information.
+                </p>
+              )}
             </GlassCard>
           </motion.div>
 
           {/* Eligibility */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-          >
-            <GlassCard className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-pulse-text">Eligibility</h2>
-                <Badge variant="success" className="flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" />
-                  You qualify
-                </Badge>
-              </div>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {grant.eligibility.types.map((type) => (
-                  <Badge key={type} variant="accent">{type}</Badge>
-                ))}
-              </div>
-              <p className="text-sm text-pulse-text-secondary">
-                {grant.eligibility.raw}
-              </p>
-            </GlassCard>
-          </motion.div>
+          {grant.eligibility.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+            >
+              <GlassCard className="p-6">
+                <h2 className="text-lg font-semibold text-pulse-text mb-4">Eligibility</h2>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {grant.eligibility.map((type, i) => (
+                    <Badge key={i} variant="accent">{type}</Badge>
+                  ))}
+                </div>
+              </GlassCard>
+            </motion.div>
+          )}
 
           {/* Requirements Checklist */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <GlassCard className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-pulse-text">Requirements Checklist</h2>
-                <span className="text-sm text-pulse-text-tertiary">
-                  Click to track progress
-                </span>
-              </div>
-              <div className="space-y-2">
-                {grant.requirements.map((req, index) => (
-                  <RequirementItem key={index} requirement={req} index={index} />
-                ))}
-              </div>
-            </GlassCard>
-          </motion.div>
+          {grant.requirements.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <GlassCard className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-pulse-text">Requirements Checklist</h2>
+                  <span className="text-sm text-pulse-text-tertiary">
+                    Click to track progress
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {grant.requirements.map((req, index) => (
+                    <RequirementItem key={index} requirement={req} index={index} />
+                  ))}
+                </div>
+              </GlassCard>
+            </motion.div>
+          )}
         </div>
 
         {/* Right Column - Sidebar */}
         <div className="space-y-6">
           {/* Match Score Card */}
-          <MatchScoreCard score={grant.matchScore} breakdown={grant.matchBreakdown} />
+          <MatchScoreCard />
 
           {/* Key Details */}
           <motion.div
@@ -440,24 +608,28 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
                   </div>
                   <div>
                     <p className="text-xs text-pulse-text-tertiary uppercase tracking-wider">Funding Amount</p>
-                    <p className="text-sm font-semibold text-pulse-text">{grant.amountText}</p>
+                    <p className="text-sm font-semibold text-pulse-text">{amountDisplay}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                    isUrgent ? 'bg-pulse-error/10 border border-pulse-error/20' : 'bg-pulse-accent/10 border border-pulse-accent/20'
-                  }`}>
-                    <Calendar className={`w-4 h-4 ${isUrgent ? 'text-pulse-error' : 'text-pulse-accent'}`} />
+                {grant.deadlineDate && (
+                  <div className="flex items-start gap-3">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                      isUrgent ? 'bg-pulse-error/10 border border-pulse-error/20' : 'bg-pulse-accent/10 border border-pulse-accent/20'
+                    }`}>
+                      <Calendar className={`w-4 h-4 ${isUrgent ? 'text-pulse-error' : 'text-pulse-accent'}`} />
+                    </div>
+                    <div>
+                      <p className="text-xs text-pulse-text-tertiary uppercase tracking-wider">Deadline</p>
+                      <p className={`text-sm font-semibold ${isUrgent ? 'text-pulse-error' : 'text-pulse-text'}`}>
+                        {formatDate(new Date(grant.deadlineDate))}
+                      </p>
+                      {daysLeft !== null && daysLeft > 0 && (
+                        <p className="text-xs text-pulse-text-tertiary">{daysLeft} days remaining</p>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-pulse-text-tertiary uppercase tracking-wider">Deadline</p>
-                    <p className={`text-sm font-semibold ${isUrgent ? 'text-pulse-error' : 'text-pulse-text'}`}>
-                      {formatDate(grant.deadlineDate)}
-                    </p>
-                    <p className="text-xs text-pulse-text-tertiary">{grant.daysLeft} days remaining</p>
-                  </div>
-                </div>
+                )}
 
                 <div className="flex items-start gap-3">
                   <div className="w-9 h-9 rounded-lg bg-pulse-accent/10 border border-pulse-accent/20 flex items-center justify-center shrink-0">
@@ -465,19 +637,21 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
                   </div>
                   <div>
                     <p className="text-xs text-pulse-text-tertiary uppercase tracking-wider">Location</p>
-                    <p className="text-sm font-semibold text-pulse-text">United States</p>
+                    <p className="text-sm font-semibold text-pulse-text">{getLocationString(grant.locations)}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-pulse-accent/10 border border-pulse-accent/20 flex items-center justify-center shrink-0">
-                    <Clock className="w-4 h-4 text-pulse-accent" />
+                {grant.postedDate && (
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-pulse-accent/10 border border-pulse-accent/20 flex items-center justify-center shrink-0">
+                      <Clock className="w-4 h-4 text-pulse-accent" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-pulse-text-tertiary uppercase tracking-wider">Posted</p>
+                      <p className="text-sm font-semibold text-pulse-text">{formatDate(new Date(grant.postedDate))}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-pulse-text-tertiary uppercase tracking-wider">Posted</p>
-                    <p className="text-sm font-semibold text-pulse-text">{formatDate(grant.postedDate)}</p>
-                  </div>
-                </div>
+                )}
 
                 <div className="flex items-start gap-3">
                   <div className="w-9 h-9 rounded-lg bg-pulse-accent/10 border border-pulse-accent/20 flex items-center justify-center shrink-0">
@@ -493,32 +667,40 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
           </motion.div>
 
           {/* Contact */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <GlassCard className="p-6">
-              <h2 className="text-lg font-semibold text-pulse-text mb-4">Contact</h2>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <Users className="w-4 h-4 text-pulse-text-tertiary" />
-                  <span className="text-sm text-pulse-text">{grant.contact.name}</span>
+          {grant.contact && (grant.contact.name || grant.contact.email || grant.contact.phone) && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <GlassCard className="p-6">
+                <h2 className="text-lg font-semibold text-pulse-text mb-4">Contact</h2>
+                <div className="space-y-3">
+                  {grant.contact.name && (
+                    <div className="flex items-center gap-3">
+                      <Users className="w-4 h-4 text-pulse-text-tertiary" />
+                      <span className="text-sm text-pulse-text">{grant.contact.name}</span>
+                    </div>
+                  )}
+                  {grant.contact.email && (
+                    <a
+                      href={`mailto:${grant.contact.email}`}
+                      className="flex items-center gap-3 text-sm text-pulse-accent hover:underline"
+                    >
+                      <Mail className="w-4 h-4" />
+                      {grant.contact.email}
+                    </a>
+                  )}
+                  {grant.contact.phone && (
+                    <div className="flex items-center gap-3">
+                      <Phone className="w-4 h-4 text-pulse-text-tertiary" />
+                      <span className="text-sm text-pulse-text-secondary">{grant.contact.phone}</span>
+                    </div>
+                  )}
                 </div>
-                <a
-                  href={`mailto:${grant.contact.email}`}
-                  className="flex items-center gap-3 text-sm text-pulse-accent hover:underline"
-                >
-                  <Mail className="w-4 h-4" />
-                  {grant.contact.email}
-                </a>
-                <div className="flex items-center gap-3">
-                  <Phone className="w-4 h-4 text-pulse-text-tertiary" />
-                  <span className="text-sm text-pulse-text-secondary">{grant.contact.phone}</span>
-                </div>
-              </div>
-            </GlassCard>
-          </motion.div>
+              </GlassCard>
+            </motion.div>
+          )}
 
           {/* Source */}
           <motion.div
@@ -530,11 +712,13 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
               <h2 className="text-sm font-medium text-pulse-text-secondary mb-3">Data Source</h2>
               <div className="flex items-center gap-2 text-sm text-pulse-text-tertiary">
                 <Globe className="w-4 h-4" />
-                <span>Grants.gov</span>
+                <span>{grant.sourceName || 'GrantEase'}</span>
               </div>
-              <p className="text-xs text-pulse-text-tertiary mt-2">
-                ID: {grant.sourceId}
-              </p>
+              {grant.sourceId && (
+                <p className="text-xs text-pulse-text-tertiary mt-2">
+                  ID: {grant.sourceId}
+                </p>
+              )}
             </GlassCard>
           </motion.div>
         </div>

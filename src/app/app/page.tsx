@@ -17,59 +17,95 @@ import {
   Target,
   Zap,
   FolderOpen,
+  RefreshCw,
+  AlertCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { GlassCard } from '@/components/ui/glass-card'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
+import { useSession } from 'next-auth/react'
 
-// Mock data
-const fundingPotential = 2450000
-const applicationStages = [
-  { name: 'Discovered', count: 24, color: '#40ffaa' },
-  { name: 'In Progress', count: 8, color: '#ffb340' },
-  { name: 'Submitted', count: 12, color: '#40a0ff' },
-  { name: 'Awarded', count: 3, color: '#a040ff' },
-]
+// Types for API response
+interface DashboardData {
+  user: {
+    id: string
+    name: string | null
+    email: string
+    organization: string | null
+    hasCompletedOnboarding: boolean
+  }
+  stats: {
+    savedGrants: number
+    workspaces: number
+    savedSearches: number
+    fundingPotential: number
+    unreadNotifications: number
+  }
+  applicationStages: Array<{
+    name: string
+    count: number
+    color: string
+  }>
+  upcomingDeadlines: Array<{
+    id: string
+    title: string
+    type: 'saved' | 'workspace'
+    deadline: string | null
+    amount: number | null
+    progress: number
+    href: string
+    daysLeft: number | null
+    urgent: boolean
+  }>
+  topCategories: Array<{
+    name: string
+    count: number
+  }>
+  aiStats: {
+    grantsAnalyzed: number
+    matchesFound: number
+    timeSaved: string
+    successRate: number
+  }
+  recentActivity: {
+    lastSavedGrant: string | null
+    lastWorkspaceUpdate: string | null
+  }
+}
 
+// Default AI recommendations (static for now, could be from API later)
 const aiRecommendations = [
   {
     id: 'rec-1',
     type: 'opportunity',
     icon: Target,
-    priority: 'high',
-    title: '94% match found',
-    description: 'NSF SBIR Phase II perfectly matches your tech profile',
-    action: 'View Grant',
-    href: '/app/grants/1',
-    amount: '$1M',
+    priority: 'high' as const,
+    title: 'Find your best matches',
+    description: 'Discover grants tailored to your organization profile',
+    action: 'Explore Grants',
+    href: '/app/discover',
   },
   {
     id: 'rec-2',
     type: 'insight',
     icon: Lightbulb,
-    priority: 'normal',
-    title: 'Success pattern',
-    description: 'Add budget breakdown to increase approval odds by 40%',
-    action: 'Learn More',
-    href: '/app/workspace/1',
+    priority: 'normal' as const,
+    title: 'Improve success rate',
+    description: 'Complete your profile to get better AI-powered recommendations',
+    action: 'Update Profile',
+    href: '/app/settings',
   },
   {
     id: 'rec-3',
     type: 'action',
     icon: Zap,
-    priority: 'normal',
-    title: 'Quick win',
-    description: 'Reuse 60% of your HUD application for the EPA grant',
-    action: 'Start Draft',
+    priority: 'normal' as const,
+    title: 'Start an application',
+    description: 'Create a workspace to begin drafting your grant application',
+    action: 'New Workspace',
     href: '/app/workspace/new',
   },
-]
-
-const upcomingDeadlines = [
-  { id: 'd1', title: 'SBIR Phase I', days: 3, amount: '$275K', urgent: true, progress: 75, href: '/app/workspace/1' },
-  { id: 'd2', title: 'Community Block Grant', days: 12, amount: '$500K', urgent: false, progress: 30, href: '/app/workspace/2' },
-  { id: 'd3', title: 'EPA Environmental', days: 28, amount: '$150K', urgent: false, progress: 0, href: '/app/grants/3' },
 ]
 
 const quickCommands = [
@@ -148,9 +184,6 @@ function AIRecommendationCard({ rec, index }: { rec: typeof aiRecommendations[0]
               <p className="text-sm font-medium text-pulse-text group-hover:text-pulse-accent transition-colors">
                 {rec.title}
               </p>
-              {rec.amount && (
-                <Badge variant="success" className="text-xs">{rec.amount}</Badge>
-              )}
             </div>
             <p className="text-xs text-pulse-text-secondary line-clamp-2 mb-2">
               {rec.description}
@@ -166,10 +199,109 @@ function AIRecommendationCard({ rec, index }: { rec: typeof aiRecommendations[0]
   )
 }
 
+// Loading skeleton
+function DashboardSkeleton() {
+  return (
+    <div className="p-8 animate-pulse">
+      <div className="mb-8">
+        <div className="h-4 bg-pulse-surface rounded w-32 mb-2" />
+        <div className="h-10 bg-pulse-surface rounded w-64 mb-6" />
+        <div className="h-32 bg-pulse-surface rounded-2xl" />
+      </div>
+      <div className="grid grid-cols-12 gap-5">
+        <div className="col-span-4 h-40 bg-pulse-surface rounded-2xl" />
+        <div className="col-span-8 h-40 bg-pulse-surface rounded-2xl" />
+        <div className="col-span-12 h-48 bg-pulse-surface rounded-2xl" />
+        <div className="col-span-7 h-64 bg-pulse-surface rounded-2xl" />
+        <div className="col-span-5 h-64 bg-pulse-surface rounded-2xl" />
+      </div>
+    </div>
+  )
+}
+
+// Error state
+function DashboardError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="p-8 flex items-center justify-center min-h-[60vh]">
+      <GlassCard className="p-8 text-center max-w-md">
+        <div className="w-12 h-12 rounded-full bg-pulse-error/20 flex items-center justify-center mx-auto mb-4">
+          <AlertCircle className="w-6 h-6 text-pulse-error" />
+        </div>
+        <h2 className="text-lg font-semibold text-pulse-text mb-2">
+          Failed to load dashboard
+        </h2>
+        <p className="text-pulse-text-secondary text-sm mb-4">
+          We couldn&apos;t load your dashboard data. Please try again.
+        </p>
+        <Button onClick={onRetry}>
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Retry
+        </Button>
+      </GlassCard>
+    </div>
+  )
+}
+
+// Format currency
+function formatCurrency(amount: number): string {
+  if (amount >= 1000000) {
+    return `$${(amount / 1000000).toFixed(1)}M`
+  } else if (amount >= 1000) {
+    return `$${(amount / 1000).toFixed(0)}K`
+  }
+  return `$${amount}`
+}
+
+// Get greeting based on time
+function getGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 17) return 'Good afternoon'
+  return 'Good evening'
+}
+
 export default function AppDashboard() {
+  const { data: session } = useSession()
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [inputValue, setInputValue] = useState('')
   const [commandBarFocused, setCommandBarFocused] = useState(false)
+
+  const fetchDashboard = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await fetch('/api/dashboard')
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard')
+      }
+      const data = await response.json()
+      setDashboardData(data)
+    } catch (err) {
+      console.error('Dashboard fetch error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchDashboard()
+  }, [fetchDashboard])
+
+  if (isLoading) {
+    return <DashboardSkeleton />
+  }
+
+  if (error || !dashboardData) {
+    return <DashboardError onRetry={fetchDashboard} />
+  }
+
+  const { user, stats, applicationStages, upcomingDeadlines, aiStats } = dashboardData
   const totalGrants = applicationStages.reduce((sum, s) => sum + s.count, 0)
+  const userName = user.name || session?.user?.name || 'there'
+  const firstName = userName.split(' ')[0]
 
   return (
     <div className="p-8">
@@ -185,7 +317,7 @@ export default function AppDashboard() {
               Command Center
             </p>
             <h1 className="font-serif text-display text-pulse-text">
-              Good morning, Sarah
+              {getGreeting()}, {firstName}
             </h1>
           </div>
           <Button size="sm" asChild>
@@ -272,11 +404,15 @@ export default function AppDashboard() {
                 <span className="text-pulse-text-secondary text-xs">Funding Potential</span>
               </div>
               <div className="font-serif text-heading-lg text-pulse-text mb-1">
-                <AnimatedValue value={fundingPotential} prefix="$" />
+                {stats.fundingPotential > 0 ? (
+                  <AnimatedValue value={stats.fundingPotential} prefix="$" />
+                ) : (
+                  <span className="text-pulse-text-secondary">$0</span>
+                )}
               </div>
               <p className="text-pulse-accent text-xs flex items-center gap-1">
                 <TrendingUp className="w-3 h-3" />
-                +$450K this week
+                {stats.savedGrants} grants saved
               </p>
             </div>
           </GlassCard>
@@ -294,23 +430,35 @@ export default function AppDashboard() {
               <h3 className="text-sm font-semibold text-pulse-text">Application Pipeline</h3>
               <span className="text-pulse-text-tertiary text-xs">{totalGrants} grants</span>
             </div>
-            <div className="grid grid-cols-4 gap-4">
-              {applicationStages.map((stage, i) => (
-                <motion.div
-                  key={stage.name}
-                  className="text-center"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.25 + i * 0.1 }}
-                >
-                  <div className="relative inline-flex items-center justify-center mb-2">
-                    <ProgressRing progress={(stage.count / totalGrants) * 100} color={stage.color} />
-                    <span className="absolute text-base font-semibold text-pulse-text">{stage.count}</span>
-                  </div>
-                  <p className="text-xs text-pulse-text-secondary">{stage.name}</p>
-                </motion.div>
-              ))}
-            </div>
+            {totalGrants > 0 ? (
+              <div className="grid grid-cols-4 gap-4">
+                {applicationStages.map((stage, i) => (
+                  <motion.div
+                    key={stage.name}
+                    className="text-center"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.25 + i * 0.1 }}
+                  >
+                    <div className="relative inline-flex items-center justify-center mb-2">
+                      <ProgressRing progress={totalGrants > 0 ? (stage.count / totalGrants) * 100 : 0} color={stage.color} />
+                      <span className="absolute text-base font-semibold text-pulse-text">{stage.count}</span>
+                    </div>
+                    <p className="text-xs text-pulse-text-secondary">{stage.name}</p>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-12 h-12 rounded-full bg-pulse-surface flex items-center justify-center mb-3">
+                  <Bookmark className="w-5 h-5 text-pulse-text-tertiary" />
+                </div>
+                <p className="text-sm text-pulse-text-secondary mb-2">No grants in your pipeline yet</p>
+                <Button size="sm" variant="outline" asChild>
+                  <Link href="/app/discover">Discover Grants</Link>
+                </Button>
+              </div>
+            )}
           </GlassCard>
         </motion.div>
 
@@ -319,7 +467,6 @@ export default function AppDashboard() {
           <div className="flex items-center gap-2 mb-4">
             <Sparkles className="w-4 h-4 text-pulse-accent" />
             <h3 className="text-sm font-semibold text-pulse-text">AI Recommendations</h3>
-            <Badge variant="success" className="text-xs">3 new</Badge>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {aiRecommendations.map((rec, i) => (
@@ -345,47 +492,61 @@ export default function AppDashboard() {
                 <Link href="/app/workspace">View all</Link>
               </Button>
             </div>
-            <div className="space-y-3">
-              {upcomingDeadlines.map((deadline, i) => (
-                <motion.div
-                  key={deadline.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 + i * 0.1 }}
-                >
-                  <Link
-                    href={deadline.href}
-                    className={`block p-3 rounded-xl border transition-all hover:border-pulse-accent/30 ${
-                      deadline.urgent ? 'bg-pulse-error/10 border-pulse-error/30' : 'bg-pulse-surface/50 border-pulse-border'
-                    }`}
+            {upcomingDeadlines.length > 0 ? (
+              <div className="space-y-3">
+                {upcomingDeadlines.map((deadline, i) => (
+                  <motion.div
+                    key={deadline.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5 + i * 0.1 }}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-pulse-text text-sm">{deadline.title}</span>
-                        {deadline.urgent && <Badge variant="error" className="text-xs">Urgent</Badge>}
+                    <Link
+                      href={deadline.href}
+                      className={`block p-3 rounded-xl border transition-all hover:border-pulse-accent/30 ${
+                        deadline.urgent ? 'bg-pulse-error/10 border-pulse-error/30' : 'bg-pulse-surface/50 border-pulse-border'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-pulse-text text-sm line-clamp-1">{deadline.title}</span>
+                          {deadline.urgent && <Badge variant="error" className="text-xs shrink-0">Urgent</Badge>}
+                        </div>
+                        {deadline.amount && (
+                          <span className="text-pulse-accent text-sm font-medium shrink-0">
+                            {formatCurrency(deadline.amount)}
+                          </span>
+                        )}
                       </div>
-                      <span className="text-pulse-accent text-sm font-medium">{deadline.amount}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 h-1.5 bg-pulse-border rounded-full overflow-hidden">
-                        <motion.div
-                          className="h-full bg-pulse-accent rounded-full"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${deadline.progress}%` }}
-                          transition={{ duration: 0.8, delay: 0.6 + i * 0.1 }}
-                        />
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 h-1.5 bg-pulse-border rounded-full overflow-hidden">
+                          <motion.div
+                            className="h-full bg-pulse-accent rounded-full"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${deadline.progress}%` }}
+                            transition={{ duration: 0.8, delay: 0.6 + i * 0.1 }}
+                          />
+                        </div>
+                        <span className="text-xs text-pulse-text-tertiary w-16 text-right">
+                          {deadline.progress}% done
+                        </span>
+                        <span className={`text-xs shrink-0 ${deadline.urgent ? 'text-pulse-error' : 'text-pulse-text-tertiary'}`}>
+                          {deadline.daysLeft !== null ? `${deadline.daysLeft}d left` : 'No deadline'}
+                        </span>
                       </div>
-                      <span className="text-xs text-pulse-text-tertiary w-16 text-right">
-                        {deadline.progress}% done
-                      </span>
-                      <span className={`text-xs ${deadline.urgent ? 'text-pulse-error' : 'text-pulse-text-tertiary'}`}>
-                        {deadline.days}d left
-                      </span>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-12 h-12 rounded-full bg-pulse-surface flex items-center justify-center mb-3">
+                  <Clock className="w-5 h-5 text-pulse-text-tertiary" />
+                </div>
+                <p className="text-sm text-pulse-text-secondary mb-2">No upcoming deadlines</p>
+                <p className="text-xs text-pulse-text-tertiary">Save grants to track their deadlines</p>
+              </div>
+            )}
           </GlassCard>
         </motion.div>
 
@@ -403,19 +564,19 @@ export default function AppDashboard() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="p-3 rounded-xl bg-pulse-surface/50 border border-pulse-border">
-                <p className="text-2xl font-semibold text-pulse-text">2,847</p>
+                <p className="text-2xl font-semibold text-pulse-text">{aiStats.grantsAnalyzed.toLocaleString()}</p>
                 <p className="text-xs text-pulse-text-tertiary">Grants analyzed</p>
               </div>
               <div className="p-3 rounded-xl bg-pulse-surface/50 border border-pulse-border">
-                <p className="text-2xl font-semibold text-pulse-accent">124</p>
+                <p className="text-2xl font-semibold text-pulse-accent">{aiStats.matchesFound}</p>
                 <p className="text-xs text-pulse-text-tertiary">Matches found</p>
               </div>
               <div className="p-3 rounded-xl bg-pulse-surface/50 border border-pulse-border">
-                <p className="text-2xl font-semibold text-pulse-text">~47h</p>
+                <p className="text-2xl font-semibold text-pulse-text">{aiStats.timeSaved}</p>
                 <p className="text-xs text-pulse-text-tertiary">Time saved</p>
               </div>
               <div className="p-3 rounded-xl bg-pulse-surface/50 border border-pulse-border">
-                <p className="text-2xl font-semibold text-pulse-text">23%</p>
+                <p className="text-2xl font-semibold text-pulse-text">{aiStats.successRate}%</p>
                 <p className="text-xs text-pulse-text-tertiary">Success rate</p>
               </div>
             </div>
@@ -423,9 +584,9 @@ export default function AppDashboard() {
             {/* Quick Links */}
             <div className="mt-4 pt-4 border-t border-pulse-border space-y-2">
               {[
-                { icon: Search, label: 'Discover Grants', href: '/app/discover' },
-                { icon: Bookmark, label: 'Saved Grants', href: '/app/saved' },
-                { icon: FolderOpen, label: 'Workspaces', href: '/app/workspace' },
+                { icon: Search, label: 'Discover Grants', href: '/app/discover', count: null },
+                { icon: Bookmark, label: 'Saved Grants', href: '/app/saved', count: stats.savedGrants },
+                { icon: FolderOpen, label: 'Workspaces', href: '/app/workspace', count: stats.workspaces },
               ].map((item) => (
                 <Link
                   key={item.label}
@@ -436,7 +597,12 @@ export default function AppDashboard() {
                     <item.icon className="w-4 h-4 text-pulse-text-tertiary group-hover:text-pulse-accent transition-colors" />
                     <span className="text-sm text-pulse-text-secondary group-hover:text-pulse-text transition-colors">{item.label}</span>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-pulse-text-tertiary group-hover:text-pulse-accent transition-colors" />
+                  <div className="flex items-center gap-2">
+                    {item.count !== null && item.count > 0 && (
+                      <span className="text-xs text-pulse-text-tertiary">{item.count}</span>
+                    )}
+                    <ChevronRight className="w-4 h-4 text-pulse-text-tertiary group-hover:text-pulse-accent transition-colors" />
+                  </div>
                 </Link>
               ))}
             </div>

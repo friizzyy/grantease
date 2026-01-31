@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import '@/styles/globals.css'
 import { MotionProvider } from '@/lib/motion/motion-context'
+import { SessionProvider } from '@/components/providers/session-provider'
+import { ToastProvider } from '@/components/ui/toast-provider'
 import { Agentation } from 'agentation'
 
 export const metadata: Metadata = {
@@ -54,9 +56,13 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-pulse-bg text-pulse-text antialiased font-sans">
-        <MotionProvider>
-          {children}
-        </MotionProvider>
+        <SessionProvider>
+          <MotionProvider>
+            <ToastProvider>
+              {children}
+            </ToastProvider>
+          </MotionProvider>
+        </SessionProvider>
         {process.env.NODE_ENV === 'development' && <Agentation />}
       </body>
     </html>

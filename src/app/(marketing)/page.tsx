@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight, CheckCircle2, X, Check, Bell, FolderOpen, Target, Search } from 'lucide-react'
 import { HeroSearch } from '@/components/marketing/HeroSearch'
+import { FloatingCard, PulsingDot } from '@/components/marketing/HeroAnimations'
 
 export default function HomePage() {
   return (
@@ -15,26 +16,26 @@ export default function HomePage() {
 
         <div className="max-w-7xl mx-auto w-full relative z-10">
           {/* Floating stats - Left */}
-          <div className="hidden lg:block absolute top-1/4 left-0">
+          <FloatingCard className="hidden lg:block absolute top-1/4 left-0" delay={0}>
             <div className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-5">
               <div className="text-3xl font-bold text-pulse-text mb-1">$12B+</div>
               <div className="text-sm text-pulse-text-tertiary">Available funding</div>
             </div>
-          </div>
+          </FloatingCard>
 
           {/* Floating stats - Right */}
-          <div className="hidden lg:block absolute top-1/3 right-0">
+          <FloatingCard className="hidden lg:block absolute top-1/3 right-0" delay={1}>
             <div className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-5">
               <div className="text-3xl font-bold text-pulse-accent mb-1">20,000+</div>
               <div className="text-sm text-pulse-text-tertiary">Active grants</div>
             </div>
-          </div>
+          </FloatingCard>
 
           <div className="text-center max-w-4xl mx-auto">
             {/* Premium badge */}
             <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/[0.03] backdrop-blur-md border border-white/[0.08] mb-10">
               <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-pulse-accent" />
+                <PulsingDot />
                 <span className="text-xs font-medium text-pulse-accent uppercase tracking-wider">Live</span>
               </div>
               <div className="w-px h-4 bg-white/10" />

@@ -30,7 +30,21 @@
       "Bash(git remote set-url:*)",
       "Bash(git config:*)",
       "Bash(npx tsc:*)",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "Bash(openssl rand:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(npm run db:seed:*)",
+      "WebFetch(domain:www.grants.gov)",
+      "WebFetch(domain:open.gsa.gov)",
+      "WebFetch(domain:api.usaspending.gov)",
+      "WebFetch(domain:developer.candid.org)",
+      "WebFetch(domain:www.grants.ca.gov)",
+      "WebFetch(domain:data.ca.gov)",
+      "WebFetch(domain:catalog.data.gov)",
+      "WebFetch(domain:api.reporter.nih.gov)",
+      "Bash(npx prisma:*)",
+      "Bash(xargs:*)",
+      "Bash(npm test:*)"
     ]
   }
 }

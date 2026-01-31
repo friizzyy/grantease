@@ -25,7 +25,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         <AnimatePresence>
           {icon && (
             <motion.div
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-pulse-text-tertiary pointer-events-none"
+              className="absolute left-3 top-0 bottom-0 flex items-center text-pulse-text-tertiary pointer-events-none"
               animate={{
                 color: isFocused ? 'rgba(64, 255, 170, 0.8)' : 'rgba(250, 250, 250, 0.4)',
                 scale: isFocused ? 1.1 : 1,

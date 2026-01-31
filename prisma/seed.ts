@@ -6,11 +6,11 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('🌱 Starting database seed...')
 
-  // Create demo user
-  const passwordHash = await hash('demo123', 12)
+  // Create demo user with valid password (must have uppercase, lowercase, number, 8+ chars)
+  const passwordHash = await hash('Demo1234', 12)
   const user = await prisma.user.upsert({
     where: { email: 'demo@example.com' },
-    update: {},
+    update: { passwordHash }, // Update password if user exists
     create: {
       email: 'demo@example.com',
       name: 'Demo User',
@@ -368,7 +368,7 @@ async function main() {
   console.log('\n✨ Seed completed successfully!')
   console.log('\nDemo account:')
   console.log('  Email: demo@example.com')
-  console.log('  Password: demo123')
+  console.log('  Password: Demo1234')
 }
 
 main()

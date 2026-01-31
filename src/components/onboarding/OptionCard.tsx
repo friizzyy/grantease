@@ -67,7 +67,7 @@ export function OptionCard({
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-pulse-bg',
         size === 'default' ? 'p-5' : 'p-4',
         isSelected
-          ? 'border-pulse-accent bg-pulse-accent/[0.03]'
+          ? 'border-pulse-accent bg-transparent'
           : 'border-white/[0.08] hover:border-white/[0.15] bg-white/[0.02] hover:bg-white/[0.04]',
         disabled && 'opacity-50 cursor-not-allowed'
       )}
@@ -80,7 +80,8 @@ export function OptionCard({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className={cn(
-              'absolute inset-0 rounded-2xl bg-gradient-to-br opacity-[0.04] pointer-events-none',
+              'absolute inset-0 rounded-2xl bg-gradient-to-br pointer-events-none',
+              isSelected ? 'opacity-[0.08]' : 'opacity-[0.04]',
               gradientColor
             )}
           />

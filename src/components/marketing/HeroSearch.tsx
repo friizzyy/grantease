@@ -79,6 +79,9 @@ function getRandomGrants(): typeof grantDatabase {
   return shuffled.slice(0, 3)
 }
 
+// Fixed set of grants for SSR to avoid hydration mismatch
+const DEFAULT_GRANTS = grantDatabase.slice(0, 3)
+
 export function HeroSearch() {
   const router = useRouter()
   const [query, setQuery] = useState('')
@@ -86,11 +89,14 @@ export function HeroSearch() {
   const [isSearching, setIsSearching] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
+  const [defaultGrants, setDefaultGrants] = useState(DEFAULT_GRANTS)
   const inputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<NodeJS.Timeout>()
 
-  // Random grants for default state (memoized to prevent re-shuffling on every render)
-  const defaultGrants = useMemo(() => getRandomGrants(), [])
+  // Randomize grants after hydration to avoid mismatch
+  useEffect(() => {
+    setDefaultGrants(getRandomGrants())
+  }, [])
 
   // Debounced search
   useEffect(() => {

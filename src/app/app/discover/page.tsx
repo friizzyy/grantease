@@ -1,198 +1,201 @@
 'use client'
 
 /**
- * DISCOVER PAGE - PREMIUM UPGRADE
- * --------------------------------
- * AI-enhanced grant discovery with:
- * - Premium search bar with AI suggestions
- * - Match score indicators on each grant
- * - Filter toggle with advanced options
- * - AI summary bar with match statistics
- * - GlassCard design throughout
+ * DISCOVER PAGE - Multi-Source Grant Discovery
+ * Searches across Grants.gov, SAM.gov, USAspending, California Grants, and more
  */
 
-import { Suspense, useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search,
-  Filter,
   Sparkles,
   Target,
   Clock,
   DollarSign,
   Building2,
-  TrendingUp,
   ChevronRight,
-  ChevronLeft,
-  Save,
   Bookmark,
   BookmarkCheck,
   SlidersHorizontal,
   X,
-  Zap,
-  ArrowUpRight,
+  Loader2,
+  AlertCircle,
+  RefreshCw,
+  Globe,
+  MapPin,
+  FileText,
+  Award,
+  CheckCircle2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { GlassCard } from '@/components/ui/glass-card'
-import { springs } from '@/lib/motion/animations'
 
-// Mock grant data with AI match scores
-const mockGrants = [
-  {
-    id: '1',
-    title: 'Small Business Innovation Research (SBIR) Phase I',
-    sponsor: 'National Science Foundation',
-    summary: 'The SBIR program stimulates technological innovation in the private sector by strengthening the role of small business concerns in meeting Federal research and development needs.',
-    categories: ['Small Business', 'Research', 'Technology'],
-    amountMin: 50000,
-    amountMax: 275000,
-    amountText: '$50,000 - $275,000',
-    deadlineDate: new Date('2024-03-15'),
-    daysLeft: 45,
-    matchScore: 94,
-    isNew: true,
-    isSaved: false,
-  },
-  {
-    id: '2',
-    title: 'Community Development Block Grant Program',
-    sponsor: 'Department of Housing and Urban Development',
-    summary: 'The CDBG program provides annual grants to states, cities, and counties to develop viable urban communities by providing decent housing and expanding economic opportunities.',
-    categories: ['Housing', 'Community Development'],
-    amountMin: 100000,
-    amountMax: 500000,
-    amountText: '$100,000 - $500,000',
-    deadlineDate: new Date('2024-02-28'),
-    daysLeft: 20,
-    matchScore: 91,
-    isNew: true,
-    isSaved: true,
-  },
-  {
-    id: '3',
-    title: 'Environmental Justice Collaborative Problem-Solving',
-    sponsor: 'Environmental Protection Agency',
-    summary: 'This program provides funding to support community-based organizations in their efforts to collaborate and develop solutions to address local environmental and public health issues.',
-    categories: ['Climate', 'Community Development', 'Health'],
-    amountMin: 50000,
-    amountMax: 150000,
-    amountText: 'Up to $150,000',
-    deadlineDate: new Date('2024-04-01'),
-    daysLeft: 60,
-    matchScore: 87,
-    isNew: false,
-    isSaved: false,
-  },
-  {
-    id: '4',
-    title: 'Rural Business Development Grant',
-    sponsor: 'USDA Rural Development',
-    summary: 'Provides technical assistance and training for small rural businesses. Grant funds may be used for a variety of purposes including training and technical assistance.',
-    categories: ['Small Business', 'Agriculture', 'Community Development'],
-    amountMin: 10000,
-    amountMax: 500000,
-    amountText: '$10,000 - $500,000',
-    deadlineDate: null,
-    daysLeft: null,
-    matchScore: 85,
-    isNew: false,
-    isSaved: false,
-  },
-  {
-    id: '5',
-    title: 'Grants for Arts Projects',
-    sponsor: 'National Endowment for the Arts',
-    summary: 'Supports public engagement with, and access to, various forms of excellent art across the nation. Projects may include festivals, exhibitions, tours, readings, and more.',
-    categories: ['Arts & Culture', 'Community Development'],
-    amountMin: 10000,
-    amountMax: 100000,
-    amountText: '$10,000 - $100,000',
-    deadlineDate: new Date('2024-05-15'),
-    daysLeft: 105,
-    matchScore: 78,
-    isNew: false,
-    isSaved: true,
-  },
-  {
-    id: '6',
-    title: 'Workforce Innovation and Opportunity Act Youth Program',
-    sponsor: 'Department of Labor',
-    summary: 'Provides funding to states and local areas to support a wide range of activities and services to prepare youth for success in the labor market.',
-    categories: ['Workforce Development', 'Education', 'Youth & Families'],
-    amountMin: 100000,
-    amountMax: 1000000,
-    amountText: '$100,000 - $1,000,000',
-    deadlineDate: new Date('2024-03-30'),
-    daysLeft: 58,
-    matchScore: 72,
-    isNew: false,
-    isSaved: false,
-  },
-]
+// Grant type from unified API
+interface Grant {
+  id: string
+  sourceId: string
+  sourceName: string
+  sourceLabel?: string
+  type?: 'grant' | 'contract' | 'award'
+  title: string
+  sponsor: string
+  summary: string
+  categories: string[]
+  eligibility: string[]
+  locations: string[]
+  amountMin: number | null
+  amountMax: number | null
+  amountText: string | null
+  deadlineDate: string | null
+  url: string
+  status: string
+  isLive?: boolean
+  metadata?: Record<string, unknown>
+}
+
+// Source info from API
+interface SourceInfo {
+  name: string
+  label: string
+  description: string
+  type: string
+  region?: string
+  requiresApiKey: boolean
+  isConfigured: boolean
+}
 
 // Quick search suggestions
 const quickSuggestions = [
-  'Small business grants',
-  'Tech startups',
-  'Community development',
-  'Environmental projects',
-  'Research funding',
+  'small business',
+  'technology',
+  'climate',
+  'education',
+  'health',
+  'research',
 ]
 
-// Premium Grant Card Component
-function PremiumGrantCard({ grant, index }: { grant: typeof mockGrants[0]; index: number }) {
-  const [isSaved, setIsSaved] = useState(grant.isSaved)
+// Format currency
+function formatCurrency(amount: number | null): string {
+  if (!amount) return ''
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
 
-  const getMatchColor = (score: number) => {
-    if (score >= 90) return 'text-pulse-accent'
-    if (score >= 80) return 'text-blue-400'
-    if (score >= 70) return 'text-yellow-400'
-    return 'text-pulse-text-tertiary'
+// Calculate days until deadline
+function getDaysUntil(dateStr: string | null): number | null {
+  if (!dateStr) return null
+  const deadline = new Date(dateStr)
+  const now = new Date()
+  const diff = deadline.getTime() - now.getTime()
+  return Math.ceil(diff / (1000 * 60 * 60 * 24))
+}
+
+// Get type icon
+function getTypeIcon(type?: string) {
+  switch (type) {
+    case 'contract': return <FileText className="w-3 h-3" />
+    case 'award': return <Award className="w-3 h-3" />
+    default: return <Globe className="w-3 h-3" />
+  }
+}
+
+// Get source color
+function getSourceColor(sourceName: string): string {
+  const colors: Record<string, string> = {
+    'grants-gov': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    'sam-gov': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    'usaspending': 'bg-green-500/20 text-green-400 border-green-500/30',
+    'california-grants': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+  }
+  return colors[sourceName] || 'bg-gray-500/20 text-gray-400 border-gray-500/30'
+}
+
+// Grant Card Component
+function GrantCard({ grant, index }: { grant: Grant; index: number }) {
+  const [isSaved, setIsSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const daysLeft = getDaysUntil(grant.deadlineDate)
+
+  const handleSave = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setSaving(true)
+
+    try {
+      if (isSaved) {
+        await fetch(`/api/user/saved-grants?grantId=${grant.id}`, { method: 'DELETE' })
+      } else {
+        await fetch('/api/user/saved-grants', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ grantId: grant.id }),
+        })
+      }
+      setIsSaved(!isSaved)
+    } catch (error) {
+      console.error('Error saving grant:', error)
+    } finally {
+      setSaving(false)
+    }
   }
 
-  const getMatchBg = (score: number) => {
-    if (score >= 90) return 'bg-pulse-accent/10 border-pulse-accent/30'
-    if (score >= 80) return 'bg-blue-500/10 border-blue-500/30'
-    if (score >= 70) return 'bg-yellow-500/10 border-yellow-500/30'
-    return 'bg-pulse-surface border-pulse-border'
-  }
+  const amountDisplay = grant.amountText ||
+    (grant.amountMin && grant.amountMax
+      ? `${formatCurrency(grant.amountMin)} - ${formatCurrency(grant.amountMax)}`
+      : grant.amountMax
+        ? `Up to ${formatCurrency(grant.amountMax)}`
+        : grant.amountMin
+          ? `From ${formatCurrency(grant.amountMin)}`
+          : 'Amount varies')
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
+      transition={{ delay: index * 0.03 }}
     >
-      <Link href={`/app/grants/${grant.id}`}>
-        <GlassCard className="p-5 hover:border-pulse-accent/30 transition-all group cursor-pointer">
-          {/* Top Row - Match Score & Actions */}
+      <Link href={grant.url} target="_blank" rel="noopener noreferrer">
+        <GlassCard className="p-5 hover:border-pulse-accent/30 transition-all group cursor-pointer h-full">
+          {/* Top Row - Source & Type */}
           <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className={`px-2.5 py-1 rounded-lg border ${getMatchBg(grant.matchScore)}`}>
-                <span className={`text-sm font-semibold ${getMatchColor(grant.matchScore)}`}>
-                  {grant.matchScore}% match
-                </span>
-              </div>
-              {grant.isNew && (
-                <Badge variant="success" className="text-xs">New</Badge>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant="outline" className={`text-xs ${getSourceColor(grant.sourceName)}`}>
+                {getTypeIcon(grant.type)}
+                <span className="ml-1">{grant.sourceLabel || grant.sourceName}</span>
+              </Badge>
+              {grant.status === 'open' && (
+                <Badge variant="default" className="text-xs bg-green-500/20 text-green-400 border-green-500/30">
+                  Open
+                </Badge>
+              )}
+              {grant.status === 'forecasted' && (
+                <Badge variant="outline" className="text-xs bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+                  Forecasted
+                </Badge>
               )}
             </div>
             <button
-              onClick={(e) => {
-                e.preventDefault()
-                setIsSaved(!isSaved)
-              }}
-              aria-label={isSaved ? 'Remove from saved grants' : 'Save this grant'}
-              aria-pressed={isSaved}
+              onClick={handleSave}
+              disabled={saving}
               className={`p-2 rounded-lg transition-all ${
                 isSaved
                   ? 'bg-pulse-accent/20 text-pulse-accent'
                   : 'bg-pulse-surface text-pulse-text-tertiary hover:text-pulse-accent'
               }`}
             >
-              {isSaved ? <BookmarkCheck className="w-4 h-4" aria-hidden="true" /> : <Bookmark className="w-4 h-4" aria-hidden="true" />}
+              {saving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : isSaved ? (
+                <BookmarkCheck className="w-4 h-4" />
+              ) : (
+                <Bookmark className="w-4 h-4" />
+              )}
             </button>
           </div>
 
@@ -201,41 +204,61 @@ function PremiumGrantCard({ grant, index }: { grant: typeof mockGrants[0]; index
             {grant.title}
           </h3>
           <p className="text-sm text-pulse-text-tertiary flex items-center gap-1.5 mb-3">
-            <Building2 className="w-3.5 h-3.5" />
-            {grant.sponsor}
+            <Building2 className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="truncate">{grant.sponsor}</span>
           </p>
 
           {/* Summary */}
-          <p className="text-sm text-pulse-text-secondary mb-4 line-clamp-2">
-            {grant.summary}
-          </p>
+          {grant.summary && (
+            <p className="text-sm text-pulse-text-secondary mb-4 line-clamp-2">
+              {grant.summary}
+            </p>
+          )}
 
           {/* Categories */}
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {grant.categories.slice(0, 3).map((cat) => (
-              <span
-                key={cat}
-                className="px-2 py-0.5 rounded-full bg-pulse-surface text-xs text-pulse-text-tertiary"
-              >
-                {cat}
-              </span>
-            ))}
-          </div>
+          {grant.categories.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-4">
+              {grant.categories.slice(0, 3).map((cat, i) => (
+                <span
+                  key={i}
+                  className="px-2 py-0.5 rounded-full bg-pulse-surface text-xs text-pulse-text-tertiary"
+                >
+                  {cat}
+                </span>
+              ))}
+              {grant.categories.length > 3 && (
+                <span className="px-2 py-0.5 rounded-full bg-pulse-surface text-xs text-pulse-text-tertiary">
+                  +{grant.categories.length - 3}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Location */}
+          {grant.locations.length > 0 && grant.locations[0] !== 'National' && (
+            <div className="flex items-center gap-1.5 text-xs text-pulse-text-tertiary mb-3">
+              <MapPin className="w-3 h-3" />
+              <span>{grant.locations.slice(0, 2).join(', ')}</span>
+            </div>
+          )}
 
           {/* Bottom Row - Amount & Deadline */}
-          <div className="flex items-center justify-between pt-3 border-t border-pulse-border">
+          <div className="flex items-center justify-between pt-3 border-t border-pulse-border mt-auto">
             <div className="flex items-center gap-1.5">
               <DollarSign className="w-4 h-4 text-pulse-accent" />
-              <span className="text-sm font-medium text-pulse-text">{grant.amountText}</span>
+              <span className="text-sm font-medium text-pulse-text">{amountDisplay}</span>
             </div>
-            {grant.daysLeft !== null ? (
+            {daysLeft !== null ? (
               <div className={`flex items-center gap-1.5 text-sm ${
-                grant.daysLeft <= 14 ? 'text-pulse-error' :
-                grant.daysLeft <= 30 ? 'text-pulse-warning' :
+                daysLeft <= 0 ? 'text-pulse-text-tertiary' :
+                daysLeft <= 14 ? 'text-pulse-error' :
+                daysLeft <= 30 ? 'text-pulse-warning' :
                 'text-pulse-text-tertiary'
               }`}>
                 <Clock className="w-4 h-4" />
-                <span>{grant.daysLeft} days left</span>
+                <span>
+                  {daysLeft <= 0 ? 'Closed' : `${daysLeft} days left`}
+                </span>
               </div>
             ) : (
               <span className="text-sm text-pulse-text-tertiary">Rolling deadline</span>
@@ -247,8 +270,61 @@ function PremiumGrantCard({ grant, index }: { grant: typeof mockGrants[0]; index
   )
 }
 
+// Source Selector Component
+function SourceSelector({
+  sources,
+  selectedSources,
+  onToggle,
+}: {
+  sources: SourceInfo[]
+  selectedSources: string[]
+  onToggle: (name: string) => void
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {sources.map((source) => {
+        const isSelected = selectedSources.includes(source.name)
+        const isDisabled = !source.isConfigured
+
+        return (
+          <button
+            key={source.name}
+            onClick={() => !isDisabled && onToggle(source.name)}
+            disabled={isDisabled}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
+              isDisabled
+                ? 'bg-pulse-surface/50 text-pulse-text-tertiary cursor-not-allowed'
+                : isSelected
+                  ? 'bg-pulse-accent/20 text-pulse-accent border border-pulse-accent/30'
+                  : 'bg-pulse-surface border border-pulse-border text-pulse-text-secondary hover:border-pulse-accent/30'
+            }`}
+            title={isDisabled ? `Requires ${source.requiresApiKey ? 'API key' : 'configuration'}` : source.description}
+          >
+            {isSelected && <CheckCircle2 className="w-4 h-4" />}
+            <span>{source.label}</span>
+            {source.type === 'state' && source.region && (
+              <span className="text-xs opacity-70">({source.region})</span>
+            )}
+            {isDisabled && (
+              <span className="text-xs text-pulse-warning">(Not configured)</span>
+            )}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 // AI Summary Bar Component
-function AISummaryBar() {
+function AISummaryBar({
+  total,
+  loading,
+  sourceCounts,
+}: {
+  total: number
+  loading: boolean
+  sourceCounts: Array<{ name: string; label: string; count: number; total: number; error?: string }>
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -256,25 +332,41 @@ function AISummaryBar() {
       transition={{ delay: 0.2 }}
     >
       <GlassCard variant="accent" className="p-4 mb-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-pulse-accent/20 border border-pulse-accent/30 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-pulse-accent" />
+              {loading ? (
+                <Loader2 className="w-4 h-4 text-pulse-accent animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4 text-pulse-accent" />
+              )}
             </div>
             <div>
-              <p className="text-sm font-medium text-pulse-text">AI found 6 grants matching your profile</p>
-              <p className="text-xs text-pulse-text-tertiary">3 with 90%+ match score • 2 new this week</p>
+              <p className="text-sm font-medium text-pulse-text">
+                {loading ? 'Searching grant databases...' : `Found ${total.toLocaleString()} opportunities`}
+              </p>
+              <p className="text-xs text-pulse-text-tertiary">
+                {sourceCounts.length > 0
+                  ? `From ${sourceCounts.filter(s => s.count > 0).length} sources`
+                  : 'Live results from federal and state databases'}
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-lg font-semibold text-pulse-accent">$2.5M</p>
-              <p className="text-xs text-pulse-text-tertiary">Total potential</p>
-            </div>
-            <Button size="sm" variant="outline" className="border-pulse-accent/30 text-pulse-accent hover:bg-pulse-accent/10">
-              <Zap className="w-4 h-4 mr-1" />
-              Refine
-            </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            {sourceCounts.map((source) => (
+              <Badge
+                key={source.name}
+                variant="outline"
+                className={`text-xs ${source.error ? 'border-pulse-error/30 text-pulse-error' : ''}`}
+              >
+                {source.error ? (
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                ) : (
+                  <span className="w-2 h-2 bg-green-400 rounded-full mr-1.5 animate-pulse" />
+                )}
+                {source.label}: {source.error ? 'Error' : source.count}
+              </Badge>
+            ))}
           </div>
         </div>
       </GlassCard>
@@ -283,10 +375,55 @@ function AISummaryBar() {
 }
 
 // Filter Panel Component
-function FilterPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const categories = ['Small Business', 'Research', 'Technology', 'Community Development', 'Arts & Culture', 'Climate', 'Education']
-  const amounts = ['Under $50K', '$50K - $250K', '$250K - $1M', 'Over $1M']
-  const deadlines = ['Next 2 weeks', 'Next 30 days', 'Next 90 days', 'Rolling']
+function FilterPanel({
+  isOpen,
+  onClose,
+  onApply,
+  filters,
+  setFilters,
+  sources,
+  selectedSources,
+  onToggleSource,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  onApply: () => void
+  filters: { agency: string; status: string; state: string }
+  setFilters: (f: { agency: string; status: string; state: string }) => void
+  sources: SourceInfo[]
+  selectedSources: string[]
+  onToggleSource: (name: string) => void
+}) {
+  const agencies = [
+    { label: 'All Agencies', value: '' },
+    { label: 'NSF', value: 'NSF' },
+    { label: 'NIH', value: 'HHS' },
+    { label: 'DOE', value: 'DOE' },
+    { label: 'EPA', value: 'EPA' },
+    { label: 'USDA', value: 'USDA' },
+    { label: 'DOD', value: 'DOD' },
+    { label: 'NASA', value: 'NASA' },
+  ]
+
+  const statuses = [
+    { label: 'Open', value: 'open' },
+    { label: 'Forecasted', value: 'forecasted' },
+    { label: 'All', value: 'all' },
+  ]
+
+  const states = [
+    { label: 'All States', value: '' },
+    { label: 'California', value: 'CA' },
+    { label: 'New York', value: 'NY' },
+    { label: 'Texas', value: 'TX' },
+    { label: 'Florida', value: 'FL' },
+    { label: 'Illinois', value: 'IL' },
+    { label: 'Pennsylvania', value: 'PA' },
+    { label: 'Ohio', value: 'OH' },
+    { label: 'Georgia', value: 'GA' },
+    { label: 'North Carolina', value: 'NC' },
+    { label: 'Michigan', value: 'MI' },
+  ]
 
   return (
     <AnimatePresence>
@@ -300,57 +437,74 @@ function FilterPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
         >
           <GlassCard className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-pulse-text">Advanced Filters</h3>
-              <button
-                onClick={onClose}
-                aria-label="Close filters panel"
-                className="p-1 rounded hover:bg-pulse-surface"
-              >
-                <X className="w-4 h-4 text-pulse-text-tertiary" aria-hidden="true" />
+              <h3 className="text-sm font-semibold text-pulse-text">Filters & Sources</h3>
+              <button onClick={onClose} className="p-1 rounded hover:bg-pulse-surface">
+                <X className="w-4 h-4 text-pulse-text-tertiary" />
               </button>
             </div>
 
+            {/* Source Selection */}
+            <div className="mb-6">
+              <label className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-3 block">
+                Data Sources
+              </label>
+              <SourceSelector
+                sources={sources}
+                selectedSources={selectedSources}
+                onToggle={onToggleSource}
+              />
+            </div>
+
             <div className="grid md:grid-cols-3 gap-6">
-              {/* Categories */}
+              {/* Agency */}
               <div>
-                <p className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-3">Category</p>
-                <div className="flex flex-wrap gap-2">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat}
-                      className="px-3 py-1.5 rounded-full bg-pulse-surface border border-pulse-border text-xs text-pulse-text-secondary hover:border-pulse-accent/30 hover:text-pulse-text transition-all"
-                    >
-                      {cat}
-                    </button>
+                <label className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-3 block">
+                  Agency
+                </label>
+                <select
+                  value={filters.agency}
+                  onChange={(e) => setFilters({ ...filters, agency: e.target.value })}
+                  className="w-full bg-pulse-surface border border-pulse-border rounded-lg px-3 py-2 text-sm text-pulse-text focus:outline-none focus:border-pulse-accent"
+                >
+                  {agencies.map((a) => (
+                    <option key={a.value} value={a.value}>{a.label}</option>
                   ))}
-                </div>
+                </select>
               </div>
 
-              {/* Amount */}
+              {/* State */}
               <div>
-                <p className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-3">Funding Amount</p>
-                <div className="flex flex-wrap gap-2">
-                  {amounts.map((amt) => (
-                    <button
-                      key={amt}
-                      className="px-3 py-1.5 rounded-full bg-pulse-surface border border-pulse-border text-xs text-pulse-text-secondary hover:border-pulse-accent/30 hover:text-pulse-text transition-all"
-                    >
-                      {amt}
-                    </button>
+                <label className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-3 block">
+                  State
+                </label>
+                <select
+                  value={filters.state}
+                  onChange={(e) => setFilters({ ...filters, state: e.target.value })}
+                  className="w-full bg-pulse-surface border border-pulse-border rounded-lg px-3 py-2 text-sm text-pulse-text focus:outline-none focus:border-pulse-accent"
+                >
+                  {states.map((s) => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
                   ))}
-                </div>
+                </select>
               </div>
 
-              {/* Deadline */}
+              {/* Status */}
               <div>
-                <p className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-3">Deadline</p>
+                <label className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-3 block">
+                  Status
+                </label>
                 <div className="flex flex-wrap gap-2">
-                  {deadlines.map((d) => (
+                  {statuses.map((s) => (
                     <button
-                      key={d}
-                      className="px-3 py-1.5 rounded-full bg-pulse-surface border border-pulse-border text-xs text-pulse-text-secondary hover:border-pulse-accent/30 hover:text-pulse-text transition-all"
+                      key={s.value}
+                      onClick={() => setFilters({ ...filters, status: s.value })}
+                      className={`px-3 py-1.5 rounded-full text-xs transition-all ${
+                        filters.status === s.value
+                          ? 'bg-pulse-accent text-pulse-bg'
+                          : 'bg-pulse-surface border border-pulse-border text-pulse-text-secondary hover:border-pulse-accent/30'
+                      }`}
                     >
-                      {d}
+                      {s.label}
                     </button>
                   ))}
                 </div>
@@ -358,10 +512,12 @@ function FilterPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
             </div>
 
             <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-pulse-border">
-              <Button variant="ghost" size="sm" onClick={onClose}>
-                Clear All
+              <Button variant="ghost" size="sm" onClick={() => {
+                setFilters({ agency: '', status: 'open', state: '' })
+              }}>
+                Clear Filters
               </Button>
-              <Button size="sm">
+              <Button size="sm" onClick={onApply}>
                 Apply Filters
               </Button>
             </div>
@@ -375,7 +531,111 @@ function FilterPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
 export default function DiscoverPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showFilters, setShowFilters] = useState(false)
-  const [sortBy, setSortBy] = useState('match')
+  const [filters, setFilters] = useState({ agency: '', status: 'open', state: '' })
+  const [grants, setGrants] = useState<Grant[]>([])
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [sources, setSources] = useState<SourceInfo[]>([])
+  const [selectedSources, setSelectedSources] = useState<string[]>([])
+  const [sourceCounts, setSourceCounts] = useState<Array<{ name: string; label: string; count: number; total: number; error?: string }>>([])
+  const limit = 24
+
+  // Fetch available sources
+  useEffect(() => {
+    async function fetchSources() {
+      try {
+        const response = await fetch('/api/grants/sources')
+        if (response.ok) {
+          const data = await response.json()
+          setSources(data.sources || [])
+          // Default to all configured sources
+          setSelectedSources(data.configured || [])
+        }
+      } catch (err) {
+        console.error('Failed to fetch sources:', err)
+        // Fallback to just grants-gov
+        setSelectedSources(['grants-gov'])
+      }
+    }
+    fetchSources()
+  }, [])
+
+  // Toggle source selection
+  const handleToggleSource = (name: string) => {
+    setSelectedSources(prev =>
+      prev.includes(name)
+        ? prev.filter(s => s !== name)
+        : [...prev, name]
+    )
+  }
+
+  // Fetch grants from unified API
+  const fetchGrants = useCallback(async (query?: string) => {
+    if (selectedSources.length === 0) {
+      setGrants([])
+      setTotal(0)
+      setSourceCounts([])
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const params = new URLSearchParams()
+      if (query) params.set('q', query)
+      if (filters.agency) params.set('agency', filters.agency)
+      if (filters.state) params.set('state', filters.state)
+      params.set('status', filters.status)
+      params.set('sources', selectedSources.join(','))
+      params.set('limit', String(limit))
+
+      const response = await fetch(`/api/grants/unified-search?${params}`)
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch grants')
+      }
+
+      const data = await response.json()
+      setGrants(data.grants || [])
+      setTotal(data.totalCount || 0)
+      setSourceCounts(data.sources || [])
+    } catch (err) {
+      console.error('Error fetching grants:', err)
+      setError('Unable to load grants. Please try again.')
+      setGrants([])
+      setTotal(0)
+      setSourceCounts([])
+    } finally {
+      setLoading(false)
+    }
+  }, [filters.agency, filters.status, filters.state, selectedSources])
+
+  // Initial load and when sources change
+  useEffect(() => {
+    if (selectedSources.length > 0) {
+      fetchGrants(searchQuery)
+    }
+  }, [selectedSources]) // Only re-fetch when sources change
+
+  // Handle search
+  const handleSearch = () => {
+    fetchGrants(searchQuery)
+  }
+
+  // Handle quick suggestion click
+  const handleSuggestion = (suggestion: string) => {
+    setSearchQuery(suggestion)
+    fetchGrants(suggestion)
+  }
+
+  // Handle filter apply
+  const handleApplyFilters = () => {
+    setShowFilters(false)
+    fetchGrants(searchQuery)
+  }
 
   return (
     <div className="p-8">
@@ -385,7 +645,7 @@ export default function DiscoverPage() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <div className="flex items-end justify-between">
+        <div className="flex items-end justify-between flex-wrap gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Target className="w-5 h-5 text-pulse-accent" />
@@ -397,7 +657,7 @@ export default function DiscoverPage() {
               Find Your Perfect Grant
             </h1>
             <p className="text-pulse-text-secondary mt-2">
-              AI-powered search across thousands of federal, state, and private funding opportunities
+              Search real-time across federal, state, and foundation funding opportunities
             </p>
           </div>
           <Button variant="outline" size="sm" asChild>
@@ -417,14 +677,15 @@ export default function DiscoverPage() {
         className="mb-6"
       >
         <GlassCard className="p-4">
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-pulse-text-tertiary" />
               <input
                 type="text"
-                placeholder="Search by keyword, sponsor, or category..."
+                placeholder="Search grants by keyword..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 className="w-full pl-12 pr-4 py-3 rounded-xl bg-pulse-bg border border-pulse-border focus:border-pulse-accent focus:outline-none text-pulse-text placeholder:text-pulse-text-tertiary"
               />
             </div>
@@ -434,20 +695,29 @@ export default function DiscoverPage() {
             >
               <SlidersHorizontal className="w-4 h-4 mr-2" />
               Filters
+              {selectedSources.length > 0 && (
+                <span className="ml-2 px-1.5 py-0.5 rounded-full bg-pulse-accent/20 text-xs">
+                  {selectedSources.length}
+                </span>
+              )}
             </Button>
-            <Button>
-              <Sparkles className="w-4 h-4 mr-2" />
+            <Button onClick={handleSearch} disabled={loading}>
+              {loading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Search className="w-4 h-4 mr-2" />
+              )}
               Search
             </Button>
           </div>
 
           {/* Quick Suggestions */}
-          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-pulse-border">
+          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-pulse-border flex-wrap">
             <span className="text-xs text-pulse-text-tertiary">Popular:</span>
             {quickSuggestions.map((suggestion) => (
               <button
                 key={suggestion}
-                onClick={() => setSearchQuery(suggestion)}
+                onClick={() => handleSuggestion(suggestion)}
                 className="px-3 py-1 rounded-full bg-pulse-surface border border-pulse-border text-xs text-pulse-text-secondary hover:border-pulse-accent/30 hover:text-pulse-text transition-all"
               >
                 {suggestion}
@@ -458,73 +728,154 @@ export default function DiscoverPage() {
       </motion.div>
 
       {/* Filter Panel */}
-      <FilterPanel isOpen={showFilters} onClose={() => setShowFilters(false)} />
+      <FilterPanel
+        isOpen={showFilters}
+        onClose={() => setShowFilters(false)}
+        onApply={handleApplyFilters}
+        filters={filters}
+        setFilters={setFilters}
+        sources={sources}
+        selectedSources={selectedSources}
+        onToggleSource={handleToggleSource}
+      />
 
       {/* AI Summary Bar */}
-      <AISummaryBar />
+      <AISummaryBar total={total} loading={loading} sourceCounts={sourceCounts} />
+
+      {/* Error State */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mb-6"
+        >
+          <GlassCard className="p-4 border-pulse-error/30">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-pulse-error" />
+              <p className="text-sm text-pulse-error">{error}</p>
+              <Button variant="ghost" size="sm" onClick={() => fetchGrants(searchQuery)}>
+                <RefreshCw className="w-4 h-4 mr-1" />
+                Retry
+              </Button>
+            </div>
+          </GlassCard>
+        </motion.div>
+      )}
+
+      {/* No Sources Selected */}
+      {selectedSources.length === 0 && !loading && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center py-12"
+        >
+          <div className="w-16 h-16 rounded-full bg-pulse-surface flex items-center justify-center mx-auto mb-4">
+            <Globe className="w-8 h-8 text-pulse-text-tertiary" />
+          </div>
+          <h3 className="text-lg font-semibold text-pulse-text mb-2">No sources selected</h3>
+          <p className="text-pulse-text-secondary mb-4">
+            Select at least one data source to search for grants
+          </p>
+          <Button variant="outline" onClick={() => setShowFilters(true)}>
+            <SlidersHorizontal className="w-4 h-4 mr-2" />
+            Open Filters
+          </Button>
+        </motion.div>
+      )}
 
       {/* Results Header */}
-      <motion.div
-        className="flex items-center justify-between mb-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.25 }}
-      >
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-pulse-text">
-            <span className="font-semibold text-pulse-accent">{mockGrants.length}</span> grants found
-          </span>
-          <Button variant="ghost" size="sm">
-            <Save className="w-4 h-4 mr-1" />
-            Save Search
-          </Button>
-        </div>
-        <div className="flex items-center gap-2">
-          <label htmlFor="sort-grants" className="text-xs text-pulse-text-tertiary">Sort by:</label>
-          <select
-            id="sort-grants"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="bg-pulse-surface border border-pulse-border rounded-lg px-3 py-1.5 text-sm text-pulse-text focus:outline-none focus:border-pulse-accent"
+      {selectedSources.length > 0 && (
+        <motion.div
+          className="flex items-center justify-between mb-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.25 }}
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-pulse-text">
+              Showing <span className="font-semibold text-pulse-accent">{grants.length}</span>
+              {total > grants.length && ` of ${total.toLocaleString()}`} opportunities
+            </span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => fetchGrants(searchQuery)}
+            disabled={loading}
           >
-            <option value="match">Match Score</option>
-            <option value="deadline">Deadline</option>
-            <option value="amount">Amount</option>
-            <option value="newest">Newest</option>
-          </select>
+            <RefreshCw className={`w-4 h-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </motion.div>
+      )}
+
+      {/* Loading State */}
+      {loading && grants.length === 0 && (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[...Array(6)].map((_, i) => (
+            <GlassCard key={i} className="p-5 animate-pulse">
+              <div className="h-4 bg-pulse-surface rounded w-1/3 mb-4" />
+              <div className="h-6 bg-pulse-surface rounded w-full mb-2" />
+              <div className="h-4 bg-pulse-surface rounded w-2/3 mb-4" />
+              <div className="h-16 bg-pulse-surface rounded w-full mb-4" />
+              <div className="h-4 bg-pulse-surface rounded w-1/2" />
+            </GlassCard>
+          ))}
         </div>
-      </motion.div>
+      )}
+
+      {/* Empty State */}
+      {!loading && grants.length === 0 && !error && selectedSources.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center py-12"
+        >
+          <div className="w-16 h-16 rounded-full bg-pulse-surface flex items-center justify-center mx-auto mb-4">
+            <Search className="w-8 h-8 text-pulse-text-tertiary" />
+          </div>
+          <h3 className="text-lg font-semibold text-pulse-text mb-2">No grants found</h3>
+          <p className="text-pulse-text-secondary mb-4">
+            Try adjusting your search terms or filters
+          </p>
+          <Button variant="outline" onClick={() => {
+            setSearchQuery('')
+            setFilters({ agency: '', status: 'open', state: '' })
+            fetchGrants()
+          }}>
+            Clear Search
+          </Button>
+        </motion.div>
+      )}
 
       {/* Grant Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {mockGrants.map((grant, index) => (
-          <PremiumGrantCard key={grant.id} grant={grant} index={index} />
-        ))}
-      </div>
-
-      {/* Pagination */}
-      <motion.div
-        className="flex items-center justify-center gap-4 mt-8"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        role="navigation"
-        aria-label="Pagination"
-      >
-        <Button variant="outline" size="sm" disabled aria-label="Go to previous page">
-          <ChevronLeft className="w-4 h-4 mr-1" aria-hidden="true" />
-          Previous
-        </Button>
-        <div className="flex items-center gap-2" role="list">
-          <button className="w-8 h-8 rounded-lg bg-pulse-accent text-pulse-bg text-sm font-medium" aria-label="Page 1" aria-current="page">1</button>
-          <button className="w-8 h-8 rounded-lg bg-pulse-surface text-pulse-text-secondary text-sm hover:bg-pulse-elevated transition-colors" aria-label="Go to page 2">2</button>
-          <button className="w-8 h-8 rounded-lg bg-pulse-surface text-pulse-text-secondary text-sm hover:bg-pulse-elevated transition-colors" aria-label="Go to page 3">3</button>
+      {grants.length > 0 && (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {grants.map((grant, index) => (
+            <GrantCard key={grant.id} grant={grant} index={index} />
+          ))}
         </div>
-        <Button variant="outline" size="sm" aria-label="Go to next page">
-          Next
-          <ChevronRight className="w-4 h-4 ml-1" aria-hidden="true" />
-        </Button>
-      </motion.div>
+      )}
+
+      {/* Load More */}
+      {grants.length > 0 && grants.length < total && (
+        <motion.div
+          className="flex items-center justify-center mt-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Button
+            variant="outline"
+            onClick={() => {
+              fetchGrants(searchQuery)
+            }}
+          >
+            Load More Grants
+            <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
+        </motion.div>
+      )}
     </div>
   )
 }
