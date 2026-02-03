@@ -357,6 +357,18 @@ export default function VaultPage() {
   const [documents, setDocuments] = useState<VaultDocument[]>([])
   const [textBlocks, setTextBlocks] = useState<VaultTextBlock[]>([])
 
+  // Modal states
+  const [showAddTextBlock, setShowAddTextBlock] = useState(false)
+  const [editingTextBlock, setEditingTextBlock] = useState<VaultTextBlock | null>(null)
+  const [deletingDocId, setDeletingDocId] = useState<string | null>(null)
+  const [deletingBlockId, setDeletingBlockId] = useState<string | null>(null)
+
+  // New text block form
+  const [newBlockTitle, setNewBlockTitle] = useState('')
+  const [newBlockCategory, setNewBlockCategory] = useState('mission_statement')
+  const [newBlockContent, setNewBlockContent] = useState('')
+  const [isSavingBlock, setIsSavingBlock] = useState(false)
+
   useEffect(() => {
     loadVault()
   }, [])
@@ -401,6 +413,129 @@ export default function VaultPage() {
       toast.error('Failed to save', 'Please try again')
       throw error
     }
+  }
+
+  // Handle document delete
+  const handleDeleteDocument = async (docId: string) => {
+    setDeletingDocId(docId)
+    try {
+      const response = await fetch(`/api/vault/documents?id=${docId}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) throw new Error('Failed to delete')
+      setDocuments(prev => prev.filter(d => d.id !== docId))
+      toast.success('Deleted', 'Document has been removed')
+      loadVault() // Refresh completeness
+    } catch (error) {
+      console.error('Delete error:', error)
+      toast.error('Failed to delete', 'Please try again')
+    } finally {
+      setDeletingDocId(null)
+    }
+  }
+
+  // Handle text block save
+  const handleSaveTextBlock = async () => {
+    if (!newBlockTitle.trim() || !newBlockContent.trim()) {
+      toast.error('Required fields', 'Title and content are required')
+      return
+    }
+
+    setIsSavingBlock(true)
+    try {
+      if (editingTextBlock) {
+        // Update existing
+        const response = await fetch('/api/vault/text-blocks', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            blockId: editingTextBlock.id,
+            title: newBlockTitle,
+            category: newBlockCategory,
+            content: newBlockContent,
+          }),
+        })
+        if (!response.ok) throw new Error('Failed to update')
+        const data = await response.json()
+        setTextBlocks(prev => prev.map(b => b.id === editingTextBlock.id ? data.textBlock : b))
+        toast.success('Updated', 'Text block has been updated')
+      } else {
+        // Create new
+        const response = await fetch('/api/vault/text-blocks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: newBlockTitle,
+            category: newBlockCategory,
+            content: newBlockContent,
+          }),
+        })
+        if (!response.ok) throw new Error('Failed to create')
+        const data = await response.json()
+        setTextBlocks(prev => [data.textBlock, ...prev])
+        toast.success('Created', 'Text block has been added')
+      }
+
+      // Reset form and close
+      setNewBlockTitle('')
+      setNewBlockCategory('mission_statement')
+      setNewBlockContent('')
+      setShowAddTextBlock(false)
+      setEditingTextBlock(null)
+      loadVault() // Refresh completeness
+    } catch (error) {
+      console.error('Save error:', error)
+      toast.error('Failed to save', 'Please try again')
+    } finally {
+      setIsSavingBlock(false)
+    }
+  }
+
+  // Handle text block delete
+  const handleDeleteTextBlock = async (blockId: string) => {
+    setDeletingBlockId(blockId)
+    try {
+      const response = await fetch(`/api/vault/text-blocks?id=${blockId}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) throw new Error('Failed to delete')
+      setTextBlocks(prev => prev.filter(b => b.id !== blockId))
+      toast.success('Deleted', 'Text block has been removed')
+      loadVault() // Refresh completeness
+    } catch (error) {
+      console.error('Delete error:', error)
+      toast.error('Failed to delete', 'Please try again')
+    } finally {
+      setDeletingBlockId(null)
+    }
+  }
+
+  // Open edit modal for text block
+  const handleEditTextBlock = (block: VaultTextBlock) => {
+    setEditingTextBlock(block)
+    setNewBlockTitle(block.title)
+    setNewBlockCategory(block.category)
+    setNewBlockContent(block.content)
+    setShowAddTextBlock(true)
+  }
+
+  // Handle document upload (opens file picker)
+  const handleUploadDocument = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.pdf,.doc,.docx,.txt,.png,.jpg,.jpeg'
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (!file) return
+
+      // For now, show a toast explaining file storage is not set up
+      // In production, this would upload to S3/Cloudinary and then call the API
+      toast.info(
+        'Upload coming soon',
+        'File storage integration is being set up. For now, you can link to documents stored elsewhere.'
+      )
+    }
+    input.click()
   }
 
   if (isLoading) {
@@ -719,8 +854,17 @@ export default function VaultPage() {
                           </p>
                         </div>
                       </div>
-                      <Button size="sm" variant="ghost">
-                        <Trash2 className="w-4 h-4 text-pulse-error" />
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDeleteDocument(doc.id)}
+                        disabled={deletingDocId === doc.id}
+                      >
+                        {deletingDocId === doc.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-pulse-error" />
+                        ) : (
+                          <Trash2 className="w-4 h-4 text-pulse-error" />
+                        )}
                       </Button>
                     </div>
                   ))}
@@ -731,7 +875,7 @@ export default function VaultPage() {
                   <p className="text-sm text-pulse-text-secondary mb-3">
                     No documents uploaded yet
                   </p>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={handleUploadDocument}>
                     <Upload className="w-4 h-4 mr-2" />
                     Upload Document
                   </Button>
@@ -774,8 +918,20 @@ export default function VaultPage() {
                               AI
                             </Badge>
                           )}
-                          <Button size="sm" variant="ghost">
+                          <Button size="sm" variant="ghost" onClick={() => handleEditTextBlock(block)}>
                             <Edit2 className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteTextBlock(block.id)}
+                            disabled={deletingBlockId === block.id}
+                          >
+                            {deletingBlockId === block.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-pulse-error" />
+                            ) : (
+                              <Trash2 className="w-4 h-4 text-pulse-error" />
+                            )}
                           </Button>
                         </div>
                       </div>
@@ -794,7 +950,7 @@ export default function VaultPage() {
                   <p className="text-xs text-pulse-text-tertiary mb-4">
                     Create reusable narratives like mission statements, need statements, and organizational capacity descriptions
                   </p>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={() => setShowAddTextBlock(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Add Text Block
                   </Button>
@@ -816,6 +972,106 @@ export default function VaultPage() {
           Data in your vault is automatically used to pre-fill grant applications, saving you time.
         </p>
       </motion.div>
+
+      {/* Add/Edit Text Block Modal */}
+      <AnimatePresence>
+        {showAddTextBlock && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => {
+              setShowAddTextBlock(false)
+              setEditingTextBlock(null)
+              setNewBlockTitle('')
+              setNewBlockCategory('mission_statement')
+              setNewBlockContent('')
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-lg"
+            >
+              <GlassCard className="p-6">
+                <h2 className="text-lg font-semibold text-pulse-text mb-4">
+                  {editingTextBlock ? 'Edit Text Block' : 'Add Text Block'}
+                </h2>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-pulse-text mb-2 block">Title</label>
+                    <input
+                      type="text"
+                      value={newBlockTitle}
+                      onChange={(e) => setNewBlockTitle(e.target.value)}
+                      placeholder="e.g., Mission Statement"
+                      className="w-full px-4 py-2.5 rounded-lg bg-pulse-bg border border-pulse-border focus:border-pulse-accent focus:outline-none text-pulse-text placeholder:text-pulse-text-tertiary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-pulse-text mb-2 block">Category</label>
+                    <select
+                      value={newBlockCategory}
+                      onChange={(e) => setNewBlockCategory(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-lg bg-pulse-bg border border-pulse-border focus:border-pulse-accent focus:outline-none text-pulse-text"
+                    >
+                      <option value="mission_statement">Mission Statement</option>
+                      <option value="need_statement">Need Statement</option>
+                      <option value="org_capacity">Organizational Capacity</option>
+                      <option value="project_description">Project Description</option>
+                      <option value="evaluation_plan">Evaluation Plan</option>
+                      <option value="sustainability">Sustainability Plan</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-pulse-text mb-2 block">Content</label>
+                    <textarea
+                      value={newBlockContent}
+                      onChange={(e) => setNewBlockContent(e.target.value)}
+                      placeholder="Enter your reusable text..."
+                      rows={6}
+                      className="w-full px-4 py-3 rounded-lg bg-pulse-bg border border-pulse-border focus:border-pulse-accent focus:outline-none text-pulse-text placeholder:text-pulse-text-tertiary resize-none"
+                    />
+                    <p className="text-xs text-pulse-text-tertiary mt-1">
+                      {newBlockContent.split(/\s+/).filter(Boolean).length} words
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 mt-6">
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setShowAddTextBlock(false)
+                      setEditingTextBlock(null)
+                      setNewBlockTitle('')
+                      setNewBlockCategory('mission_statement')
+                      setNewBlockContent('')
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSaveTextBlock} disabled={isSavingBlock}>
+                    {isSavingBlock ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4 mr-2" />
+                    )}
+                    {editingTextBlock ? 'Update' : 'Add'} Text Block
+                  </Button>
+                </div>
+              </GlassCard>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

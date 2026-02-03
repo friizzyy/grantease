@@ -1,16 +1,18 @@
 /**
  * Grant Source Adapter System
  *
- * A unified interface for searching grants across multiple data sources.
- * Makes it easy to add new grant sources with consistent behavior.
- *
- * To add a new source:
- * 1. Create a service file (e.g., new-source-api.ts)
- * 2. Implement the GrantSourceAdapter interface
- * 3. Register it in GRANT_SOURCES below
+ * Simplified to use Gemini AI for all grant discovery.
+ * Gemini searches the web in real-time to find grants from:
+ * - Federal sources (Grants.gov, SAM.gov, USDA, etc.)
+ * - State and local programs
+ * - Foundation grants
+ * - Corporate giving programs
  */
 
-// Normalized grant type used across all sources
+import { discoverGrants, searchGrantsByKeyword, DiscoveredGrant } from '../gemini-grant-discovery'
+import type { UserProfile } from '@/lib/types/onboarding'
+
+// Normalized grant type used across the app
 export interface NormalizedGrant {
   id: string
   sourceId: string
@@ -34,11 +36,12 @@ export interface NormalizedGrant {
   contact?: string | null
   status: 'forecasted' | 'open' | 'closed'
   isLive?: boolean
-  // Source-specific metadata
+  confidence?: number
+  relevanceScore?: number
   metadata?: Record<string, unknown>
 }
 
-// Search parameters common to all sources
+// Search parameters
 export interface GrantSearchParams {
   keyword?: string
   categories?: string[]
@@ -52,7 +55,7 @@ export interface GrantSearchParams {
   offset?: number
 }
 
-// Search result from a source
+// Search result
 export interface GrantSearchResult {
   grants: NormalizedGrant[]
   total: number
@@ -62,125 +65,187 @@ export interface GrantSearchResult {
   error?: string
 }
 
-// Grant source adapter interface
-export interface GrantSourceAdapter {
-  name: string
-  label: string
-  description: string
-  type: 'federal' | 'state' | 'foundation' | 'corporate' | 'international'
-  region?: string // For state-specific sources
-  requiresApiKey: boolean
-  apiKeyEnvVar?: string
-  isConfigured: () => boolean
-  search: (params: GrantSearchParams) => Promise<GrantSearchResult>
-  testConnection: () => Promise<boolean>
+/**
+ * Convert a discovered grant from Gemini to normalized format
+ */
+function normalizeDiscoveredGrant(grant: DiscoveredGrant): NormalizedGrant {
+  // Parse amount range if provided
+  let amountMin: number | null = null
+  let amountMax: number | null = null
+
+  if (grant.amountRange) {
+    const amounts = grant.amountRange.match(/\$?([\d,]+)/g)
+    if (amounts && amounts.length >= 1) {
+      amountMin = parseInt(amounts[0].replace(/[$,]/g, ''))
+      if (amounts.length >= 2) {
+        amountMax = parseInt(amounts[1].replace(/[$,]/g, ''))
+      }
+    }
+  }
+
+  // Parse deadline
+  let deadlineDate: Date | null = null
+  let deadlineType: 'hard' | 'rolling' | 'continuous' | undefined
+
+  if (grant.deadline) {
+    const deadlineLower = grant.deadline.toLowerCase()
+    if (deadlineLower.includes('rolling') || deadlineLower.includes('ongoing')) {
+      deadlineType = 'rolling'
+    } else if (deadlineLower.includes('continuous')) {
+      deadlineType = 'continuous'
+    } else {
+      try {
+        deadlineDate = new Date(grant.deadline)
+        if (isNaN(deadlineDate.getTime())) {
+          deadlineDate = null
+        }
+        deadlineType = 'hard'
+      } catch {
+        // Keep null
+      }
+    }
+  }
+
+  return {
+    id: `gemini-${Buffer.from(grant.url).toString('base64').slice(0, 20)}`,
+    sourceId: grant.url,
+    sourceName: 'gemini-discovery',
+    sourceLabel: grant.source || 'AI Discovery',
+    type: 'grant',
+    title: grant.title,
+    sponsor: grant.sponsor,
+    summary: grant.description,
+    description: grant.description,
+    categories: grant.categories || [],
+    eligibility: grant.eligibility || [],
+    locations: [],
+    amountMin,
+    amountMax,
+    amountText: grant.amountRange || null,
+    deadlineDate,
+    deadlineType,
+    url: grant.url,
+    status: 'open',
+    isLive: true,
+    confidence: grant.confidence,
+    relevanceScore: grant.relevanceScore,
+  }
 }
 
-// Import individual source adapters
-import { grantsGovAdapter } from './grants-gov-adapter'
-import { samGovAdapter } from './sam-gov-adapter'
-import { usaSpendingAdapter } from './usaspending-adapter'
-import { californiaGrantsAdapter } from './california-grants-adapter'
-import { nihReporterAdapter } from './nih-reporter-adapter'
-import { dataGovAdapter } from './data-gov-adapter'
-import { candidAdapter } from './candid-adapter'
-import { nyGrantsAdapter } from './ny-grants-adapter'
-import { texasGrantsAdapter } from './texas-grants-adapter'
-import { usdaGrantsAdapter } from './usda-grants-adapter'
+/**
+ * Search for grants using Gemini AI
+ */
+export async function searchGrants(
+  params: GrantSearchParams,
+  profile?: Partial<UserProfile>
+): Promise<GrantSearchResult> {
+  try {
+    let grants: DiscoveredGrant[] = []
 
-// Register all available grant sources
-export const GRANT_SOURCES: Record<string, GrantSourceAdapter> = {
-  // Federal sources
-  'grants-gov': grantsGovAdapter,
-  'sam-gov': samGovAdapter,
-  'usaspending': usaSpendingAdapter,
-  'nih-reporter': nihReporterAdapter,
-  'data-gov': dataGovAdapter,
-  'usda-grants': usdaGrantsAdapter, // Agriculture-focused USDA grants
-  // State sources
-  'california-grants': californiaGrantsAdapter,
-  'ny-state-grants': nyGrantsAdapter,
-  'texas-grants': texasGrantsAdapter,
-  // Foundation sources
-  'candid': candidAdapter,
+    if (params.keyword) {
+      // Keyword search
+      grants = await searchGrantsByKeyword(params.keyword, {
+        state: params.state || profile?.state,
+        entityType: profile?.entityType,
+      })
+    } else if (profile) {
+      // Profile-based discovery
+      grants = await discoverGrants(profile as UserProfile, {
+        searchFocus: 'all',
+      })
+    }
+
+    // Apply filters
+    let normalizedGrants = grants.map(normalizeDiscoveredGrant)
+
+    // Filter by status
+    if (params.status && params.status !== 'all') {
+      normalizedGrants = normalizedGrants.filter(g => g.status === params.status)
+    }
+
+    // Filter by amount
+    if (params.amountMin) {
+      normalizedGrants = normalizedGrants.filter(
+        g => !g.amountMax || g.amountMax >= params.amountMin!
+      )
+    }
+    if (params.amountMax) {
+      normalizedGrants = normalizedGrants.filter(
+        g => !g.amountMin || g.amountMin <= params.amountMax!
+      )
+    }
+
+    // Filter by categories
+    if (params.categories && params.categories.length > 0) {
+      normalizedGrants = normalizedGrants.filter(g =>
+        g.categories.some(c => params.categories!.includes(c))
+      )
+    }
+
+    // Apply pagination
+    const offset = params.offset || 0
+    const limit = params.limit || 25
+    const paginatedGrants = normalizedGrants.slice(offset, offset + limit)
+
+    return {
+      grants: paginatedGrants,
+      total: normalizedGrants.length,
+      source: 'gemini-discovery',
+      sourceLabel: 'AI-Powered Discovery',
+      cached: false,
+    }
+  } catch (error) {
+    console.error('Grant search error:', error)
+    return {
+      grants: [],
+      total: 0,
+      source: 'gemini-discovery',
+      sourceLabel: 'AI-Powered Discovery',
+      cached: false,
+      error: error instanceof Error ? error.message : 'Search failed',
+    }
+  }
 }
 
-// Get list of all sources
-export function getAllSources(): GrantSourceAdapter[] {
-  return Object.values(GRANT_SOURCES)
-}
-
-// Get configured sources only
-export function getConfiguredSources(): GrantSourceAdapter[] {
-  return Object.values(GRANT_SOURCES).filter(s => s.isConfigured())
-}
-
-// Get sources by type
-export function getSourcesByType(type: GrantSourceAdapter['type']): GrantSourceAdapter[] {
-  return Object.values(GRANT_SOURCES).filter(s => s.type === type)
-}
-
-// Get source by name
-export function getSource(name: string): GrantSourceAdapter | undefined {
-  return GRANT_SOURCES[name]
-}
-
-// Search across multiple sources
+/**
+ * Search all sources (now just uses Gemini)
+ */
 export async function searchAllSources(
   params: GrantSearchParams,
-  sourceNames?: string[]
+  profile?: Partial<UserProfile>
 ): Promise<{
   results: GrantSearchResult[]
   allGrants: NormalizedGrant[]
   totalCount: number
   errors: Array<{ source: string; error: string }>
 }> {
-  const sources = sourceNames
-    ? sourceNames.map(n => GRANT_SOURCES[n]).filter(Boolean)
-    : getConfiguredSources()
+  const result = await searchGrants(params, profile)
 
-  const results: GrantSearchResult[] = []
-  const errors: Array<{ source: string; error: string }> = []
+  return {
+    results: [result],
+    allGrants: result.grants,
+    totalCount: result.total,
+    errors: result.error ? [{ source: 'gemini-discovery', error: result.error }] : [],
+  }
+}
 
-  // Search all sources in parallel
-  const searchPromises = sources.map(async (source) => {
-    try {
-      const result = await source.search(params)
-      results.push(result)
-      if (result.error) {
-        errors.push({ source: source.name, error: result.error })
-      }
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
-      errors.push({ source: source.name, error: errorMsg })
-      results.push({
-        grants: [],
-        total: 0,
-        source: source.name,
-        sourceLabel: source.label,
-        cached: false,
-        error: errorMsg,
-      })
-    }
-  })
+// Legacy exports for backward compatibility
+export function getAllSources() {
+  return [{
+    name: 'gemini-discovery',
+    label: 'AI-Powered Discovery',
+    description: 'Uses Gemini AI to search the web for grants in real-time',
+    type: 'federal' as const,
+    requiresApiKey: true,
+    apiKeyEnvVar: 'GEMINI_API_KEY',
+    isConfigured: () => !!process.env.GEMINI_API_KEY,
+  }]
+}
 
-  await Promise.all(searchPromises)
+export function getConfiguredSources() {
+  return getAllSources().filter(s => s.isConfigured())
+}
 
-  // Combine all grants and sort by deadline
-  const allGrants = results
-    .flatMap(r => r.grants)
-    .sort((a, b) => {
-      // Open grants first, then by deadline
-      if (a.status !== b.status) {
-        if (a.status === 'open') return -1
-        if (b.status === 'open') return 1
-      }
-      const dateA = a.deadlineDate ? new Date(a.deadlineDate).getTime() : Infinity
-      const dateB = b.deadlineDate ? new Date(b.deadlineDate).getTime() : Infinity
-      return dateA - dateB
-    })
-
-  const totalCount = results.reduce((sum, r) => sum + r.total, 0)
-
-  return { results, allGrants, totalCount, errors }
+export function getSource(name: string) {
+  return getAllSources().find(s => s.name === name)
 }

@@ -1,30 +1,31 @@
 import { NextResponse } from 'next/server'
-import { getAllSources, getConfiguredSources } from '@/lib/services/grant-sources'
+import { isGeminiConfigured } from '@/lib/services/gemini-client'
 
 /**
  * GET /api/grants/sources
  *
- * Get list of available grant sources and their status
+ * Get list of available grant sources and their status.
+ * Now uses only Gemini AI for grant discovery.
  */
 export async function GET() {
-  const allSources = getAllSources()
-  const configuredSources = getConfiguredSources()
+  const geminiConfigured = isGeminiConfigured()
 
-  const sources = allSources.map(source => ({
-    name: source.name,
-    label: source.label,
-    description: source.description,
-    type: source.type,
-    region: source.region,
-    requiresApiKey: source.requiresApiKey,
-    apiKeyEnvVar: source.apiKeyEnvVar,
-    isConfigured: source.isConfigured(),
-  }))
+  const sources = [
+    {
+      name: 'gemini-ai',
+      label: 'Gemini AI Discovery',
+      description: 'AI-powered grant discovery that searches and analyzes grants from across the web',
+      type: 'ai',
+      requiresApiKey: true,
+      apiKeyEnvVar: 'GEMINI_API_KEY',
+      isConfigured: geminiConfigured,
+    },
+  ]
 
   return NextResponse.json({
     sources,
-    configured: configuredSources.map(s => s.name),
-    total: allSources.length,
-    configuredCount: configuredSources.length,
+    configured: geminiConfigured ? ['gemini-ai'] : [],
+    total: 1,
+    configuredCount: geminiConfigured ? 1 : 0,
   })
 }

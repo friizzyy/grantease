@@ -758,9 +758,11 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
                   )}
 
                   <div className="flex items-center gap-2">
-                    <Button size="sm">
-                      <Zap className="w-4 h-4 mr-1" />
-                      Get Application Help
+                    <Button size="sm" asChild>
+                      <Link href={`/app/apply/${encodeURIComponent(id)}`}>
+                        <Zap className="w-4 h-4 mr-1" />
+                        Get Application Help
+                      </Link>
                     </Button>
                   </div>
                 </div>

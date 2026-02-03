@@ -22,6 +22,10 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // Password reset
+  resetToken       String?
+  resetTokenExpiry DateTime?
+
   accounts                Account[]
   sessions                Session[]
   savedGrants             SavedGrant[]
@@ -143,19 +147,37 @@ model Grant {
   hashFingerprint String // For deduplication
   duplicateOf     String? // Reference to canonical grant if this is a dupe
 
-  // NEW: Funding classification
+  // Funding classification
   fundingType  String? // grant, loan, rebate, tax_credit, forgivable_loan
   purposeTags  String  @default("[]") // JSON array: equipment, hiring, R&D, sustainability, expansion, training
 
-  // NEW: Structured data
+  // Structured data
   requirementsStructured String? // JSON array of key requirement bullets
 
-  // NEW: Data quality & verification
+  // === STRUCTURED ELIGIBILITY FIELDS ===
+  // These complement the JSON eligibility field for faster filtering
+  eligibleEntityTypes   String  @default("[]") // JSON array: ["nonprofit", "small_business", "individual", etc.]
+  eligibleStates        String  @default("[]") // JSON array: ["CA", "NY"] or ["national"]
+  eligibleIndustries    String  @default("[]") // JSON array from taxonomy: ["agriculture", "technology", etc.]
+  minBudgetRequirement  Int?    // Minimum org budget required (if applicable)
+  maxBudgetRequirement  Int?    // Maximum org budget allowed (if applicable)
+  restrictedToRural     Boolean @default(false)
+  restrictedToUrban     Boolean @default(false)
+  citizenshipRequired   Boolean @default(false)
+  samRegistrationRequired Boolean @default(false)
+
+  // === GEOGRAPHY DETAILS ===
+  isNational           Boolean @default(true)  // Available nationwide
+  isStateSpecific      Boolean @default(false)
+  isLocalOnly          Boolean @default(false)
+  serviceAreaText      String? // Original text description of service area
+
+  // Data quality & verification
   lastVerifiedAt DateTime?
-  qualityScore   Float     @default(0) // 0-1 for data completeness
+  qualityScore   Float     @default(0) // 0-100 for data completeness
   linkStatus     String    @default("unknown") // active, broken, unknown
 
-  // NEW: Cached AI outputs
+  // Cached AI outputs
   aiSummary    String? // Cached 1-2 line summary
   contentHash  String? // Hash of core content for detecting changes
 
@@ -175,6 +197,8 @@ model Grant {
   @@index([deadlineDate])
   @@index([hashFingerprint])
   @@index([qualityScore])
+  @@index([isNational])
+  @@index([fundingType])
 }
 
 model SavedGrant {

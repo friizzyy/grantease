@@ -1,35 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { grantsGovApi, normalizeGrantsGovOpportunity } from '@/lib/services/grants-gov-api'
+import { discoverGrants } from '@/lib/services/gemini-grant-discovery'
+import type { EntityType } from '@/lib/types/onboarding'
 
 /**
  * GET /api/cron/sync-grants
  *
- * Cron endpoint for automated grant syncing.
- * Configure in vercel.json or call via external cron service.
+ * Cron endpoint for automated grant discovery using Gemini AI.
+ * Discovers grants for all active users based on their profiles.
  *
- * Vercel Cron config (add to vercel.json):
- * {
- *   "crons": [{
- *     "path": "/api/cron/sync-grants",
- *     "schedule": "0 6,18 * * *"
- *   }]
- * }
- *
- * Security: Validates CRON_SECRET header or Vercel's internal auth
+ * Security: Validates CRON_SECRET header
  */
 export async function GET(request: NextRequest) {
   // Verify this is a legitimate cron call
   const authHeader = request.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
 
-  // CRON_SECRET must be configured in all environments
   if (!cronSecret) {
-    console.error('[CRON] CRON_SECRET not configured - blocking request')
+    console.error('[CRON] CRON_SECRET not configured')
     return NextResponse.json({ error: 'Cron not configured' }, { status: 503 })
   }
 
-  // Check for Vercel cron or manual cron secret
   const isVercelCron = authHeader === `Bearer ${cronSecret}`
   const isManualCron = request.headers.get('x-cron-secret') === cronSecret
 
@@ -40,157 +31,66 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now()
   const results = {
     success: true,
-    source: 'grants-gov',
+    source: 'gemini-discovery',
+    usersProcessed: 0,
     grantsFound: 0,
-    grantsNew: 0,
-    grantsUpdated: 0,
-    grantsSkipped: 0,
     errors: [] as string[],
     duration: 0,
     timestamp: new Date().toISOString(),
   }
 
   try {
-    console.log('[CRON] Starting grants sync...')
+    console.log('[CRON] Starting Gemini grant discovery...')
 
-    // Get or create source
-    let source = await prisma.ingestionSource.findUnique({
-      where: { name: 'grants-gov' },
-    })
-
-    if (!source) {
-      source = await prisma.ingestionSource.create({
-        data: {
-          name: 'grants-gov',
-          displayName: 'Grants.gov',
-          type: 'api',
-          config: JSON.stringify({ apiUrl: 'https://www.grants.gov/grantsws/rest' }),
-          enabled: true,
-        },
-      })
-    }
-
-    // Create run record
-    const run = await prisma.ingestionRun.create({
-      data: {
-        sourceId: source.id,
-        status: 'running',
-        startedAt: new Date(),
+    // Get users with completed profiles
+    const profiles = await prisma.userProfile.findMany({
+      where: {
+        onboardingCompleted: true,
       },
-    })
-
-    // Fetch from Grants.gov (limit to 5 pages = ~500 grants per sync)
-    const opportunities = await grantsGovApi.fetchAllPostedOpportunities({
-      maxPages: 5,
-      onProgress: (fetched, total) => {
-        console.log(`[CRON] Progress: ${fetched}/${total}`)
+      select: {
+        userId: true,
+        entityType: true,
+        industryTags: true,
+        state: true,
       },
+      take: 50, // Process up to 50 users per run
     })
 
-    results.grantsFound = opportunities.length
-
-    // Process each opportunity
-    for (const opp of opportunities) {
+    for (const profile of profiles) {
       try {
-        const normalized = normalizeGrantsGovOpportunity(opp)
-
-        const existing = await prisma.grant.findUnique({
-          where: {
-            sourceName_sourceId: {
-              sourceName: normalized.sourceName,
-              sourceId: normalized.sourceId,
-            },
-          },
-        })
-
-        if (existing) {
-          if (existing.hashFingerprint !== normalized.hashFingerprint) {
-            await prisma.grant.update({
-              where: { id: existing.id },
-              data: {
-                title: normalized.title,
-                sponsor: normalized.sponsor,
-                summary: normalized.summary,
-                description: normalized.description,
-                categories: JSON.stringify(normalized.categories),
-                eligibility: JSON.stringify(normalized.eligibility),
-                locations: JSON.stringify(normalized.locations),
-                amountMin: normalized.amountMin,
-                amountMax: normalized.amountMax,
-                amountText: normalized.amountText,
-                deadlineDate: normalized.deadlineDate,
-                deadlineType: normalized.deadlineType,
-                url: normalized.url,
-                contact: normalized.contact,
-                requirements: JSON.stringify(normalized.requirements),
-                status: normalized.status,
-                hashFingerprint: normalized.hashFingerprint,
-                updatedAt: new Date(),
-              },
-            })
-            results.grantsUpdated++
-          } else {
-            results.grantsSkipped++
-          }
-        } else {
-          await prisma.grant.create({
-            data: {
-              sourceId: normalized.sourceId,
-              sourceName: normalized.sourceName,
-              title: normalized.title,
-              sponsor: normalized.sponsor,
-              summary: normalized.summary,
-              description: normalized.description,
-              categories: JSON.stringify(normalized.categories),
-              eligibility: JSON.stringify(normalized.eligibility),
-              locations: JSON.stringify(normalized.locations),
-              amountMin: normalized.amountMin,
-              amountMax: normalized.amountMax,
-              amountText: normalized.amountText,
-              deadlineDate: normalized.deadlineDate,
-              deadlineType: normalized.deadlineType,
-              url: normalized.url,
-              contact: normalized.contact,
-              requirements: JSON.stringify(normalized.requirements),
-              status: normalized.status,
-              hashFingerprint: normalized.hashFingerprint,
-            },
-          })
-          results.grantsNew++
+        // Parse industry tags (stored as JSON string)
+        let industryTags: string[] = []
+        try {
+          industryTags = JSON.parse(profile.industryTags || '[]')
+        } catch {
+          industryTags = []
         }
+
+        // Skip if no valid profile data
+        if (!profile.entityType) {
+          continue
+        }
+
+        // Discover grants for this user
+        const grants = await discoverGrants({
+          entityType: profile.entityType as EntityType,
+          industryTags,
+          state: profile.state,
+        } as Parameters<typeof discoverGrants>[0])
+
+        results.grantsFound += grants.length
+        results.usersProcessed++
+
+        console.log(`[CRON] Found ${grants.length} grants for user ${profile.userId}`)
       } catch (error) {
         const msg = error instanceof Error ? error.message : 'Unknown'
-        results.errors.push(`${opp.id}: ${msg}`)
+        results.errors.push(`User ${profile.userId}: ${msg}`)
       }
     }
 
     results.duration = Date.now() - startTime
 
-    // Update run record
-    await prisma.ingestionRun.update({
-      where: { id: run.id },
-      data: {
-        status: results.errors.length > 0 ? 'partial' : 'success',
-        grantsFound: results.grantsFound,
-        grantsNew: results.grantsNew,
-        grantsUpdated: results.grantsUpdated,
-        grantsDupes: results.grantsSkipped,
-        completedAt: new Date(),
-        logs: JSON.stringify(results.errors.slice(0, 50)),
-      },
-    })
-
-    // Update source stats
-    await prisma.ingestionSource.update({
-      where: { id: source.id },
-      data: {
-        lastRunAt: new Date(),
-        lastStatus: results.errors.length > 0 ? 'partial' : 'success',
-        grantsCount: await prisma.grant.count({ where: { sourceName: 'grants-gov' } }),
-      },
-    })
-
-    console.log(`[CRON] Completed: ${results.grantsNew} new, ${results.grantsUpdated} updated, ${results.grantsSkipped} skipped`)
+    console.log(`[CRON] Completed: ${results.usersProcessed} users, ${results.grantsFound} grants discovered`)
 
     return NextResponse.json(results)
   } catch (error) {
@@ -198,7 +98,7 @@ export async function GET(request: NextRequest) {
     results.duration = Date.now() - startTime
     results.errors.push(error instanceof Error ? error.message : 'Unknown error')
 
-    console.error('[CRON] Sync failed:', error)
+    console.error('[CRON] Discovery failed:', error)
 
     return NextResponse.json(results, { status: 500 })
   }

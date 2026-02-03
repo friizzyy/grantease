@@ -60,6 +60,7 @@ interface SavedGrant {
   status: string
   savedAt: string
   notes: string | null
+  matchScore?: number | null // Real AI match score if available
 }
 
 interface Collection {
@@ -119,8 +120,8 @@ function SavedGrantCard({
   const [showMenu, setShowMenu] = useState(false)
   const daysLeft = getDaysLeft(grant.deadlineDate)
 
-  // Mock match score based on categories - in production this would come from the API
-  const matchScore = 70 + Math.floor(Math.random() * 25)
+  // Use real match score if available, otherwise show no score
+  const matchScore = grant.matchScore
 
   const getMatchColor = (score: number) => {
     if (score >= 90) return 'text-pulse-accent'
@@ -147,11 +148,17 @@ function SavedGrantCard({
         {/* Top Row - Match Score & Actions */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className={`px-2.5 py-1 rounded-lg border ${getMatchBg(matchScore)}`}>
-              <span className={`text-sm font-semibold ${getMatchColor(matchScore)}`}>
-                {matchScore}% match
-              </span>
-            </div>
+            {matchScore ? (
+              <div className={`px-2.5 py-1 rounded-lg border ${getMatchBg(matchScore)}`}>
+                <span className={`text-sm font-semibold ${getMatchColor(matchScore)}`}>
+                  {matchScore}% match
+                </span>
+              </div>
+            ) : (
+              <div className="px-2.5 py-1 rounded-lg border bg-pulse-surface border-pulse-border">
+                <span className="text-sm text-pulse-text-tertiary">Saved</span>
+              </div>
+            )}
           </div>
           <div className="relative">
             <button

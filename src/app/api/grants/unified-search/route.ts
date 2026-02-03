@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { searchAllSources, type GrantSearchParams, type NormalizedGrant } from '@/lib/services/grant-sources'
+import { searchGrants, type GrantSearchParams, type NormalizedGrant } from '@/lib/services/grant-sources'
 import { calculateRelevance, type GrantForRelevance } from '@/lib/relevance/engine'
-import { UserProfile } from '@/lib/types/onboarding'
+import { UserProfile, EntityType } from '@/lib/types/onboarding'
 import { safeJsonParse } from '@/lib/api-utils'
 import { rateLimiters, rateLimitExceededResponse, getClientIdentifier } from '@/lib/rate-limit'
 
@@ -141,22 +141,21 @@ function mapEntityToEligibility(entityType: string): string {
 /**
  * GET /api/grants/unified-search
  *
- * Search across all configured grant sources or specific sources.
+ * Search grants using Gemini AI discovery.
  * When user is logged in, applies relevance filtering based on their profile.
  *
  * Query params:
  * - q: Search keyword
- * - sources: Comma-separated source names (default: all configured)
  * - state: Filter by state code (e.g., CA, NY)
  * - agency: Filter by agency
  * - status: 'open', 'forecasted', 'closed', 'all' (default: open)
  * - category: Filter by category
- * - limit: Max results per source (default: 25, max: 100)
+ * - limit: Max results (default: 25, max: 100)
  * - offset: Pagination offset
  * - useProfile: 'true' to apply profile-based filtering (default: true for logged-in users)
  */
 export async function GET(request: NextRequest) {
-  // Apply rate limiting - this endpoint hits external APIs so needs stricter limits
+  // Apply rate limiting
   const clientId = getClientIdentifier(request)
   const rateLimit = rateLimiters.search(clientId)
   if (!rateLimit.allowed) {
@@ -167,19 +166,11 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
 
     const keyword = searchParams.get('q') || undefined
-    const sourcesParam = searchParams.get('sources')
     const state = searchParams.get('state') || undefined
-    const agency = searchParams.get('agency') || undefined
     const status = (searchParams.get('status') || 'open') as GrantSearchParams['status']
     const category = searchParams.get('category') || undefined
     const limit = Math.min(parseInt(searchParams.get('limit') || '25'), 100)
-    const offset = parseInt(searchParams.get('offset') || '0')
     const useProfileParam = searchParams.get('useProfile')
-
-    // Parse source names
-    const sourceNames = sourcesParam
-      ? sourcesParam.split(',').map(s => s.trim()).filter(Boolean)
-      : undefined
 
     // Get user profile if logged in
     let userProfile: UserProfile | null = null
@@ -217,27 +208,26 @@ export async function GET(request: NextRequest) {
     // Build search params - use profile data to enhance search if available
     const params: GrantSearchParams = {
       keyword,
-      // Use profile state if no explicit state filter and profile has state
       state: state || (shouldUseProfile && userProfile?.state ? userProfile.state : undefined),
-      agency,
       status,
       categories: category ? [category] : (shouldUseProfile && userProfile?.industryTags?.length ? userProfile.industryTags : undefined),
-      // Use profile eligibility based on entity type
-      eligibility: shouldUseProfile && userProfile?.entityType ? [mapEntityToEligibility(userProfile.entityType)] : undefined,
-      limit: shouldUseProfile ? limit * 3 : limit, // Fetch more to allow for filtering
-      offset,
+      limit: shouldUseProfile ? limit * 3 : limit,
     }
 
-    // Search all sources
-    const { results, allGrants, totalCount, errors } = await searchAllSources(params, sourceNames)
+    // Build profile for search
+    const searchProfile = shouldUseProfile && userProfile ? {
+      entityType: userProfile.entityType as EntityType,
+      industryTags: userProfile.industryTags,
+      state: userProfile.state || undefined,
+    } : undefined
 
-    // Apply relevance scoring and filtering if we have a profile
-    let processedGrants: Array<NormalizedGrant & { relevance?: { score: number; isEligible: boolean; matchReasons: string[]; warnings: string[] } }> = allGrants
+    // Search using Gemini AI
+    const result = await searchGrants(params, searchProfile)
+    let processedGrants = result.grants as Array<NormalizedGrant & { relevance?: { score: number; isEligible: boolean; matchReasons: string[]; warnings: string[] } }>
 
     // STRICT CATEGORY FILTERING: When user searches by category/keyword, apply strict filtering
-    // This ensures that "agriculture" search only returns agriculture grants, not random grants
     if (keyword) {
-      processedGrants = filterByKeywordStrict(processedGrants, keyword)
+      processedGrants = filterByKeywordStrict(processedGrants, keyword) as typeof processedGrants
     }
 
     // Minimum score threshold - only show grants that are actually relevant
@@ -280,26 +270,22 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       grants: paginatedGrants,
-      totalCount: shouldUseProfile ? processedGrants.length : totalCount,
-      sources: results.map(r => ({
-        name: r.source,
-        label: r.sourceLabel,
-        count: r.grants.length,
-        total: r.total,
-        cached: r.cached,
-        error: r.error,
-      })),
-      errors: errors.length > 0 ? errors : undefined,
+      totalCount: processedGrants.length,
+      sources: [{
+        name: 'gemini-ai',
+        label: 'Gemini AI Discovery',
+        count: paginatedGrants.length,
+        total: result.total,
+        cached: false,
+        error: result.error,
+      }],
       profileApplied: shouldUseProfile,
       query: {
         keyword,
-        sources: sourceNames || 'all',
         state,
-        agency,
         status,
         category,
         limit,
-        offset,
       },
     })
   } catch (error) {
@@ -319,7 +305,7 @@ export async function GET(request: NextRequest) {
  * Supports profile-based relevance filtering.
  */
 export async function POST(request: NextRequest) {
-  // Apply rate limiting - this endpoint hits external APIs so needs stricter limits
+  // Apply rate limiting
   const clientId = getClientIdentifier(request)
   const rateLimit = rateLimiters.search(clientId)
   if (!rateLimit.allowed) {
@@ -331,16 +317,10 @@ export async function POST(request: NextRequest) {
 
     const {
       keyword,
-      sources: sourceNames,
       state,
-      agency,
       status = 'open',
       categories,
-      eligibility,
-      amountMin,
-      amountMax,
       limit = 25,
-      offset = 0,
       useProfile = true,
     } = body
 
@@ -380,24 +360,24 @@ export async function POST(request: NextRequest) {
     const params: GrantSearchParams = {
       keyword,
       state: state || (shouldUseProfile && userProfile?.state ? userProfile.state : undefined),
-      agency,
       status,
       categories: categories || (shouldUseProfile && userProfile?.industryTags?.length ? userProfile.industryTags : undefined),
-      eligibility: eligibility || (shouldUseProfile && userProfile?.entityType ? [mapEntityToEligibility(userProfile.entityType)] : undefined),
-      amountMin,
-      amountMax,
       limit: shouldUseProfile ? Math.min(limit * 3, 300) : Math.min(limit, 100),
-      offset,
     }
 
-    const { results, allGrants, totalCount, errors } = await searchAllSources(params, sourceNames)
+    // Build profile for search
+    const searchProfile = shouldUseProfile && userProfile ? {
+      entityType: userProfile.entityType as EntityType,
+      industryTags: userProfile.industryTags,
+      state: userProfile.state || undefined,
+    } : undefined
 
-    // Apply relevance scoring and filtering if we have a profile
-    let processedGrants: Array<NormalizedGrant & { relevance?: { score: number; isEligible: boolean; matchReasons: string[]; warnings: string[] } }> = allGrants
+    const result = await searchGrants(params, searchProfile)
+    let processedGrants = result.grants as Array<NormalizedGrant & { relevance?: { score: number; isEligible: boolean; matchReasons: string[]; warnings: string[] } }>
 
     // STRICT CATEGORY FILTERING: When user searches by category/keyword, apply strict filtering
     if (keyword) {
-      processedGrants = filterByKeywordStrict(processedGrants, keyword)
+      processedGrants = filterByKeywordStrict(processedGrants, keyword) as typeof processedGrants
     }
 
     // Minimum score threshold for profile-based filtering
@@ -435,16 +415,15 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       grants: paginatedGrants,
-      totalCount: shouldUseProfile ? processedGrants.length : totalCount,
-      sources: results.map(r => ({
-        name: r.source,
-        label: r.sourceLabel,
-        count: r.grants.length,
-        total: r.total,
-        cached: r.cached,
-        error: r.error,
-      })),
-      errors: errors.length > 0 ? errors : undefined,
+      totalCount: processedGrants.length,
+      sources: [{
+        name: 'gemini-ai',
+        label: 'Gemini AI Discovery',
+        count: paginatedGrants.length,
+        total: result.total,
+        cached: false,
+        error: result.error,
+      }],
       profileApplied: shouldUseProfile,
     })
   } catch (error) {
