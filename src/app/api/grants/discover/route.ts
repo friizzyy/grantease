@@ -6,7 +6,7 @@ import { rateLimiters, rateLimitExceededResponse, getClientIdentifier } from '@/
 import { safeJsonParse } from '@/lib/api-utils'
 import { UserProfile } from '@/lib/types/onboarding'
 import { searchAllSources, type GrantSearchParams, type NormalizedGrant } from '@/lib/services/grant-sources'
-import { matchGrantsWithGemini, type GrantForMatching } from '@/lib/services/gemini-grant-matching'
+import { matchGrantsWithGemini, preFilterForAccessibility, type GrantForMatching } from '@/lib/services/gemini-grant-matching'
 import { isGeminiConfigured } from '@/lib/services/gemini-client'
 
 const DISCOVER_LIMIT = 20
@@ -123,10 +123,10 @@ export async function GET(request: NextRequest) {
       grants = dbGrants
     }
 
-    console.log(`Discover - Found ${grants.length} raw grants, sending to Gemini for matching...`)
+    console.log(`Discover - Found ${grants.length} raw grants`)
 
-    // Use Gemini AI to intelligently match and filter grants
-    const grantsForMatching: GrantForMatching[] = grants.slice(0, 50).map(g => ({
+    // Convert to matching format
+    let grantsForMatching: GrantForMatching[] = grants.slice(0, 100).map(g => ({
       id: g.id,
       title: g.title,
       sponsor: g.sponsor,
@@ -140,8 +140,13 @@ export async function GET(request: NextRequest) {
       url: g.url,
     }))
 
-    // Get Gemini's intelligent matching results
-    const geminiResults = await matchGrantsWithGemini(grantsForMatching, profile)
+    // PRE-FILTER: Remove grants that are clearly not accessible to regular people
+    // (Research grants, huge contracts, institutional requirements, etc.)
+    grantsForMatching = preFilterForAccessibility(grantsForMatching)
+    console.log(`Discover - After accessibility pre-filter: ${grantsForMatching.length} grants`)
+
+    // Send to Gemini for intelligent matching (limit to 50 to manage API costs)
+    const geminiResults = await matchGrantsWithGemini(grantsForMatching.slice(0, 50), profile)
 
     console.log(`Discover - Gemini returned ${geminiResults.length} relevant grants`)
 
@@ -180,7 +185,10 @@ export async function GET(request: NextRequest) {
 
         return {
           ...formatGrantForResponse(grant),
+          // Match scores
           fitScore: result.matchScore,
+          accessibilityScore: result.accessibilityScore,
+          // AI explanations
           fitSummary: result.fitSummary,
           eligibilityStatus: result.eligibilityStatus,
           nextSteps: result.nextSteps,
@@ -188,6 +196,9 @@ export async function GET(request: NextRequest) {
           matchReasons: result.reasons,
           warnings: result.concerns,
           urgency: result.urgency,
+          // NEW: Application difficulty info
+          difficultyLevel: result.difficultyLevel,
+          estimatedTimeToApply: result.estimatedTimeToApply,
         }
       })
       .filter(Boolean)
