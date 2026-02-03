@@ -26,7 +26,7 @@ export default function HowItWorksPage() {
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-6">
             <div className="w-1.5 h-1.5 rounded-full bg-pulse-accent" />
-            <span className="text-sm text-pulse-text-secondary">How It Works</span>
+            <span className="text-sm text-pulse-text-secondary">You finish applications here, not just browse</span>
           </div>
 
           <h1 className="text-4xl md:text-5xl font-bold text-pulse-text mb-6 tracking-tight">
@@ -185,14 +185,14 @@ export default function HowItWorksPage() {
                   </div>
                   <p className="text-pulse-text-secondary mb-6 leading-relaxed">
                     You&apos;re not alone. Our AI writing assistant helps you craft each section of your application.
-                    Your profile auto-fills basic information—you never retype your address or organization details.
+                    Your vault auto-fills basic information—you never retype your address, EIN, or organization details.
                     Get feedback on your drafts before you submit.
                   </p>
                   <div className="grid sm:grid-cols-2 gap-4 mb-6">
                     {[
                       'Section-by-section guidance',
                       'AI drafts you can edit and refine',
-                      'Auto-fill from your saved profile',
+                      'Your vault auto-fills 90% of basic fields—never retype your EIN, address, or mission',
                       'Feedback on clarity and completeness',
                     ].map((item, i) => (
                       <div key={i} className="flex items-start gap-2">
@@ -203,7 +203,7 @@ export default function HowItWorksPage() {
                   </div>
                   <div className="p-4 rounded-xl bg-pulse-bg/50 border border-white/[0.06]">
                     <p className="text-sm text-pulse-text-secondary">
-                      <span className="text-pulse-accent font-medium">No grant writer needed.</span> Our AI helps you
+                      <span className="text-pulse-accent font-medium">Professional applications without hiring a $5,000 consultant.</span> Our AI helps you
                       sound professional while keeping your authentic voice. Every word is yours to approve.
                     </p>
                   </div>

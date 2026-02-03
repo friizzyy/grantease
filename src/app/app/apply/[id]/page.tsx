@@ -1291,7 +1291,7 @@ export default function ApplyPage({ params }: { params: Promise<{ id: string }> 
 
           {currentStep < STEPS.length - 1 ? (
             <Button onClick={goNext}>
-              Next
+              Continue to {STEPS[currentStep + 1].label}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           ) : (

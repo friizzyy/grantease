@@ -19,6 +19,7 @@ import {
   FolderOpen,
   RefreshCw,
   AlertCircle,
+  Shield,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -71,6 +72,11 @@ interface DashboardData {
   recentActivity: {
     lastSavedGrant: string | null
     lastWorkspaceUpdate: string | null
+  }
+  vaultCompleteness?: {
+    overall: number
+    sections: Array<{ name: string; complete: boolean }>
+    missingCritical: string[]
   }
 }
 
@@ -474,6 +480,67 @@ export default function AppDashboard() {
             ))}
           </div>
         </div>
+
+        {/* Vault Completeness Widget */}
+        <motion.div
+          className="col-span-12 lg:col-span-5"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+        >
+          <GlassCard className="p-5 h-full">
+            <div className="flex items-center gap-2 mb-4">
+              <Shield className="w-4 h-4 text-pulse-accent" />
+              <h3 className="text-sm font-semibold text-pulse-text">Your Vault</h3>
+            </div>
+
+            {/* Progress Ring */}
+            <div className="flex items-center justify-center mb-4">
+              <div className="relative">
+                <ProgressRing
+                  progress={dashboardData.vaultCompleteness?.overall ?? 0}
+                  size={120}
+                  strokeWidth={8}
+                  color="rgb(var(--pulse-accent))"
+                />
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-3xl font-bold text-pulse-text">
+                    {dashboardData.vaultCompleteness?.overall ?? 0}%
+                  </span>
+                  <span className="text-xs text-pulse-text-tertiary">complete</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Status Message */}
+            <div className="text-center mb-4">
+              <p className="text-sm text-pulse-text-secondary">
+                {(dashboardData.vaultCompleteness?.overall ?? 0) >= 80
+                  ? 'Your vault is ready for applications!'
+                  : (dashboardData.vaultCompleteness?.overall ?? 0) >= 50
+                  ? 'Almost there! A few more details needed.'
+                  : 'Complete your vault to auto-fill applications'}
+              </p>
+            </div>
+
+            {/* Benefits */}
+            <div className="p-3 rounded-lg bg-pulse-accent/5 border border-pulse-accent/20 mb-4">
+              <p className="text-xs font-medium text-pulse-accent mb-1">Why complete your vault?</p>
+              <p className="text-xs text-pulse-text-tertiary">
+                Auto-fill ~{(dashboardData.vaultCompleteness?.overall ?? 0)}% of grant applications.
+                Save 15-20 hours per application.
+              </p>
+            </div>
+
+            {/* CTA Button */}
+            <Button className="w-full" variant="outline" asChild>
+              <Link href="/app/vault">
+                <Shield className="w-4 h-4 mr-2" />
+                Update Vault
+              </Link>
+            </Button>
+          </GlassCard>
+        </motion.div>
 
         {/* Deadlines with Progress */}
         <motion.div

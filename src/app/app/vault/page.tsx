@@ -308,6 +308,17 @@ function CompletenessCard({ completeness }: { completeness: VaultCompleteness })
         />
       </div>
 
+      {/* Why This Matters */}
+      <div className="mb-4 p-3 rounded-lg bg-pulse-accent/5 border border-pulse-accent/20">
+        <p className="text-xs font-medium text-pulse-accent mb-1.5">Why complete your vault?</p>
+        <p className="text-xs text-pulse-text-secondary mb-2">
+          Your vault can auto-fill approximately <span className="font-semibold text-pulse-text">{completeness.overall}%</span> of the average grant application.
+        </p>
+        <p className="text-xs text-pulse-text-tertiary">
+          Complete your vault to save ~15-20 hours per grant application.
+        </p>
+      </div>
+
       {completeness.missingCritical.length > 0 && (
         <div className="mb-4">
           <p className="text-xs font-medium text-pulse-error mb-2">Missing Critical Info:</p>

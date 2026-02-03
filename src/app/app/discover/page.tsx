@@ -342,6 +342,21 @@ function GrantCard({
             </p>
           )}
 
+          {/* Why This Matches - Top 2 reasons */}
+          {aiMatch?.reasons && aiMatch.reasons.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {aiMatch.reasons.slice(0, 2).map((reason, i) => (
+                <Badge
+                  key={i}
+                  variant="outline"
+                  className="text-xs border-pulse-accent/30 text-pulse-accent bg-pulse-accent/5"
+                >
+                  {reason}
+                </Badge>
+              ))}
+            </div>
+          )}
+
           {/* Summary (only if no AI match) */}
           {!aiMatch && grant.summary && (
             <p className="text-body-sm text-pulse-text-secondary mb-4 line-clamp-2">

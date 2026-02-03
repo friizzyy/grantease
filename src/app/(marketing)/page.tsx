@@ -60,7 +60,7 @@ export default function HomePage() {
                 <span className="text-xs font-medium text-pulse-accent uppercase tracking-wider">Now Available</span>
               </div>
               <div className="w-px h-4 bg-white/10" />
-              <span className="text-sm text-pulse-text-secondary">AI-powered grant applications</span>
+              <span className="text-sm text-pulse-text-secondary">Complete applications, not just find grants</span>
             </div>
 
             {/* Main headline - Focus on outcome */}
@@ -73,8 +73,8 @@ export default function HomePage() {
             </h1>
 
             <p className="text-xl text-pulse-text-secondary max-w-2xl mx-auto mb-6 leading-relaxed">
-              We don&apos;t just help you find grants—we guide you through every step of applying.
-              Plain English explanations. AI-powered writing. No grant writer needed.
+              We guide you through every step of applying. See grants in plain English.
+              Get writing help for each section. Your data auto-fills every application. No grant writer needed.
             </p>
 
             {/* Key differentiator */}
@@ -127,7 +127,7 @@ export default function HomePage() {
               },
               {
                 problem: 'Starting from scratch on every single application',
-                solution: 'Your profile auto-fills applications—never retype info',
+                solution: 'Your vault auto-fills applications—never retype your address, EIN, or mission statement again',
               },
             ].map((item, i) => (
               <div key={i} className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
@@ -236,7 +236,7 @@ export default function HomePage() {
               {
                 icon: Sparkles,
                 title: 'AI Writing Assistant',
-                description: 'Get help writing every section. Improve your drafts. Sound professional without hiring a consultant.',
+                description: 'Get help writing each section. Improve drafts with AI feedback. Sound professional without hiring a $5,000 grant consultant.',
               },
               {
                 icon: Target,
@@ -246,12 +246,12 @@ export default function HomePage() {
               {
                 icon: FileText,
                 title: 'One Profile, Every Application',
-                description: 'Enter your info once. It auto-fills every grant application. Update once, apply everywhere.',
+                description: 'Enter your organization info once in your vault. Auto-fills 90% of basic fields. Update once, use everywhere.',
               },
               {
                 icon: Clock,
                 title: 'Application Timelines',
-                description: 'See exactly how long each grant takes to complete. Plan your time, never miss a deadline.',
+                description: 'See how long each application takes (10 min to 5 hours). Plan your time. Never miss another deadline.',
               },
               {
                 icon: DollarSign,

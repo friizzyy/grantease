@@ -48,6 +48,8 @@ import { Badge } from '@/components/ui/badge'
 import { GlassCard } from '@/components/ui/glass-card'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useToastActions } from '@/components/ui/toast-provider'
+import { PlainEnglishSummary } from '@/components/grants/PlainEnglishSummary'
+import { ConfidenceIndicator } from '@/components/grants/ConfidenceIndicator'
 
 // Types
 interface Grant {
@@ -627,11 +629,11 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
             >
               <Link href={`/app/apply/${encodeURIComponent(id)}`}>
                 <Sparkles className="w-5 h-5 mr-2" />
-                Start Application
+                Begin Guided Application
               </Link>
             </Button>
             <p className="text-xs text-pulse-text-tertiary mt-2">
-              Use our guided flow with AI assistance
+              Your vault will auto-fill basic fields
             </p>
           </motion.div>
 
@@ -766,6 +768,9 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
             </GlassCard>
           </motion.div>
 
+          {/* Plain English Summary */}
+          <PlainEnglishSummary grant={grant} aiGenerated={false} />
+
           {/* Overview */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -840,6 +845,21 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
         <div className="space-y-6">
           {/* Match Score Card */}
           <MatchScoreCard aiMatch={aiMatch} />
+
+          {/* Confidence Indicator */}
+          {aiMatch && (
+            <ConfidenceIndicator
+              level={
+                aiMatch.score >= 80 ? 'strong' :
+                aiMatch.score >= 60 ? 'possible' :
+                'consider-others'
+              }
+              score={aiMatch.score}
+              profileMatch={aiMatch.score}
+              eligibilityStatus={aiMatch.eligibilityStatus}
+              reasons={aiMatch.reasons?.slice(0, 3)}
+            />
+          )}
 
           {/* Key Details */}
           <motion.div
