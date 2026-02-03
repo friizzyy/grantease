@@ -1,0 +1,422 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== AUTH ====================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  passwordHash  String?
+  image         String?
+  organization  String?
+  role          String    @default("user") // user, admin
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts                Account[]
+  sessions                Session[]
+  savedGrants             SavedGrant[]
+  savedSearches           SavedSearch[]
+  workspaces              Workspace[]
+  profile                 UserProfile?
+  notifications           Notification[]
+  notificationPreferences NotificationPreferences?
+  collections             GrantCollection[]
+  aiUsageLogs             AIUsageLog[]
+  grantMatchCache         GrantMatchCache[]
+}
+
+// ==================== USER PROFILE (ONBOARDING) ====================
+
+model UserProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Step 1: Entity Type & Geography
+  entityType String // Individual, Nonprofit, Small Business, For-Profit, Educational, Government, Tribal
+  country    String  @default("US")
+  state      String?
+
+  // Step 2: Industry/Domain (stored as JSON array in SQLite)
+  industryTags String @default("[]") // JSON array: ["Technology", "Education", etc.]
+
+  // Step 3: Size & Stage
+  sizeBand     String? // solo, small (2-10), medium (11-50), large (50+)
+  stage        String? // idea, early, growth, established
+  annualBudget String? // <100k, 100k-500k, 500k-1M, 1M-5M, 5M+
+
+  // Step 4: Industry-specific attributes (JSON for flexibility)
+  industryAttributes String @default("{}") // JSON: { hasResearchFocus: true, servesK12: true }
+
+  // Step 5: Grant Preferences (JSON)
+  grantPreferences String @default("{}") // JSON: { preferredSize, timeline, complexity }
+
+  // Meta
+  onboardingCompleted   Boolean   @default(false)
+  onboardingCompletedAt DateTime?
+  onboardingStep        Int       @default(1) // Track progress for resume
+  confidenceScore       Float     @default(0.5) // How confident we are in the profile
+  profileVersion        Int       @default(1) // Incremented on profile changes, used for cache invalidation
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ==================== GRANTS ====================
+
+model Grant {
+  id         String @id @default(cuid())
+  sourceId   String // ID from the original source
+  sourceName String // e.g., "grants_gov", "california_state", "ford_foundation"
+
+  title       String
+  sponsor     String // Agency/organization name
+  summary     String // Cleaned summary text
+  description String? // Full description if available
+
+  categories  String // JSON array of category tags
+  eligibility String // JSON object with tags and raw text
+  locations   String // JSON array of location objects
+
+  amountMin  Int?
+  amountMax  Int?
+  amountText String? // Original amount text for display
+
+  deadlineType String    @default("unknown") // fixed, rolling, unknown
+  deadlineDate DateTime?
+  postedDate   DateTime?
+
+  url     String // Link to original grant
+  contact String? // Contact info JSON
+
+  requirements String? // JSON array of requirements/checklist items
+
+  status String @default("open") // open, closed, unknown
+
+  hashFingerprint String // For deduplication
+  duplicateOf     String? // Reference to canonical grant if this is a dupe
+
+  // NEW: Funding classification
+  fundingType  String? // grant, loan, rebate, tax_credit, forgivable_loan
+  purposeTags  String  @default("[]") // JSON array: equipment, hiring, R&D, sustainability, expansion, training
+
+  // NEW: Structured data
+  requirementsStructured String? // JSON array of key requirement bullets
+
+  // NEW: Data quality & verification
+  lastVerifiedAt DateTime?
+  qualityScore   Float     @default(0) // 0-1 for data completeness
+  linkStatus     String    @default("unknown") // active, broken, unknown
+
+  // NEW: Cached AI outputs
+  aiSummary    String? // Cached 1-2 line summary
+  contentHash  String? // Hash of core content for detecting changes
+
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  savedBy         SavedGrant[]
+  workspaces      Workspace[]
+  collections     GrantCollectionItem[]
+  grantMatchCache GrantMatchCache[]
+
+  @@unique([sourceName, sourceId])
+  @@index([status])
+  @@index([deadlineDate])
+  @@index([hashFingerprint])
+  @@index([qualityScore])
+}
+
+model SavedGrant {
+  id        String   @id @default(cuid())
+  userId    String
+  grantId   String
+  notes     String?
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grant Grant @relation(fields: [grantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, grantId])
+}
+
+model SavedSearch {
+  id           String    @id @default(cuid())
+  userId       String
+  name         String
+  query        String? // Search text
+  filters      String // JSON of filter values
+  alertEnabled Boolean   @default(false)
+  alertFreq    String    @default("daily") // daily, weekly
+  lastAlertAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ==================== WORKSPACE ====================
+
+model Workspace {
+  id        String    @id @default(cuid())
+  userId    String
+  grantId   String
+  name      String
+  status    String    @default("not_started") // not_started, in_progress, submitted, awarded, rejected
+  notes     String?
+  checklist String? // JSON array of checklist items with completion status
+  dueDate   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grant Grant @relation(fields: [grantId], references: [id], onDelete: Cascade)
+
+  documents WorkspaceDocument[]
+}
+
+model WorkspaceDocument {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  type        String // file type or category
+  url         String? // If stored externally
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+// ==================== INGESTION ====================
+
+model IngestionSource {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  displayName String
+  type        String // api, feed, bulk
+  config      String // JSON configuration
+  enabled     Boolean   @default(true)
+  lastRunAt   DateTime?
+  lastStatus  String? // success, failed, partial
+  lastError   String?
+  grantsCount Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  runs IngestionRun[]
+}
+
+model IngestionRun {
+  id            String    @id @default(cuid())
+  sourceId      String?
+  sourceName    String?
+  status        String // running, success, failed, partial
+  grantsFound   Int       @default(0)
+  grantsNew     Int       @default(0)
+  grantsUpdated Int       @default(0)
+  grantsDupes   Int       @default(0)
+  errorMessage  String?
+  logs          String? // JSON array of log entries
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+
+  source IngestionSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+}
+
+// ==================== NOTIFICATIONS ====================
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String // deadline_reminder, new_match, application_update, system
+  title     String
+  message   String
+  link      String? // Optional link to relevant page
+  metadata  String? // JSON for additional data
+  read      Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+model NotificationPreferences {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  // Email notification settings
+  emailEnabled       Boolean @default(true)
+  grantAlerts        Boolean @default(true) // New grant matches
+  deadlineReminders  Boolean @default(true) // Upcoming deadlines
+  weeklyDigest       Boolean @default(true) // Weekly summary
+  applicationUpdates Boolean @default(true) // Workspace status changes
+  aiRecommendations  Boolean @default(false) // AI-powered suggestions
+
+  // Timing preferences
+  deadlineReminderDays Int    @default(7) // Days before deadline to remind
+  digestDay            String @default("monday") // Day to send weekly digest
+
+  // Quiet hours (optional)
+  quietHoursEnabled Boolean @default(false)
+  quietHoursStart   String? // HH:MM format
+  quietHoursEnd     String? // HH:MM format
+  timezone          String  @default("America/New_York")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ==================== GRANT COLLECTIONS ====================
+
+model GrantCollection {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  color       String? // Hex color for UI
+  icon        String? // Icon name for UI
+  isDefault   Boolean  @default(false) // Cannot be deleted
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user   User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grants GrantCollectionItem[]
+
+  @@index([userId])
+}
+
+model GrantCollectionItem {
+  id           String   @id @default(cuid())
+  collectionId String
+  grantId      String
+  notes        String?
+  addedAt      DateTime @default(now())
+
+  collection GrantCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  grant      Grant           @relation(fields: [grantId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, grantId])
+}
+
+// ==================== AI USAGE TRACKING ====================
+
+model AIUsageLog {
+  id     String @id @default(cuid())
+  userId String
+
+  // Type of AI interaction
+  type String // chat, match, writing_assistant, grant_analysis
+
+  // Request details
+  model            String? // gpt-4o-mini, gpt-4, etc.
+  promptTokens     Int     @default(0)
+  completionTokens Int     @default(0)
+  totalTokens      Int     @default(0)
+
+  // Context (what was being analyzed)
+  grantId     String? // If related to a specific grant
+  workspaceId String? // If related to a workspace
+
+  // Response metrics
+  responseTime Int? // Response time in milliseconds
+  success      Boolean @default(true)
+  errorMessage String?
+
+  // Metadata for analytics
+  metadata String? // JSON for additional context (query type, features used, etc.)
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([grantId])
+}
+
+// ==================== GRANT MATCH CACHE ====================
+
+model GrantMatchCache {
+  id String @id @default(cuid())
+
+  userId  String
+  grantId String
+
+  // Cache keys for invalidation
+  profileVersion Int      // User's profile version at cache time
+  grantUpdatedAt DateTime // Grant's updatedAt at cache time
+
+  // Cached AI matching outputs
+  fitScore          Int    // 0-100
+  fitSummary        String // "Strong match for your agriculture focus"
+  fitExplanation    String // Longer explanation of why this matches
+  eligibilityStatus String // eligible, likely_eligible, check_requirements, not_eligible
+  nextSteps         String // JSON array of action items
+  whatYouCanFund    String // JSON array of funding uses
+  applicationTips   String // JSON array of tips
+  urgency           String // high, medium, low
+
+  createdAt DateTime @default(now())
+  expiresAt DateTime // Auto-expire after 7 days
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grant Grant @relation(fields: [grantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, grantId])
+  @@index([userId])
+  @@index([expiresAt])
+}
