@@ -2,41 +2,34 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { runHardFilters } from '@/lib/relevance/hard-filters'
-import { calculateSoftScore } from '@/lib/relevance/soft-scoring'
-import { GrantForRelevance } from '@/lib/relevance/types'
-import { rerankWithLLM, isOpenAIConfigured } from '@/lib/services/openai-reranking'
 import { rateLimiters, rateLimitExceededResponse, getClientIdentifier } from '@/lib/rate-limit'
 import { safeJsonParse } from '@/lib/api-utils'
 import { UserProfile } from '@/lib/types/onboarding'
 import { searchAllSources, type GrantSearchParams, type NormalizedGrant } from '@/lib/services/grant-sources'
+import { matchGrantsWithGemini, type GrantForMatching } from '@/lib/services/gemini-grant-matching'
+import { isGeminiConfigured } from '@/lib/services/gemini-client'
 
 const DISCOVER_LIMIT = 20
-const SOFT_SCORE_THRESHOLD = 30
-const CANDIDATES_FOR_RERANKING = 50
 
 /**
  * Map industry tags to keywords for API search
- * These are SPECIFIC keywords that will be sent to the grant APIs
- * More focused = better results
  */
 function getKeywordsFromIndustry(industryTags: string[]): string {
   const keywordMap: Record<string, string[]> = {
-    // Agriculture - focus on actual farming/land keywords, not generic "food"
-    'agriculture': ['agriculture', 'agricultural', 'farm', 'farming', 'rural development', 'usda', 'crop', 'livestock'],
-    'arts_culture': ['arts', 'culture', 'museum', 'heritage', 'humanities', 'nea', 'neh'],
-    'business': ['small business', 'sbir', 'sttr', 'entrepreneur', 'commercialization'],
-    'climate': ['climate', 'environmental', 'clean energy', 'conservation', 'sustainability', 'epa'],
-    'community': ['community development', 'cdbg', 'neighborhood', 'civic'],
-    'education': ['education', 'school', 'k-12', 'higher education', 'stem'],
-    'health': ['health', 'medical', 'nih', 'healthcare', 'clinical', 'biomedical'],
-    'housing': ['housing', 'hud', 'affordable housing', 'homelessness'],
-    'infrastructure': ['infrastructure', 'transportation', 'broadband', 'water system'],
+    'agriculture': ['agriculture', 'farm', 'rural', 'usda', 'crop', 'livestock', 'agricultural'],
+    'arts_culture': ['arts', 'culture', 'museum', 'humanities', 'nea', 'neh'],
+    'business': ['small business', 'sbir', 'sttr', 'entrepreneur'],
+    'climate': ['climate', 'environmental', 'clean energy', 'conservation', 'epa'],
+    'community': ['community development', 'cdbg', 'neighborhood'],
+    'education': ['education', 'school', 'k-12', 'higher education'],
+    'health': ['health', 'medical', 'nih', 'healthcare', 'clinical'],
+    'housing': ['housing', 'hud', 'affordable housing'],
+    'infrastructure': ['infrastructure', 'transportation', 'broadband'],
     'nonprofit': ['nonprofit', 'charitable', '501c'],
-    'research': ['research', 'nsf', 'scientific', 'r&d'],
-    'technology': ['technology', 'innovation', 'digital', 'cyber', 'sbir'],
-    'workforce': ['workforce', 'job training', 'employment', 'apprenticeship'],
-    'youth': ['youth', 'children', 'family', 'juvenile'],
+    'research': ['research', 'nsf', 'scientific'],
+    'technology': ['technology', 'innovation', 'digital', 'cyber'],
+    'workforce': ['workforce', 'job training', 'employment'],
+    'youth': ['youth', 'children', 'family'],
   }
 
   const keywords: string[] = []
@@ -47,15 +40,14 @@ function getKeywordsFromIndustry(industryTags: string[]): string {
     }
   }
 
-  // Return as OR query - limit to 4 most specific keywords
   return [...new Set(keywords)].slice(0, 4).join(' OR ')
 }
 
 /**
  * GET /api/grants/discover
  *
- * Returns top 15-20 personalized grants for the authenticated user.
- * Uses 3-layer matching: hard filters → soft scoring → LLM reranking.
+ * Returns personalized grants using Gemini AI for intelligent matching.
+ * Gemini understands context and filters out irrelevant grants.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -113,13 +105,11 @@ export async function GET(request: NextRequest) {
       confidenceScore: dbProfile.confidenceScore,
     }
 
-    const profileVersion = dbProfile.profileVersion || 1
-
-    // Fetch grants from LIVE API sources (not just database)
+    // Fetch grants from LIVE API sources
     let grants = await fetchGrantsFromAPIs(profile)
 
     if (grants.length === 0) {
-      // Fallback to database if live APIs return nothing
+      // Fallback to database
       const dbGrants = await fetchGrantsFromDatabase(profile)
       if (dbGrants.length === 0) {
         return NextResponse.json({
@@ -127,147 +117,87 @@ export async function GET(request: NextRequest) {
           total: 0,
           profileComplete: true,
           message: 'No grants found matching your criteria. Try broadening your profile interests.',
-          aiEnabled: isOpenAIConfigured(),
+          aiEnabled: isGeminiConfigured(),
         })
       }
-      // Use database grants as fallback
       grants = dbGrants
     }
 
-    // Apply hard filters
-    const eligibleGrants = grants.filter((grant) => {
-      const grantForRelevance = toGrantForRelevance(grant)
-      const filterResult = runHardFilters(profile, grantForRelevance, { requireUrl: true })
-      return filterResult.passes
-    })
+    console.log(`Discover - Found ${grants.length} raw grants, sending to Gemini for matching...`)
 
-    if (eligibleGrants.length === 0) {
-      // Fallback: relax filters slightly
-      const relaxedGrants = grants.filter((grant) => {
-        const grantForRelevance = toGrantForRelevance(grant)
-        const filterResult = runHardFilters(profile, grantForRelevance, { requireUrl: false })
-        return filterResult.passes
-      }).slice(0, 10)
+    // Use Gemini AI to intelligently match and filter grants
+    const grantsForMatching: GrantForMatching[] = grants.slice(0, 50).map(g => ({
+      id: g.id,
+      title: g.title,
+      sponsor: g.sponsor,
+      summary: g.summary,
+      description: g.description,
+      categories: safeJsonParse<string[]>(g.categories, []),
+      eligibility: safeJsonParse<{ tags?: string[] }>(g.eligibility, {}).tags || [],
+      amountMin: g.amountMin || undefined,
+      amountMax: g.amountMax || undefined,
+      deadlineDate: g.deadlineDate,
+      url: g.url,
+    }))
 
-      if (relaxedGrants.length > 0) {
-        return NextResponse.json({
-          grants: relaxedGrants.map(formatGrantForResponse),
-          total: relaxedGrants.length,
-          profileComplete: true,
-          relaxedFilters: true,
-          message: 'Showing broader results',
-        })
-      }
+    // Get Gemini's intelligent matching results
+    const geminiResults = await matchGrantsWithGemini(grantsForMatching, profile)
 
+    console.log(`Discover - Gemini returned ${geminiResults.length} relevant grants`)
+
+    if (geminiResults.length === 0) {
+      // Gemini found nothing relevant - return empty with message
       return NextResponse.json({
         grants: [],
         total: 0,
         profileComplete: true,
-        message: 'No grants currently match your criteria. Try updating your profile.',
+        message: `No grants found that match your ${profile.industryTags?.join(', ') || ''} focus. Try updating your profile or browsing all grants.`,
+        aiEnabled: isGeminiConfigured(),
       })
     }
 
-    // Apply soft scoring
-    const scoredGrants = eligibleGrants.map((grant) => {
-      const grantForRelevance = toGrantForRelevance(grant)
-      const scoring = calculateSoftScore(profile, grantForRelevance)
-      return {
-        grant,
-        score: scoring.totalScore,
-        breakdown: scoring.breakdown,
-        matchReasons: scoring.matchReasons,
-        warnings: scoring.warnings,
-      }
-    })
-
-    // Filter by minimum score and get top candidates
-    const topCandidates = scoredGrants
-      .filter((g) => g.score >= SOFT_SCORE_THRESHOLD)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, CANDIDATES_FOR_RERANKING)
-
-    if (topCandidates.length === 0) {
-      // Show top grants even if below threshold
-      const fallbackGrants = scoredGrants
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 10)
-
-      return NextResponse.json({
-        grants: fallbackGrants.map((g) => ({
-          ...formatGrantForResponse(g.grant),
-          fitScore: g.score,
-          matchReasons: g.matchReasons,
-          warnings: g.warnings,
-        })),
-        total: fallbackGrants.length,
-        profileComplete: true,
-        belowThreshold: true,
+    // Build final response with Gemini's enriched data
+    const finalGrants = geminiResults
+      .sort((a, b) => {
+        if (sortBy === 'deadline_soon') {
+          const grantA = grants.find(g => g.id === a.grantId)
+          const grantB = grants.find(g => g.id === b.grantId)
+          const deadlineA = grantA?.deadlineDate?.getTime() ?? Infinity
+          const deadlineB = grantB?.deadlineDate?.getTime() ?? Infinity
+          return deadlineA - deadlineB
+        }
+        if (sortBy === 'highest_funding') {
+          const grantA = grants.find(g => g.id === a.grantId)
+          const grantB = grants.find(g => g.id === b.grantId)
+          return (grantB?.amountMax ?? 0) - (grantA?.amountMax ?? 0)
+        }
+        return b.matchScore - a.matchScore
       })
-    }
+      .slice(0, limit)
+      .map(result => {
+        const grant = grants.find(g => g.id === result.grantId)
+        if (!grant) return null
 
-    // Prepare grants for reranking
-    const grantsForReranking = topCandidates.map((g) => ({
-      id: g.grant.id,
-      title: g.grant.title,
-      sponsor: g.grant.sponsor,
-      summary: g.grant.summary,
-      categories: safeJsonParse<string[]>(g.grant.categories, []),
-      eligibility: safeJsonParse<{ tags?: string[] }>(g.grant.eligibility, {}).tags || [],
-      amountMin: g.grant.amountMin || undefined,
-      amountMax: g.grant.amountMax || undefined,
-      deadlineDate: g.grant.deadlineDate || undefined,
-      url: g.grant.url,
-      updatedAt: g.grant.updatedAt,
-    }))
-
-    // LLM reranking with caching
-    let rerankedResults = await rerankWithLLM(
-      session.user.id,
-      profile,
-      grantsForReranking,
-      profileVersion,
-      limit
-    )
-
-    // Sort by requested order
-    if (sortBy !== 'best_match') {
-      rerankedResults = sortResults(rerankedResults, topCandidates, sortBy)
-    }
-
-    // Count cache statistics
-    const cacheHits = rerankedResults.filter((r) => r.cached).length
-    const cacheMisses = rerankedResults.filter((r) => !r.cached).length
-
-    // Build final response
-    const finalGrants = rerankedResults.map((result) => {
-      const grantData = topCandidates.find((g) => g.grant.id === result.grantId)
-      if (!grantData) return null
-
-      return {
-        ...formatGrantForResponse(grantData.grant),
-        fitScore: result.fitScore,
-        fitSummary: result.fitSummary,
-        fitExplanation: result.fitExplanation,
-        eligibilityStatus: result.eligibilityStatus,
-        nextSteps: result.nextSteps,
-        whatYouCanFund: result.whatYouCanFund,
-        applicationTips: result.applicationTips,
-        urgency: result.urgency,
-        scoreBreakdown: grantData.breakdown,
-        matchReasons: grantData.matchReasons,
-        warnings: grantData.warnings,
-      }
-    }).filter(Boolean)
+        return {
+          ...formatGrantForResponse(grant),
+          fitScore: result.matchScore,
+          fitSummary: result.fitSummary,
+          eligibilityStatus: result.eligibilityStatus,
+          nextSteps: result.nextSteps,
+          whatYouCanFund: result.whatYouCanFund,
+          matchReasons: result.reasons,
+          warnings: result.concerns,
+          urgency: result.urgency,
+        }
+      })
+      .filter(Boolean)
 
     return NextResponse.json({
       grants: finalGrants,
       total: finalGrants.length,
       profileComplete: true,
-      cacheStats: {
-        hits: cacheHits,
-        misses: cacheMisses,
-      },
-      aiEnabled: isOpenAIConfigured(),
+      aiEnabled: isGeminiConfigured(),
+      aiProvider: 'gemini',
     })
   } catch (error) {
     console.error('Discover grants error:', error)
@@ -309,7 +239,6 @@ async function fetchGrantsFromAPIs(profile: UserProfile): Promise<Array<{
   updatedAt: Date
 }>> {
   try {
-    // Build search params from profile
     const keywords = profile.industryTags?.length ? getKeywordsFromIndustry(profile.industryTags) : ''
 
     const searchParams: GrantSearchParams = {
@@ -317,15 +246,13 @@ async function fetchGrantsFromAPIs(profile: UserProfile): Promise<Array<{
       categories: profile.industryTags || [],
       state: profile.state || undefined,
       status: 'open',
-      limit: 200, // Get more to allow for filtering
+      limit: 100,
     }
 
-    console.log('Discover - Searching LIVE APIs with:', { keywords, state: profile.state, industries: profile.industryTags })
+    console.log('Discover - Searching APIs with:', { keywords, state: profile.state })
 
-    // Determine which sources to search based on profile
+    // Determine which sources to search
     const sourcesToSearch = ['grants-gov', 'usda-grants']
-
-    // Add state-specific sources
     if (profile.state === 'CA') sourcesToSearch.push('california-grants')
     if (profile.state === 'NY') sourcesToSearch.push('ny-state-grants')
     if (profile.state === 'TX') sourcesToSearch.push('texas-grants')
@@ -333,12 +260,11 @@ async function fetchGrantsFromAPIs(profile: UserProfile): Promise<Array<{
     const { allGrants, errors } = await searchAllSources(searchParams, sourcesToSearch)
 
     if (errors.length > 0) {
-      console.warn('Some API sources had errors:', errors)
+      console.warn('API errors:', errors)
     }
 
-    console.log(`Discover - Found ${allGrants.length} grants from live APIs`)
+    console.log(`Discover - Found ${allGrants.length} grants from APIs`)
 
-    // Convert normalized grants to the format expected by the rest of the code
     return allGrants.map((g: NormalizedGrant) => ({
       id: g.id,
       sourceId: g.sourceId,
@@ -361,13 +287,13 @@ async function fetchGrantsFromAPIs(profile: UserProfile): Promise<Array<{
       status: g.status,
       fundingType: g.type === 'contract' ? 'contract' : 'grant',
       purposeTags: JSON.stringify([]),
-      qualityScore: 0.7, // Default quality score for live API results
+      qualityScore: 0.7,
       aiSummary: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     }))
   } catch (error) {
-    console.error('Failed to fetch from live APIs:', error)
+    console.error('Failed to fetch from APIs:', error)
     return []
   }
 }
@@ -381,9 +307,7 @@ async function fetchGrantsFromDatabase(profile: UserProfile) {
     url: { not: '' },
   }
 
-  // Filter by state if available
   if (profile.state) {
-    // Include national grants and state-specific grants
     where.OR = [
       { locations: { contains: '"national"' } },
       { locations: { contains: profile.state } },
@@ -397,48 +321,8 @@ async function fetchGrantsFromDatabase(profile: UserProfile) {
       { qualityScore: 'desc' },
       { deadlineDate: 'asc' },
     ],
-    take: 500, // Fetch more than needed for filtering
+    take: 200,
   })
-}
-
-/**
- * Convert database grant to GrantForRelevance
- */
-function toGrantForRelevance(grant: {
-  id: string
-  title: string
-  categories: string
-  eligibility: string
-  locations: string
-  amountMin: number | null
-  amountMax: number | null
-  deadlineDate: Date | null
-  sponsor: string
-  url: string
-  fundingType?: string | null
-  purposeTags?: string
-  qualityScore?: number
-  aiSummary?: string | null
-}): GrantForRelevance {
-  return {
-    id: grant.id,
-    title: grant.title,
-    categories: safeJsonParse<string[]>(grant.categories, []),
-    eligibility: safeJsonParse<{ tags: string[]; rawText?: string }>(grant.eligibility, { tags: [] }),
-    locations: safeJsonParse<Array<{ type: 'national' | 'state' | 'local'; value?: string }>>(
-      grant.locations,
-      []
-    ),
-    amountMin: grant.amountMin || undefined,
-    amountMax: grant.amountMax || undefined,
-    deadlineDate: grant.deadlineDate || undefined,
-    sponsor: grant.sponsor,
-    url: grant.url,
-    fundingType: grant.fundingType || undefined,
-    purposeTags: safeJsonParse<string[]>(grant.purposeTags || '[]', []),
-    qualityScore: grant.qualityScore || 0.5,
-    aiSummary: grant.aiSummary || undefined,
-  }
 }
 
 /**
@@ -494,53 +378,10 @@ function formatGrantForResponse(grant: {
   }
 }
 
-/**
- * Format funding range for display
- */
 function formatFundingRange(min: number | null, max: number | null, text?: string | null): string {
   if (text) return text
-  if (min && max) {
-    return `$${min.toLocaleString()} - $${max.toLocaleString()}`
-  }
+  if (min && max) return `$${min.toLocaleString()} - $${max.toLocaleString()}`
   if (max) return `Up to $${max.toLocaleString()}`
   if (min) return `From $${min.toLocaleString()}`
   return 'Varies'
 }
-
-/**
- * Sort results by different criteria
- */
-function sortResults<T extends { grantId: string; fitScore: number }>(
-  results: T[],
-  candidates: Array<{ grant: { id: string; deadlineDate: Date | null; amountMax: number | null; createdAt: Date }; score: number }>,
-  sortBy: string
-): T[] {
-  const candidateMap = new Map(candidates.map((c) => [c.grant.id, c]))
-
-  return [...results].sort((a, b) => {
-    const grantA = candidateMap.get(a.grantId)?.grant
-    const grantB = candidateMap.get(b.grantId)?.grant
-
-    if (!grantA || !grantB) return 0
-
-    switch (sortBy) {
-      case 'deadline_soon':
-        const deadlineA = grantA.deadlineDate?.getTime() ?? Infinity
-        const deadlineB = grantB.deadlineDate?.getTime() ?? Infinity
-        return deadlineA - deadlineB
-
-      case 'highest_funding':
-        const amountA = grantA.amountMax ?? 0
-        const amountB = grantB.amountMax ?? 0
-        return amountB - amountA
-
-      case 'newest':
-        return grantB.createdAt.getTime() - grantA.createdAt.getTime()
-
-      default:
-        return b.fitScore - a.fitScore
-    }
-  })
-}
-
-// Note: safeJsonParse is imported from @/lib/api-utils

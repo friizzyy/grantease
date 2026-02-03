@@ -2,36 +2,38 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import OpenAI from 'openai'
 import { rateLimiters, rateLimitExceededResponse } from '@/lib/rate-limit'
-
-// Lazy initialization to avoid build-time errors when API key is not set
-function getOpenAIClient(): OpenAI {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY is not configured')
-  }
-  return new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  })
-}
+import { safeJsonParse } from '@/lib/api-utils'
+import { UserProfile } from '@/lib/types/onboarding'
+import {
+  generateSectionContent,
+  improveDraft,
+  getDraftFeedback,
+  chatWithWritingAssistant,
+  isGeminiConfigured,
+  type SectionType,
+} from '@/lib/services/gemini-writing-assistant'
 
 interface WritingRequest {
-  action: 'improve' | 'expand' | 'summarize' | 'proofread' | 'tone' | 'generate'
+  action: 'improve' | 'expand' | 'summarize' | 'proofread' | 'tone' | 'generate' | 'feedback' | 'chat'
   text?: string
   context?: {
     grantId?: string
+    grantTitle?: string
+    grantSponsor?: string
     workspaceId?: string
-    sectionType?: string
-    targetTone?: string
+    sectionType?: SectionType
+    targetTone?: 'formal' | 'conversational' | 'technical'
     maxLength?: number
   }
   prompt?: string
+  previousMessages?: Array<{ role: 'user' | 'assistant'; content: string }>
 }
 
 /**
  * POST /api/ai/writing-assistant
  *
- * AI-powered writing assistance for grant applications
+ * AI-powered writing assistance for grant applications using Gemini
  */
 export async function POST(request: NextRequest) {
   try {
@@ -41,21 +43,21 @@ export async function POST(request: NextRequest) {
     }
     const userId = session.user.id
 
-    // Rate limiting for AI endpoints
+    // Rate limiting
     const rateLimit = rateLimiters.ai(userId)
     if (!rateLimit.allowed) {
       return rateLimitExceededResponse(rateLimit.resetAt)
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!isGeminiConfigured()) {
       return NextResponse.json(
-        { error: 'AI writing assistant not configured' },
+        { error: 'AI writing assistant not configured. Please add GEMINI_API_KEY to your environment.' },
         { status: 503 }
       )
     }
 
     const body: WritingRequest = await request.json()
-    const { action, text, context, prompt } = body
+    const { action, text, context, prompt, previousMessages } = body
 
     if (!action) {
       return NextResponse.json(
@@ -64,8 +66,35 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Get user profile
+    const dbProfile = await prisma.userProfile.findUnique({
+      where: { userId: session.user.id },
+    })
+
+    // Build profile - use a default if not set
+    const profile: UserProfile = {
+      id: dbProfile?.id || '',
+      userId: dbProfile?.userId || session.user.id,
+      entityType: (dbProfile?.entityType as UserProfile['entityType']) || 'individual',
+      country: dbProfile?.country || 'US',
+      state: dbProfile?.state || null,
+      industryTags: dbProfile ? safeJsonParse<string[]>(dbProfile.industryTags, []) : [],
+      sizeBand: (dbProfile?.sizeBand || null) as UserProfile['sizeBand'],
+      stage: (dbProfile?.stage || null) as UserProfile['stage'],
+      annualBudget: (dbProfile?.annualBudget || null) as UserProfile['annualBudget'],
+      industryAttributes: dbProfile ? safeJsonParse<Record<string, string | string[] | boolean>>(dbProfile.industryAttributes, {}) : {},
+      grantPreferences: dbProfile ? safeJsonParse<UserProfile['grantPreferences']>(dbProfile.grantPreferences, { preferredSize: null, timeline: null, complexity: null }) : { preferredSize: null, timeline: null, complexity: null },
+      onboardingCompleted: dbProfile?.onboardingCompleted || false,
+      onboardingCompletedAt: dbProfile?.onboardingCompletedAt || null,
+      onboardingStep: dbProfile?.onboardingStep || 1,
+      confidenceScore: dbProfile?.confidenceScore || 0,
+    }
+
     // Get grant context if provided
-    let grantContext = ''
+    let grantTitle = context?.grantTitle || 'Grant Application'
+    let grantSponsor = context?.grantSponsor || 'Funding Organization'
+    let grantRequirements = ''
+
     if (context?.grantId) {
       const grant = await prisma.grant.findUnique({
         where: { id: context.grantId },
@@ -73,107 +102,134 @@ export async function POST(request: NextRequest) {
           title: true,
           sponsor: true,
           summary: true,
-          eligibility: true,
           requirements: true,
         },
       })
       if (grant) {
-        grantContext = `
-Grant: ${grant.title}
-Sponsor: ${grant.sponsor}
-Summary: ${grant.summary}
-Eligibility: ${grant.eligibility}
-Requirements: ${grant.requirements || 'Not specified'}
-`
+        grantTitle = grant.title
+        grantSponsor = grant.sponsor
+        grantRequirements = grant.requirements || grant.summary
       }
     }
 
-    // Get user profile for context
-    const profile = await prisma.userProfile.findUnique({
-      where: { userId: session.user.id },
-      select: {
-        entityType: true,
-        industryTags: true,
-      },
-    })
+    const startTime = Date.now()
+    let result: string | null = null
+    let additionalData: Record<string, unknown> = {}
 
-    const userContext = profile ? `
-Applicant Type: ${profile.entityType}
-Industry Focus: ${profile.industryTags}
-` : ''
+    switch (action) {
+      case 'generate': {
+        const response = await generateSectionContent(
+          {
+            section: context?.sectionType || 'project_description',
+            grantTitle,
+            grantSponsor,
+            grantRequirements,
+            userNotes: prompt,
+            wordLimit: context?.maxLength || 500,
+            tone: context?.targetTone || 'formal',
+          },
+          profile
+        )
+        if (response) {
+          result = response.content
+          additionalData = {
+            wordCount: response.wordCount,
+            suggestions: response.suggestions,
+            strengthenTips: response.strengthenTips,
+          }
+        }
+        break
+      }
 
-    // Build system prompt based on action
-    const systemPrompts: Record<string, string> = {
-      improve: `You are an expert grant writing assistant. Your task is to improve the provided text to be more compelling, clear, and professional for a grant application. Maintain the original meaning and key points while enhancing the writing quality. Keep the same approximate length unless the text is very short.`,
+      case 'improve':
+      case 'expand':
+      case 'summarize':
+      case 'proofread':
+      case 'tone': {
+        if (!text) {
+          return NextResponse.json(
+            { error: 'Text is required for this action' },
+            { status: 400 }
+          )
+        }
+        result = await improveDraft(
+          text,
+          context?.sectionType || 'project_description',
+          { title: grantTitle, sponsor: grantSponsor },
+          profile
+        )
+        break
+      }
 
-      expand: `You are an expert grant writing assistant. Your task is to expand the provided text with more detail, examples, and supporting information appropriate for a grant application. Make it more comprehensive while maintaining coherence and professionalism.`,
+      case 'feedback': {
+        if (!text) {
+          return NextResponse.json(
+            { error: 'Text is required for feedback' },
+            { status: 400 }
+          )
+        }
+        const feedback = await getDraftFeedback(
+          text,
+          context?.sectionType || 'project_description',
+          { title: grantTitle, sponsor: grantSponsor }
+        )
+        if (feedback) {
+          result = `Score: ${feedback.score}/100\n\nStrengths:\n${feedback.strengths.map(s => `• ${s}`).join('\n')}\n\nAreas to Improve:\n${feedback.weaknesses.map(w => `• ${w}`).join('\n')}\n\nSuggestions:\n${feedback.suggestions.map(s => `• ${s}`).join('\n')}`
+          additionalData = feedback
+        }
+        break
+      }
 
-      summarize: `You are an expert grant writing assistant. Your task is to create a concise summary of the provided text that captures all key points. This should be suitable for an executive summary or abstract section of a grant application.`,
+      case 'chat': {
+        if (!prompt) {
+          return NextResponse.json(
+            { error: 'Message is required for chat' },
+            { status: 400 }
+          )
+        }
+        result = await chatWithWritingAssistant(
+          prompt,
+          {
+            grantTitle,
+            grantSponsor,
+            currentSection: context?.sectionType,
+            previousMessages,
+          },
+          profile
+        )
+        break
+      }
 
-      proofread: `You are an expert grant writing assistant and editor. Your task is to proofread the provided text, fixing any grammar, spelling, punctuation, and style issues. Return the corrected text with a brief note about what was changed.`,
-
-      tone: `You are an expert grant writing assistant. Your task is to adjust the tone of the provided text to be ${context?.targetTone || 'professional and persuasive'} while maintaining the original content and meaning.`,
-
-      generate: `You are an expert grant writing assistant. Your task is to generate content for a grant application section based on the provided context and requirements. Write in a professional, compelling manner appropriate for grant applications.`,
-    }
-
-    const systemPrompt = systemPrompts[action] || systemPrompts.improve
-
-    // Build user prompt
-    let userPrompt = ''
-
-    if (action === 'generate') {
-      userPrompt = `${grantContext}\n${userContext}\n\nSection to write: ${context?.sectionType || 'general'}\n\nAdditional instructions: ${prompt || 'Write a compelling section for this grant application.'}`
-    } else {
-      if (!text) {
+      default:
         return NextResponse.json(
-          { error: 'Text is required for this action' },
+          { error: `Unknown action: ${action}` },
           { status: 400 }
         )
-      }
-      userPrompt = `${grantContext}\n${userContext}\n\nText to ${action}:\n\n${text}`
-
-      if (prompt) {
-        userPrompt += `\n\nAdditional instructions: ${prompt}`
-      }
-
-      if (context?.maxLength) {
-        userPrompt += `\n\nMaximum length: approximately ${context.maxLength} words.`
-      }
     }
 
-    const openaiClient = getOpenAIClient()
-    const startTime = Date.now()
-    const completion = await openaiClient.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.7,
-      max_tokens: 2000,
-    })
     const responseTime = Date.now() - startTime
 
-    const result = completion.choices[0]?.message?.content
-
     // Log AI usage
-    await prisma.aIUsageLog.create({
-      data: {
-        userId: session.user.id,
-        type: 'writing_assistant',
-        model: 'gpt-4o-mini',
-        promptTokens: completion.usage?.prompt_tokens || 0,
-        completionTokens: completion.usage?.completion_tokens || 0,
-        totalTokens: completion.usage?.total_tokens || 0,
-        responseTime,
-        grantId: context?.grantId || null,
-        workspaceId: context?.workspaceId || null,
-        success: !!result,
-        errorMessage: result ? null : 'No response generated',
-        metadata: JSON.stringify({ action, sectionType: context?.sectionType }),
-      },
-    })
+    try {
+      await prisma.aIUsageLog.create({
+        data: {
+          userId: session.user.id,
+          type: 'writing_assistant',
+          model: 'gemini-1.5-pro',
+          promptTokens: 0, // Gemini doesn't provide token counts easily
+          completionTokens: 0,
+          totalTokens: 0,
+          responseTime,
+          grantId: context?.grantId || null,
+          workspaceId: context?.workspaceId || null,
+          success: !!result,
+          errorMessage: result ? null : 'No response generated',
+          metadata: JSON.stringify({ action, sectionType: context?.sectionType }),
+        },
+      })
+    } catch (logError) {
+      console.warn('Failed to log AI usage:', logError)
+    }
 
     if (!result) {
       return NextResponse.json(
@@ -185,20 +241,11 @@ Industry Focus: ${profile.industryTags}
     return NextResponse.json({
       result,
       action,
-      usage: {
-        promptTokens: completion.usage?.prompt_tokens,
-        completionTokens: completion.usage?.completion_tokens,
-        totalTokens: completion.usage?.total_tokens,
-      },
+      aiProvider: 'gemini',
+      ...additionalData,
     })
   } catch (error) {
     console.error('AI writing assistant error:', error)
-    if (error instanceof OpenAI.APIError) {
-      return NextResponse.json(
-        { error: `OpenAI API error: ${error.message}` },
-        { status: error.status || 500 }
-      )
-    }
     return NextResponse.json(
       { error: 'Failed to process request' },
       { status: 500 }
@@ -218,10 +265,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const isConfigured = !!process.env.OPENAI_API_KEY
+    const configured = isGeminiConfigured()
 
     return NextResponse.json({
-      isConfigured,
+      isConfigured: configured,
+      aiProvider: 'gemini',
       actions: [
         {
           id: 'improve',
@@ -247,7 +295,7 @@ export async function GET() {
           id: 'tone',
           label: 'Adjust Tone',
           description: 'Change the writing style or tone',
-          options: ['professional', 'persuasive', 'formal', 'friendly', 'technical'],
+          options: ['formal', 'conversational', 'technical'],
         },
         {
           id: 'generate',
@@ -255,13 +303,26 @@ export async function GET() {
           description: 'Create new content for a section',
           sections: [
             'executive_summary',
-            'project_narrative',
-            'methodology',
-            'budget_justification',
-            'organizational_capacity',
+            'statement_of_need',
+            'project_description',
+            'goals_objectives',
+            'methods_approach',
             'evaluation_plan',
-            'sustainability',
+            'budget_narrative',
+            'organizational_capacity',
+            'sustainability_plan',
+            'timeline',
           ],
+        },
+        {
+          id: 'feedback',
+          label: 'Get Feedback',
+          description: 'Get AI feedback and scoring on your draft',
+        },
+        {
+          id: 'chat',
+          label: 'Chat Assistant',
+          description: 'Have a conversation about your grant application',
         },
       ],
     })
