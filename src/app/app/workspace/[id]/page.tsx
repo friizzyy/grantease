@@ -550,7 +550,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
       const data = await response.json()
       if (data.result) {
         // Append AI suggestions to notes
-        const newNotes = notes ? `${notes}\n\n--- AI Suggestions ---\n${data.result}` : data.result
+        const newNotes = notes ? `${notes}\n\nAI SUGGESTIONS:\n${data.result}` : data.result
         setNotes(newNotes)
         setHasUnsavedChanges(true)
         toast.success('AI Suggestions Added', 'Review the suggestions in your notes.')
@@ -592,7 +592,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
 
       const data = await response.json()
       if (data.result) {
-        const newNotes = notes ? `${notes}\n\n--- Proposal Outline ---\n${data.result}` : `--- Proposal Outline ---\n${data.result}`
+        const newNotes = notes ? `${notes}\n\nPROPOSAL OUTLINE:\n${data.result}` : `PROPOSAL OUTLINE:\n${data.result}`
         setNotes(newNotes)
         setHasUnsavedChanges(true)
         toast.success('Outline Generated', 'A proposal outline has been added to your notes.')

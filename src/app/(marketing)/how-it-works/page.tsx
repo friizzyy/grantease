@@ -36,7 +36,7 @@ export default function HowItWorksPage() {
           </h1>
 
           <p className="text-xl text-pulse-text-secondary max-w-2xl mx-auto mb-8 leading-relaxed">
-            We guide you through every step—from understanding if you qualify to
+            We guide you through every step, from understanding if you qualify to
             submitting a professional application. No grant writing experience needed.
           </p>
 
@@ -98,7 +98,7 @@ export default function HowItWorksPage() {
                     </div>
                   </div>
                   <p className="text-pulse-text-secondary mb-6 leading-relaxed">
-                    Tell us about your organization—what you do, where you&apos;re located, what you need funding for.
+                    Tell us about your organization: what you do, where you&apos;re located, what you need funding for.
                     Our AI searches 20,000+ grants from federal, state, and private sources. In seconds, you see
                     only the grants you actually qualify for.
                   </p>
@@ -141,7 +141,7 @@ export default function HowItWorksPage() {
                     </div>
                   </div>
                   <p className="text-pulse-text-secondary mb-6 leading-relaxed">
-                    Every grant is explained in plain English—not government jargon. See exactly what the grant funds,
+                    Every grant is explained in plain English, not government jargon. See exactly what the grant funds,
                     who qualifies, what documents you&apos;ll need, and how much effort it takes to apply.
                     Make informed decisions before investing your time.
                   </p>
@@ -185,14 +185,14 @@ export default function HowItWorksPage() {
                   </div>
                   <p className="text-pulse-text-secondary mb-6 leading-relaxed">
                     You&apos;re not alone. Our AI writing assistant helps you craft each section of your application.
-                    Your vault auto-fills basic information—you never retype your address, EIN, or organization details.
+                    Your vault auto-fills basic information. You never retype your address, EIN, or organization details.
                     Get feedback on your drafts before you submit.
                   </p>
                   <div className="grid sm:grid-cols-2 gap-4 mb-6">
                     {[
                       'Section-by-section guidance',
                       'AI drafts you can edit and refine',
-                      'Your vault auto-fills 90% of basic fields—never retype your EIN, address, or mission',
+                      'Your vault auto-fills 90% of basic fields. Never retype your EIN, address, or mission',
                       'Feedback on clarity and completeness',
                     ].map((item, i) => (
                       <div key={i} className="flex items-start gap-2">
@@ -328,7 +328,7 @@ export default function HowItWorksPage() {
             {[
               {
                 q: 'Do I need grant writing experience?',
-                a: 'No. Our AI guides you through each section with suggestions and examples. You edit and approve everything—the final application is yours.',
+                a: 'No. Our AI guides you through each section with suggestions and examples. You edit and approve everything. The final application is yours.',
               },
               {
                 q: 'How long does it take to get started?',
@@ -344,7 +344,7 @@ export default function HowItWorksPage() {
               },
               {
                 q: 'Can I use this for any type of grant?',
-                a: 'We focus on grants accessible to small organizations—small businesses, farms, nonprofits, individuals. Not the massive research grants that require institutional backing.',
+                a: 'We focus on grants accessible to small organizations: small businesses, farms, nonprofits, individuals. Not the massive research grants that require institutional backing.',
               },
             ].map((faq) => (
               <div

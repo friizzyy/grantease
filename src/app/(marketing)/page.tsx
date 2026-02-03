@@ -111,7 +111,7 @@ export default function HomePage() {
             Grant applications shouldn&apos;t be this hard
           </h2>
           <p className="text-xl text-pulse-text-secondary max-w-3xl mx-auto mb-12 leading-relaxed">
-            Most people give up on grants—not because they don&apos;t qualify, but because
+            Most people give up on grants, not because they don&apos;t qualify, but because
             the process is confusing, time-consuming, and overwhelming. We built this to change that.
           </p>
 
@@ -127,7 +127,7 @@ export default function HomePage() {
               },
               {
                 problem: 'Starting from scratch on every single application',
-                solution: 'Your vault auto-fills applications—never retype your address, EIN, or mission statement again',
+                solution: 'Your vault auto-fills applications. Never retype your address, EIN, or mission statement again',
               },
             ].map((item, i) => (
               <div key={i} className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
@@ -157,7 +157,7 @@ export default function HomePage() {
               From confused to confident in four steps
             </h2>
             <p className="text-xl text-pulse-text-secondary max-w-2xl mx-auto">
-              We guide you through the entire process—from finding the right grant to submitting a professional application.
+              We guide you through the entire process, from finding the right grant to submitting a professional application.
             </p>
           </div>
 
