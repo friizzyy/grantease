@@ -33,6 +33,8 @@ model User {
   collections             GrantCollection[]
   aiUsageLogs             AIUsageLog[]
   grantMatchCache         GrantMatchCache[]
+  vault                   UserVault?
+  applications            GrantApplication[]
 }
 
 // ==================== USER PROFILE (ONBOARDING) ====================
@@ -166,6 +168,7 @@ model Grant {
   workspaces      Workspace[]
   collections     GrantCollectionItem[]
   grantMatchCache GrantMatchCache[]
+  applications    GrantApplication[]
 
   @@unique([sourceName, sourceId])
   @@index([status])
@@ -419,4 +422,273 @@ model GrantMatchCache {
   @@unique([userId, grantId])
   @@index([userId])
   @@index([expiresAt])
+}
+
+// ==================== USER DATA VAULT ====================
+// Stores reusable data for grant applications - users enter once, reuse everywhere
+
+model UserVault {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // === ORGANIZATION INFO ===
+  organizationName     String?
+  organizationLegalName String?
+  dbaName              String?
+  ein                  String? // Tax ID (encrypted)
+  dunsNumber           String?
+  ueiNumber            String? // Unique Entity Identifier (SAM.gov)
+  cageCode             String?
+  yearFounded          Int?
+  websiteUrl           String?
+
+  // === CONTACT INFO ===
+  primaryContactName   String?
+  primaryContactTitle  String?
+  primaryContactEmail  String?
+  primaryContactPhone  String?
+
+  // === ADDRESS ===
+  streetAddress        String?
+  streetAddress2       String?
+  city                 String?
+  state                String?
+  zipCode              String?
+  country              String   @default("US")
+
+  // === MAILING ADDRESS (if different) ===
+  mailingStreetAddress  String?
+  mailingStreetAddress2 String?
+  mailingCity           String?
+  mailingState          String?
+  mailingZipCode        String?
+  mailingCountry        String?
+
+  // === ORGANIZATION DETAILS ===
+  missionStatement     String?  // Their core mission (2-3 sentences)
+  organizationHistory  String?  // Brief history
+  serviceArea          String?  // Geographic area served
+  populationsServed    String?  // Who they serve (JSON array)
+  annualOperatingBudget String?
+
+  // === FINANCIAL INFO ===
+  fiscalYearEnd        String?  // "December" or "June"
+  bankName             String?
+  accountType          String?  // checking, savings
+  routingNumber        String?  // (encrypted)
+  accountNumber        String?  // (encrypted)
+
+  // === REGISTRATIONS & CERTIFICATIONS ===
+  samRegistered        Boolean  @default(false)
+  samExpirationDate    DateTime?
+  nonprofitStatus      String?  // 501c3, 501c4, etc.
+  stateCharityReg      Boolean  @default(false)
+
+  // === CERTIFICATIONS (JSON array) ===
+  certifications       String   @default("[]") // ["minority_owned", "woman_owned", "veteran_owned", etc.]
+
+  // === KEY PERSONNEL (JSON array of objects) ===
+  keyPersonnel         String   @default("[]") // [{name, title, email, bio, role}]
+
+  // === BOARD MEMBERS (JSON array - for nonprofits) ===
+  boardMembers         String   @default("[]") // [{name, title, affiliation}]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  documents    VaultDocument[]
+  textBlocks   VaultTextBlock[]
+  budgetItems  VaultBudgetItem[]
+}
+
+// Reusable documents (uploaded once, attached to many applications)
+model VaultDocument {
+  id       String @id @default(cuid())
+  vaultId  String
+  vault    UserVault @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+
+  name        String   // User-friendly name
+  type        String   // tax_exempt_letter, annual_report, financial_statement, etc.
+  description String?
+  fileName    String
+  fileUrl     String   // Storage URL
+  fileSize    Int
+  mimeType    String
+
+  // Metadata
+  documentDate DateTime? // Date on the document
+  expiresAt    DateTime? // When this document expires
+  isPublic     Boolean   @default(false) // Can be shared with funders
+
+  // Tracking
+  uploadedAt   DateTime  @default(now())
+  lastUsedAt   DateTime?
+  usageCount   Int       @default(0) // How many applications used this
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([vaultId])
+  @@index([type])
+}
+
+// Reusable text blocks (boilerplate narratives)
+model VaultTextBlock {
+  id       String @id @default(cuid())
+  vaultId  String
+  vault    UserVault @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+
+  title       String   // "Organization History", "Mission Statement", etc.
+  category    String   // org_description, project_narrative, need_statement, etc.
+  content     String   // The actual text (can be long)
+  wordCount   Int      @default(0)
+
+  // Variants for different contexts
+  shortVersion String? // 100-word version
+  longVersion  String? // Extended version
+
+  // AI assistance tracking
+  aiGenerated  Boolean  @default(false)
+  aiImproved   Boolean  @default(false)
+  lastAiEdit   DateTime?
+
+  // Usage tracking
+  lastUsedAt   DateTime?
+  usageCount   Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([vaultId])
+  @@index([category])
+}
+
+// Reusable budget line items
+model VaultBudgetItem {
+  id       String @id @default(cuid())
+  vaultId  String
+  vault    UserVault @relation(fields: [vaultId], references: [id], onDelete: Cascade)
+
+  category     String   // personnel, equipment, supplies, travel, etc.
+  itemName     String
+  description  String?
+  unitCost     Float?
+  quantity     Int?
+  totalCost    Float
+
+  // For personnel
+  salaryRate   Float?
+  ftePercent   Float?  // Full-time equivalent percentage
+  fringeBenefits Float?
+
+  // Justification
+  justification String?
+
+  // Tracking
+  lastUsedAt   DateTime?
+  usageCount   Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([vaultId])
+  @@index([category])
+}
+
+// ==================== GRANT APPLICATIONS ====================
+// Track application progress and store grant-specific data
+
+model GrantApplication {
+  id      String @id @default(cuid())
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grantId String
+  grant   Grant  @relation(fields: [grantId], references: [id], onDelete: Cascade)
+
+  // Status tracking
+  status           String    @default("draft") // draft, in_progress, ready_to_submit, submitted, awarded, rejected
+  startedAt        DateTime  @default(now())
+  lastActivityAt   DateTime  @default(now())
+  submittedAt      DateTime?
+  decisionDate     DateTime?
+
+  // Application details
+  projectTitle     String?
+  projectSummary   String?
+  requestedAmount  Float?
+
+  // Progress tracking (JSON)
+  completedSections String  @default("[]") // ["contact_info", "project_narrative", "budget"]
+  currentSection    String? // Which section they're working on
+  progressPercent   Int     @default(0)
+
+  // Application content (JSON - stores all form responses)
+  formData         String   @default("{}")
+
+  // AI assistance
+  aiDraftContent   String?  // AI-generated draft content (JSON)
+  aiSuggestions    String?  // Active suggestions (JSON)
+
+  // Notes and reminders
+  notes            String?
+  internalDeadline DateTime? // User's personal deadline
+
+  // Submission details
+  confirmationNumber String?
+  submissionMethod   String? // online, email, mail
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  documents ApplicationDocument[]
+  timeline  ApplicationTimelineEntry[]
+
+  @@unique([userId, grantId])
+  @@index([userId])
+  @@index([status])
+}
+
+// Documents attached to a specific application
+model ApplicationDocument {
+  id            String @id @default(cuid())
+  applicationId String
+  application   GrantApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  name          String
+  type          String   // narrative, budget, attachment, support_letter
+  fileName      String
+  fileUrl       String
+  fileSize      Int
+  mimeType      String
+
+  // Can reference a vault document (reused)
+  vaultDocumentId String?
+
+  // Status
+  status        String   @default("draft") // draft, final, submitted
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([applicationId])
+}
+
+// Timeline/activity log for applications
+model ApplicationTimelineEntry {
+  id            String @id @default(cuid())
+  applicationId String
+  application   GrantApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  type          String   // status_change, document_upload, note_added, ai_assist, submission
+  title         String
+  description   String?
+  metadata      String?  // JSON for additional context
+
+  createdAt DateTime @default(now())
+
+  @@index([applicationId])
+  @@index([createdAt])
 }

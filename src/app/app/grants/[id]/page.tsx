@@ -613,34 +613,41 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
             </div>
           </div>
 
-          {/* Primary CTA - Apply Now */}
-          {grant.url ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="mb-4"
+          {/* Primary CTA - Start Application with GrantEase */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="mb-4"
+          >
+            <Button
+              size="lg"
+              className="w-full sm:w-auto px-8 py-6 text-lg font-semibold bg-gradient-to-r from-pulse-accent to-pulse-accent/80 hover:from-pulse-accent/90 hover:to-pulse-accent/70 shadow-lg shadow-pulse-accent/25"
+              asChild
             >
-              <Button
-                size="lg"
-                className="w-full sm:w-auto px-8 py-6 text-lg font-semibold bg-gradient-to-r from-pulse-accent to-pulse-accent/80 hover:from-pulse-accent/90 hover:to-pulse-accent/70 shadow-lg shadow-pulse-accent/25"
-                asChild
-              >
-                <a href={grant.url} target="_blank" rel="noopener noreferrer">
-                  Apply Now
-                  <ExternalLink className="w-5 h-5 ml-2" />
-                </a>
-              </Button>
-            </motion.div>
-          ) : (
-            <div className="mb-4 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-yellow-500" />
-              <span className="text-sm text-yellow-500">Application link unavailable</span>
-            </div>
-          )}
+              <Link href={`/app/apply/${encodeURIComponent(id)}`}>
+                <Sparkles className="w-5 h-5 mr-2" />
+                Start Application
+              </Link>
+            </Button>
+            <p className="text-xs text-pulse-text-tertiary mt-2">
+              Use our guided flow with AI assistance
+            </p>
+          </motion.div>
 
           {/* Secondary Action Buttons */}
           <div className="flex flex-wrap gap-3">
+            {grant.url && (
+              <Button
+                variant="outline"
+                asChild
+              >
+                <a href={grant.url} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  View Original
+                </a>
+              </Button>
+            )}
             <Button
               variant={isSaved ? 'outline' : 'secondary'}
               onClick={handleSaveGrant}
@@ -660,18 +667,6 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
                   Save Grant
                 </>
               )}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleStartApplication}
-              disabled={isCreatingWorkspace}
-            >
-              {isCreatingWorkspace ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <FolderPlus className="w-4 h-4 mr-2" />
-              )}
-              Start Application
             </Button>
             <Button
               variant="ghost"
