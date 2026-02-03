@@ -337,4 +337,57 @@ export interface UserProfile {
   onboardingCompletedAt: Date | null
   onboardingStep: number
   confidenceScore: number
+
+  // NEW: Enhanced profile fields from AI analysis
+  companyName?: string | null
+  companyWebsite?: string | null
+  companyDescription?: string | null
+  tagline?: string | null
+  products?: string[]
+  services?: string[]
+  targetAudience?: string[]
+  geographicFocus?: string[]
+  certifications?: string[]
+  specializations?: string[]
+  fundingNeeds?: string[]
+  potentialProjects?: string[]
+
+  // Agriculture-specific (from AI or manual)
+  farmDetails?: {
+    farmType?: string
+    acreage?: string
+    products?: string[]
+    organic?: boolean
+    sustainable?: boolean
+  }
+
+  // AI analysis metadata
+  aiAnalyzed?: boolean
+  aiAnalysisDate?: string
+  aiConfidence?: number
+}
+
+// Extended onboarding state with AI features
+export interface OnboardingStateExtended extends OnboardingState {
+  // AI-powered profile data
+  companyName?: string
+  companyWebsite?: string
+  companyDescription?: string
+  aiProfile?: {
+    tagline?: string
+    products?: string[]
+    services?: string[]
+    targetAudience?: string[]
+    certifications?: string[]
+    specializations?: string[]
+    fundingNeeds?: string[]
+    confidence?: number
+  }
+  farmDetails?: {
+    farmType?: string
+    acreage?: string
+    products?: string[]
+    organic?: boolean
+    sustainable?: boolean
+  }
 }
