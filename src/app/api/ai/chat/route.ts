@@ -2,18 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import OpenAI from 'openai'
 import { rateLimiters, rateLimitExceededResponse } from '@/lib/rate-limit'
-
-// Lazy initialization to avoid build-time errors when API key is not set
-function getOpenAIClient(): OpenAI {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY is not configured')
-  }
-  return new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  })
-}
+import { generateText, isGeminiConfigured } from '@/lib/services/gemini-client'
 
 interface ChatMessage {
   role: 'user' | 'assistant' | 'system'
@@ -23,7 +13,7 @@ interface ChatMessage {
 /**
  * POST /api/ai/chat
  *
- * AI-powered chat assistant for grant discovery and guidance
+ * AI-powered chat assistant for grant discovery and guidance using Gemini
  */
 export async function POST(request: NextRequest) {
   try {
@@ -39,9 +29,9 @@ export async function POST(request: NextRequest) {
       return rateLimitExceededResponse(rateLimit.resetAt)
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!isGeminiConfigured()) {
       return NextResponse.json(
-        { error: 'AI chat not configured' },
+        { error: 'AI chat not configured. Please add GEMINI_API_KEY to your environment.' },
         { status: 503 }
       )
     }
@@ -118,7 +108,13 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const systemPrompt = `You are the Grants By AI assistant, an expert grant advisor. Your role is to help users:
+    // Build conversation history
+    const historyText = conversationHistory
+      .slice(-10)
+      .map((msg: ChatMessage) => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+      .join('\n\n')
+
+    const prompt = `You are the GrantEase AI assistant, an expert grant advisor. Your role is to help users:
 
 1. Find relevant grants based on their profile and needs
 2. Understand grant requirements and eligibility
@@ -145,46 +141,34 @@ Available grant sources in the system:
 - New York State Grants
 - Texas State Grants
 - Candid/Foundation Directory (Foundation grants)
-- Data.gov datasets`
+- Data.gov datasets
 
-    // Build messages array
-    const messages: ChatMessage[] = [
-      { role: 'system', content: systemPrompt },
-    ]
+${historyText ? `Previous conversation:\n${historyText}\n\n` : ''}User: ${message}
 
-    // Add conversation history (limit to last 10 messages for context window)
-    const recentHistory = conversationHistory.slice(-10)
-    messages.push(...recentHistory)
+Respond helpfully and concisely.`
 
-    // Add current message
-    messages.push({ role: 'user', content: message })
-
-    const openaiClient = getOpenAIClient()
     const startTime = Date.now()
-    const completion = await openaiClient.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
-      temperature: 0.7,
-      max_tokens: 1000,
-    })
+    const response = await generateText(prompt, false)
     const responseTime = Date.now() - startTime
 
-    const response = completion.choices[0]?.message?.content
-
     // Log AI usage
-    await prisma.aIUsageLog.create({
-      data: {
-        userId,
-        type: 'chat',
-        model: 'gpt-4o-mini',
-        promptTokens: completion.usage?.prompt_tokens || 0,
-        completionTokens: completion.usage?.completion_tokens || 0,
-        totalTokens: completion.usage?.total_tokens || 0,
-        responseTime,
-        success: !!response,
-        errorMessage: response ? null : 'No response generated',
-      },
-    })
+    try {
+      await prisma.aIUsageLog.create({
+        data: {
+          userId,
+          type: 'chat',
+          model: 'gemini-1.5-flash',
+          promptTokens: 0,
+          completionTokens: 0,
+          totalTokens: 0,
+          responseTime,
+          success: !!response,
+          errorMessage: response ? null : 'No response generated',
+        },
+      })
+    } catch (logError) {
+      console.warn('Failed to log AI usage:', logError)
+    }
 
     if (!response) {
       return NextResponse.json(
@@ -199,20 +183,10 @@ Available grant sources in the system:
     return NextResponse.json({
       response,
       suggestedActions,
-      usage: {
-        promptTokens: completion.usage?.prompt_tokens,
-        completionTokens: completion.usage?.completion_tokens,
-        totalTokens: completion.usage?.total_tokens,
-      },
+      aiProvider: 'gemini',
     })
   } catch (error) {
     console.error('AI chat error:', error)
-    if (error instanceof OpenAI.APIError) {
-      return NextResponse.json(
-        { error: `OpenAI API error: ${error.message}` },
-        { status: error.status || 500 }
-      )
-    }
     return NextResponse.json(
       { error: 'Failed to process request' },
       { status: 500 }
@@ -271,10 +245,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const isConfigured = !!process.env.OPENAI_API_KEY
+    const configured = isGeminiConfigured()
 
     return NextResponse.json({
-      isConfigured,
+      isConfigured: configured,
+      aiProvider: 'gemini',
       suggestedPrompts: [
         'What grants are available for nonprofits in California?',
         'How do I apply for an SBIR grant?',

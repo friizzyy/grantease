@@ -852,42 +852,8 @@ export default function DiscoverPage() {
       }
     } catch (err) {
       console.error('Error loading personalized grants:', err)
-      // Fallback to old match endpoint
-      try {
-        const fallbackResponse = await fetch('/api/grants/match', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ maxResults: limit, minScore: 30 }),
-        })
-        const fallbackData = await fallbackResponse.json()
-
-        if (fallbackResponse.ok && fallbackData.matches?.length > 0) {
-          const matchedGrants = fallbackData.matches
-            .filter((m: { grant: Grant | null }) => m.grant)
-            .map((m: { grant: Grant }) => m.grant)
-
-          setAiMatchResults(fallbackData.matches.map((m: AIMatchResult & { grant?: Grant }) => ({
-            grantId: m.grantId || m.grant?.id,
-            score: m.score,
-            reasons: m.reasons || [],
-            eligibilityStatus: m.eligibilityStatus,
-            nextSteps: m.nextSteps,
-            whatYouCanFund: m.whatYouCanFund,
-            applicationTips: m.applicationTips,
-            urgency: m.urgency,
-            fitSummary: m.fitSummary,
-          })))
-
-          setGrants(matchedGrants)
-          setTotal(matchedGrants.length)
-          setIsProfileMode(true)
-        } else {
-          throw new Error('Fallback also failed')
-        }
-      } catch {
-        setAiMatchError(err instanceof Error ? err.message : 'Failed to load personalized grants')
-        await fetchGeneralGrants()
-      }
+      setAiMatchError(err instanceof Error ? err.message : 'Failed to load personalized grants')
+      await fetchGeneralGrants()
     } finally {
       setLoading(false)
     }
