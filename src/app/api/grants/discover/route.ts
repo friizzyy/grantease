@@ -17,23 +17,26 @@ const CANDIDATES_FOR_RERANKING = 50
 
 /**
  * Map industry tags to keywords for API search
+ * These are SPECIFIC keywords that will be sent to the grant APIs
+ * More focused = better results
  */
 function getKeywordsFromIndustry(industryTags: string[]): string {
   const keywordMap: Record<string, string[]> = {
-    'agriculture': ['agriculture', 'farm', 'rural', 'crop', 'food', 'usda'],
-    'arts_culture': ['arts', 'culture', 'museum', 'heritage', 'creative'],
-    'business': ['business', 'entrepreneurship', 'commerce', 'economic development'],
-    'climate': ['climate', 'environment', 'sustainability', 'clean energy', 'conservation'],
-    'community': ['community', 'neighborhood', 'local', 'civic'],
-    'education': ['education', 'school', 'learning', 'training', 'academic'],
-    'health': ['health', 'medical', 'wellness', 'healthcare', 'clinical'],
-    'housing': ['housing', 'affordable housing', 'shelter', 'homelessness'],
-    'infrastructure': ['infrastructure', 'transportation', 'broadband', 'water'],
-    'nonprofit': ['nonprofit', 'charitable', 'community service'],
-    'research': ['research', 'science', 'innovation', 'study'],
-    'technology': ['technology', 'innovation', 'digital', 'tech', 'software'],
-    'workforce': ['workforce', 'job training', 'employment', 'career'],
-    'youth': ['youth', 'children', 'family', 'early childhood'],
+    // Agriculture - focus on actual farming/land keywords, not generic "food"
+    'agriculture': ['agriculture', 'agricultural', 'farm', 'farming', 'rural development', 'usda', 'crop', 'livestock'],
+    'arts_culture': ['arts', 'culture', 'museum', 'heritage', 'humanities', 'nea', 'neh'],
+    'business': ['small business', 'sbir', 'sttr', 'entrepreneur', 'commercialization'],
+    'climate': ['climate', 'environmental', 'clean energy', 'conservation', 'sustainability', 'epa'],
+    'community': ['community development', 'cdbg', 'neighborhood', 'civic'],
+    'education': ['education', 'school', 'k-12', 'higher education', 'stem'],
+    'health': ['health', 'medical', 'nih', 'healthcare', 'clinical', 'biomedical'],
+    'housing': ['housing', 'hud', 'affordable housing', 'homelessness'],
+    'infrastructure': ['infrastructure', 'transportation', 'broadband', 'water system'],
+    'nonprofit': ['nonprofit', 'charitable', '501c'],
+    'research': ['research', 'nsf', 'scientific', 'r&d'],
+    'technology': ['technology', 'innovation', 'digital', 'cyber', 'sbir'],
+    'workforce': ['workforce', 'job training', 'employment', 'apprenticeship'],
+    'youth': ['youth', 'children', 'family', 'juvenile'],
   }
 
   const keywords: string[] = []
@@ -44,8 +47,8 @@ function getKeywordsFromIndustry(industryTags: string[]): string {
     }
   }
 
-  // Return as OR query
-  return [...new Set(keywords)].slice(0, 5).join(' OR ')
+  // Return as OR query - limit to 4 most specific keywords
+  return [...new Set(keywords)].slice(0, 4).join(' OR ')
 }
 
 /**

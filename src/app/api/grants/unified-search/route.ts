@@ -9,6 +9,88 @@ import { safeJsonParse } from '@/lib/api-utils'
 import { rateLimiters, rateLimitExceededResponse, getClientIdentifier } from '@/lib/rate-limit'
 
 /**
+ * STRICT CATEGORY KEYWORDS - grants must contain these to match a category search
+ * This prevents irrelevant grants from appearing when user searches by category
+ */
+const STRICT_CATEGORY_KEYWORDS: Record<string, string[]> = {
+  'agriculture': [
+    'agriculture', 'agricultural', 'farm', 'farmer', 'farming', 'ranch', 'rancher',
+    'rural', 'crop', 'livestock', 'cattle', 'poultry', 'usda', 'food production',
+    'agribusiness', 'soil', 'irrigation', 'harvest', 'seed', 'grain', 'dairy',
+    'organic farm', 'conservation land', 'pasture', 'grazing', 'horticulture',
+    'farmland', 'beginning farmer', 'young farmer', 'agricu', 'vineyard', 'orchard',
+    'nursery', 'aquaculture', 'fishery', 'forestry', 'timber', 'woodland',
+    'agroforestry', 'pollinator', 'cooperative extension', 'rural development',
+    'rural business', 'rural community',
+  ],
+  'small business': [
+    'small business', 'sbir', 'sttr', 'entrepreneur', 'startup', 'sba',
+    'business development', 'commercialization', 'enterprise', 'venture',
+    'minority business', 'women-owned', 'veteran-owned',
+  ],
+  'technology': [
+    'technology', 'tech', 'digital', 'software', 'cyber', 'artificial intelligence',
+    'data', 'computing', 'information technology', 'internet', 'broadband',
+    'telecommunications', 'innovation', 'sbir', 'sttr',
+  ],
+  'climate': [
+    'climate', 'environment', 'environmental', 'energy', 'conservation', 'sustainability',
+    'epa', 'renewable', 'clean energy', 'carbon', 'emissions', 'green', 'solar',
+    'wind energy', 'geothermal', 'recycling', 'waste reduction', 'pollution',
+  ],
+  'education': [
+    'education', 'school', 'learning', 'training', 'academic', 'student',
+    'teacher', 'curriculum', 'educational', 'k-12', 'higher education', 'university',
+    'college', 'classroom', 'literacy', 'stem education',
+  ],
+  'health': [
+    'health', 'medical', 'wellness', 'nih', 'clinical', 'disease', 'mental health',
+    'healthcare', 'hospital', 'patient', 'treatment', 'therapy', 'nursing',
+    'public health', 'medicine', 'biomedical', 'pharmaceutical',
+  ],
+  'research': [
+    'research', 'science', 'nsf', 'study', 'r&d', 'scientific',
+    'laboratory', 'experiment', 'investigation', 'academic research',
+  ],
+}
+
+/**
+ * Filter grants strictly by keyword/category
+ * Only returns grants that clearly match the search term
+ */
+function filterByKeywordStrict(grants: NormalizedGrant[], keyword: string): NormalizedGrant[] {
+  const keywordLower = keyword.toLowerCase().trim()
+
+  // Check if this is a known category with strict keywords
+  const strictKeywords = STRICT_CATEGORY_KEYWORDS[keywordLower]
+
+  if (strictKeywords) {
+    // Use strict category filtering
+    return grants.filter(grant => {
+      const titleLower = grant.title?.toLowerCase() || ''
+      const sponsorLower = grant.sponsor?.toLowerCase() || ''
+      const summaryLower = grant.summary?.toLowerCase() || ''
+      const categoriesLower = (grant.categories || []).map(c => c.toLowerCase()).join(' ')
+      const combinedText = `${titleLower} ${sponsorLower} ${summaryLower} ${categoriesLower}`
+
+      // Grant must contain at least one of the strict keywords
+      return strictKeywords.some(kw => combinedText.includes(kw))
+    })
+  }
+
+  // For non-category searches, just do basic keyword matching
+  // but be more strict - the keyword must appear in title, sponsor, or categories
+  return grants.filter(grant => {
+    const titleLower = grant.title?.toLowerCase() || ''
+    const sponsorLower = grant.sponsor?.toLowerCase() || ''
+    const categoriesLower = (grant.categories || []).map(c => c.toLowerCase()).join(' ')
+    const searchText = `${titleLower} ${sponsorLower} ${categoriesLower}`
+
+    return searchText.includes(keywordLower)
+  })
+}
+
+/**
  * Convert NormalizedGrant to GrantForRelevance format
  */
 function toGrantForRelevance(grant: NormalizedGrant): GrantForRelevance {
@@ -152,12 +234,18 @@ export async function GET(request: NextRequest) {
     // Apply relevance scoring and filtering if we have a profile
     let processedGrants: Array<NormalizedGrant & { relevance?: { score: number; isEligible: boolean; matchReasons: string[]; warnings: string[] } }> = allGrants
 
+    // STRICT CATEGORY FILTERING: When user searches by category/keyword, apply strict filtering
+    // This ensures that "agriculture" search only returns agriculture grants, not random grants
+    if (keyword) {
+      processedGrants = filterByKeywordStrict(processedGrants, keyword)
+    }
+
     // Minimum score threshold - only show grants that are actually relevant
     const minRelevanceScore = 30
 
     if (shouldUseProfile && userProfile) {
       // Calculate relevance for each grant
-      const grantsWithRelevance = allGrants.map(grant => {
+      const grantsWithRelevance = processedGrants.map(grant => {
         const grantForRelevance = toGrantForRelevance(grant)
         const relevance = calculateRelevance(grantForRelevance, userProfile)
         return {
@@ -307,11 +395,16 @@ export async function POST(request: NextRequest) {
     // Apply relevance scoring and filtering if we have a profile
     let processedGrants: Array<NormalizedGrant & { relevance?: { score: number; isEligible: boolean; matchReasons: string[]; warnings: string[] } }> = allGrants
 
+    // STRICT CATEGORY FILTERING: When user searches by category/keyword, apply strict filtering
+    if (keyword) {
+      processedGrants = filterByKeywordStrict(processedGrants, keyword)
+    }
+
     // Minimum score threshold for profile-based filtering
     const minRelevanceScore = 30
 
     if (shouldUseProfile && userProfile) {
-      const grantsWithRelevance = allGrants.map(grant => {
+      const grantsWithRelevance = processedGrants.map(grant => {
         const grantForRelevance = toGrantForRelevance(grant)
         const relevance = calculateRelevance(grantForRelevance, userProfile)
         return {
