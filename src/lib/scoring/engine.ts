@@ -415,10 +415,13 @@ function scorePreferencesMatch(
  */
 function calculateQualityBonus(grant: GrantForScoring): { score: number } {
   const MAX_POINTS = SCORING_WEIGHTS.QUALITY_BONUS
-  const qualityScore = grant.qualityScore ?? 0.5
+  const rawScore = grant.qualityScore ?? 50
 
-  // Convert 0-1 quality score to bonus points
-  return { score: Math.round(qualityScore * MAX_POINTS) }
+  // qualityScore is stored as 0-100 in database, convert to 0-1 ratio
+  const normalizedScore = rawScore > 1 ? rawScore / 100 : rawScore
+
+  // Convert to bonus points (0-5)
+  return { score: Math.round(normalizedScore * MAX_POINTS) }
 }
 
 // ============= MAIN SCORING ENGINE =============
@@ -464,8 +467,9 @@ export function calculateScore(
     qualityBonus: quality.score,
   }
 
-  // Calculate total
-  const totalScore = Object.values(breakdown).reduce((sum, val) => sum + val, 0)
+  // Calculate total (clamped to 0-100)
+  const rawTotal = Object.values(breakdown).reduce((sum, val) => sum + val, 0)
+  const totalScore = Math.min(100, Math.max(0, rawTotal))
 
   // Determine confidence level based on profile completeness
   const confidenceLevel = determineConfidenceLevel(profile)

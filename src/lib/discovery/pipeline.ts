@@ -524,11 +524,12 @@ export async function runDiscoveryPipeline(
     const original = grants.find(g => g.id === scoredGrant.id)!
     const aiResult = aiResults.get(scoredGrant.id) || createFallbackMatchResult(scoredGrant.id)
 
-    // Combined score: 60% deterministic, 40% AI
+    // Combined score: 60% deterministic, 40% AI (clamped to 0-100)
     const aiScore = aiResult.confidence !== 'low' ? aiResult.matchScore : scoredGrant.scoring.totalScore
-    const combinedScore = Math.round(
+    const rawCombined = Math.round(
       (scoredGrant.scoring.totalScore * 0.6) + (aiScore * 0.4)
     )
+    const combinedScore = Math.min(100, Math.max(0, rawCombined))
 
     // Determine applies_to_user
     let appliesToUser: DiscoveryResult['appliesToUser']

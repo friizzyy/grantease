@@ -19,6 +19,9 @@ export const ENTITY_TYPES = [
   'tribal',
   'cooperative',
   'municipality',
+  'farmer',
+  'teacher',
+  'homeowner',
 ] as const
 
 export type EntityType = typeof ENTITY_TYPES[number]
@@ -33,7 +36,109 @@ export const ENTITY_TYPE_LABELS: Record<EntityType, string> = {
   tribal: 'Tribal Organization',
   cooperative: 'Cooperative',
   municipality: 'Municipality/Local Government',
+  farmer: 'Farmer/Rancher/Ag Producer',
+  teacher: 'Teacher/Educator',
+  homeowner: 'Homeowner/Working Family',
 }
+
+// ============= SMALL ENTITY AUDIENCE TARGETING =============
+// The discover page is designed for "normal people" - not institutions
+// These entity types are the PRIMARY audience for the discover feature
+
+export const SMALL_ENTITY_TYPES: EntityType[] = [
+  'individual',
+  'small_business',
+  'farmer',
+  'teacher',
+  'homeowner',
+  'cooperative',  // Small farmer co-ops are still "small entities"
+] as const
+
+// Entity types that indicate INSTITUTIONAL applicants
+// Grants exclusively for these should be filtered OUT of discover
+export const INSTITUTIONAL_ENTITY_TYPES: EntityType[] = [
+  'educational',   // Universities, colleges
+  'government',    // Government agencies
+  'municipality',  // Local governments
+  // Note: 'nonprofit' and 'for_profit' can go either way depending on size
+] as const
+
+// Keywords in eligibility that indicate INSTITUTION-ONLY grants
+// These are hard exclusion signals
+export const INSTITUTION_ONLY_KEYWORDS = [
+  'university',
+  'universities',
+  'college',
+  'colleges',
+  'higher education institution',
+  'institutions of higher education',
+  'ihe',
+  'r1 institution',
+  'research institution',
+  'academic institution',
+  'state agency',
+  'state agencies',
+  'state government',
+  'local government',
+  'municipal government',
+  'county government',
+  'city government',
+  'tribal government',
+  'financial institution',
+  'bank',
+  'credit union',
+  'lender',
+  'lending institution',
+  'hospital',
+  'health system',
+  'medical center',
+  'large nonprofit',
+  'national nonprofit',
+  'major foundation',
+] as const
+
+// Keywords that indicate a grant COULD work for small entities
+// Even if it also accepts institutions
+export const SMALL_ENTITY_POSITIVE_KEYWORDS = [
+  'individual',
+  'individuals',
+  'small business',
+  'small businesses',
+  'small enterprise',
+  'farmer',
+  'farmers',
+  'rancher',
+  'ranchers',
+  'producer',
+  'producers',
+  'agricultural producer',
+  'beginning farmer',
+  'young farmer',
+  'veteran farmer',
+  'teacher',
+  'teachers',
+  'educator',
+  'educators',
+  'classroom teacher',
+  'homeowner',
+  'homeowners',
+  'working family',
+  'working families',
+  'low-income',
+  'moderate-income',
+  'entrepreneur',
+  'entrepreneurs',
+  'sole proprietor',
+  'self-employed',
+  'micro-enterprise',
+  'microenterprise',
+  'startup',
+  'early-stage',
+  'emerging',
+] as const
+
+// Max employee count to be considered "small" for our discover audience
+export const MAX_SMALL_ENTITY_EMPLOYEES = 15
 
 // Canonical eligibility tags that grants might use
 export const ELIGIBILITY_TAGS = [
@@ -80,6 +185,9 @@ export const ENTITY_TO_ELIGIBILITY_TAGS: Record<EntityType, EligibilityTag[]> = 
   tribal: ['Tribal', 'Tribal Organization', 'Native American', 'Government Entity'],
   cooperative: ['Cooperative', 'Nonprofit', 'Agricultural Producer'],
   municipality: ['Municipal', 'Local Government', 'Government Entity', 'Public Housing Authority'],
+  farmer: ['Agricultural Producer', 'Farmer', 'Rancher', 'Beginning Farmer', 'Individual', 'Small Business'],
+  teacher: ['Individual', 'Educational Institution'],
+  homeowner: ['Individual'],
 }
 
 // ============= INDUSTRY/FOCUS AREAS =============

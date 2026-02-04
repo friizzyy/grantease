@@ -21,6 +21,9 @@ import {
   countKeywordMatches,
   HARD_FILTER_CONFIG,
   ConfidenceLevel,
+  SMALL_ENTITY_TYPES,
+  INSTITUTION_ONLY_KEYWORDS,
+  SMALL_ENTITY_POSITIVE_KEYWORDS,
 } from '@/lib/constants/taxonomy'
 
 // ============= TYPES =============
@@ -488,6 +491,104 @@ export function checkDataQuality(grant: GrantForEligibility): EligibilityResult 
 }
 
 /**
+ * Check if user is a "small entity" type that should see filtered results
+ */
+export function isSmallEntityUser(profile: UserProfileForEligibility): boolean {
+  if (!profile.entityType) return true // Default to small entity filtering for unknown
+  return SMALL_ENTITY_TYPES.includes(profile.entityType as EntityType)
+}
+
+/**
+ * Check if grant is ONLY for institutions (not accessible to small entities)
+ *
+ * This is a KEY filter for the discover page:
+ * - If grant eligibility contains INSTITUTION_ONLY_KEYWORDS AND
+ * - Does NOT contain SMALL_ENTITY_POSITIVE_KEYWORDS
+ * - Then it fails the filter (for small entity users)
+ *
+ * Examples that FAIL (institution-only):
+ * - "Open to R1 research institutions only"
+ * - "State agencies and local governments"
+ * - "Universities with established research programs"
+ *
+ * Examples that PASS (accessible to small entities):
+ * - "Small businesses and individual farmers"
+ * - "Universities, nonprofits, and small businesses" (mixed audience)
+ * - "Agricultural producers and beginning farmers"
+ */
+export function checkNotInstitutionOnly(
+  profile: UserProfileForEligibility,
+  grant: GrantForEligibility
+): EligibilityResult {
+  const filterName = 'INSTITUTION_ONLY'
+
+  // Only apply this filter to small entity users
+  if (!isSmallEntityUser(profile)) {
+    return {
+      passes: true,
+      reason: null,
+      filterName,
+      confidence: 'high',
+      details: { skipped: 'User is not a small entity type' },
+    }
+  }
+
+  const eligibilityTags = grant.eligibility?.tags || []
+  const eligibilityText = eligibilityTags.join(' ').toLowerCase()
+  const titleLower = (grant.title || '').toLowerCase()
+  const summaryLower = (grant.aiSummary || grant.summary || '').toLowerCase()
+  const combinedText = `${eligibilityText} ${titleLower} ${summaryLower}`
+
+  // Check for institution-only keywords
+  const foundInstitutionKeywords = INSTITUTION_ONLY_KEYWORDS.filter(kw =>
+    combinedText.includes(kw.toLowerCase())
+  )
+
+  if (foundInstitutionKeywords.length === 0) {
+    // No institution keywords = passes (could be for anyone)
+    return {
+      passes: true,
+      reason: null,
+      filterName,
+      confidence: 'high',
+      details: { noInstitutionKeywords: true },
+    }
+  }
+
+  // Has institution keyword - check if it ALSO has small entity keywords
+  const foundSmallEntityKeywords = SMALL_ENTITY_POSITIVE_KEYWORDS.filter(kw =>
+    combinedText.includes(kw.toLowerCase())
+  )
+
+  if (foundSmallEntityKeywords.length > 0) {
+    // Mixed audience (institutions + small entities) = passes
+    return {
+      passes: true,
+      reason: null,
+      filterName,
+      confidence: 'high',
+      details: {
+        mixedAudience: true,
+        institutionKeywords: foundInstitutionKeywords,
+        smallEntityKeywords: foundSmallEntityKeywords,
+      },
+    }
+  }
+
+  // Institution keyword but NO small entity keyword = fails
+  return {
+    passes: false,
+    reason: `This grant appears to be for institutions only (${foundInstitutionKeywords.slice(0, 2).join(', ')})`,
+    filterName,
+    confidence: 'medium',
+    details: {
+      institutionKeywords: foundInstitutionKeywords,
+      smallEntityKeywords: [],
+    },
+  }
+}
+
+/**
  * Check for explicit exclusions in grant text
  */
 export function checkExplicitExclusions(
@@ -572,10 +673,12 @@ export function runEligibilityEngine(
   const suggestions: string[] = []
 
   // Define filter order (fail-fast order)
+  // Institution-only filter runs EARLY to quickly exclude grants meant for universities/governments
   const filters = [
     () => checkGrantStatus(grant),
     () => checkUrlExists(grant),
     () => checkDataQuality(grant),
+    () => checkNotInstitutionOnly(profile, grant), // NEW: Filter out institution-only grants for small entities
     () => checkEntityEligibility(profile, grant),
     () => checkGeographyEligibility(profile, grant),
     () => checkExplicitExclusions(profile, grant),

@@ -290,7 +290,7 @@ function GrantCard({
                 <>
                   <Badge variant="default" className="text-xs bg-pulse-accent/20 text-pulse-accent border-pulse-accent/30">
                     <Sparkles className="w-3 h-3 mr-1" />
-                    {aiMatch.score}% match
+                    {Math.min(100, Math.max(0, aiMatch.score))}/100 match
                   </Badge>
                   {aiMatch.eligibilityStatus && (
                     <EligibilityBadge

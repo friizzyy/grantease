@@ -2,6 +2,20 @@
  * HARD FILTERS
  * ------------
  * Absolute eligibility rules - if these fail, grant is NOT shown
+ *
+ * The discover page is designed for SMALL ENTITIES:
+ * - Individuals, homeowners, working families
+ * - Small businesses (≤15 employees)
+ * - Farmers, ranchers, ag producers
+ * - Teachers, educators
+ * - Early-stage entrepreneurs
+ *
+ * We EXCLUDE grants primarily for institutions:
+ * - Universities/colleges
+ * - State/local governments
+ * - Large nonprofits & foundations
+ * - Financial institutions (banks, credit unions)
+ * - Hospital systems
  */
 
 import { UserProfile } from '@/lib/types/onboarding'
@@ -9,10 +23,24 @@ import {
   GrantForRelevance,
   ENTITY_TO_ELIGIBILITY,
 } from './types'
+import {
+  SMALL_ENTITY_TYPES,
+  INSTITUTION_ONLY_KEYWORDS,
+  SMALL_ENTITY_POSITIVE_KEYWORDS,
+  EntityType,
+} from '@/lib/constants/taxonomy'
 
 interface HardFilterResult {
   passes: boolean
   reason?: string
+}
+
+/**
+ * Check if the user is a "small entity" that should see filtered results
+ */
+export function isSmallEntityUser(profile: UserProfile): boolean {
+  if (!profile.entityType) return true // Default to small entity filtering for unknown
+  return SMALL_ENTITY_TYPES.includes(profile.entityType as EntityType)
 }
 
 /**
@@ -27,6 +55,99 @@ export function checkUrlExists(
       reason: 'Grant has no application URL available',
     }
   }
+  return { passes: true }
+}
+
+/**
+ * Check if a grant is ONLY for institutions (not accessible to small entities)
+ *
+ * This is a HARD FILTER for the discover page:
+ * - If grant eligibility contains INSTITUTION_ONLY_KEYWORDS AND
+ * - Does NOT contain SMALL_ENTITY_POSITIVE_KEYWORDS
+ * - Then it fails the filter
+ *
+ * Examples that FAIL (institution-only):
+ * - "Open to R1 research institutions only"
+ * - "State agencies and local governments"
+ * - "Universities with established research programs"
+ *
+ * Examples that PASS (accessible to small entities):
+ * - "Small businesses and individual farmers"
+ * - "Universities, nonprofits, and small businesses" (mixed audience)
+ * - "Agricultural producers and beginning farmers"
+ */
+export function checkNotInstitutionOnly(
+  grant: GrantForRelevance
+): HardFilterResult {
+  const eligibilityTags = grant.eligibility?.tags || []
+  const eligibilityText = eligibilityTags.join(' ').toLowerCase()
+  const titleLower = (grant.title || '').toLowerCase()
+  const summaryLower = (grant.aiSummary || '').toLowerCase()
+  const combinedText = `${eligibilityText} ${titleLower} ${summaryLower}`
+
+  // Check for institution-only keywords
+  const hasInstitutionKeyword = INSTITUTION_ONLY_KEYWORDS.some(kw =>
+    combinedText.includes(kw.toLowerCase())
+  )
+
+  if (!hasInstitutionKeyword) {
+    // No institution keywords = passes (could be for anyone)
+    return { passes: true }
+  }
+
+  // Has institution keyword - check if it ALSO has small entity keywords
+  const hasSmallEntityKeyword = SMALL_ENTITY_POSITIVE_KEYWORDS.some(kw =>
+    combinedText.includes(kw.toLowerCase())
+  )
+
+  if (hasSmallEntityKeyword) {
+    // Mixed audience (institutions + small entities) = passes
+    return { passes: true }
+  }
+
+  // Institution keyword but NO small entity keyword = fails
+  return {
+    passes: false,
+    reason: 'This grant appears to be for institutions only (universities, government agencies, etc.)',
+  }
+}
+
+/**
+ * Check if grant eligibility explicitly excludes small entities
+ *
+ * Some grants explicitly state they are NOT for individuals or small businesses.
+ * This catches those cases.
+ */
+export function checkNotExcludedEntityType(
+  profile: UserProfile,
+  grant: GrantForRelevance
+): HardFilterResult {
+  if (!profile.entityType) {
+    return { passes: true }
+  }
+
+  const eligibilityTags = grant.eligibility?.tags || []
+  const combinedText = eligibilityTags.join(' ').toLowerCase()
+
+  // Check for explicit exclusions based on user's entity type
+  const exclusionPatterns: Record<string, string[]> = {
+    'individual': ['not for individuals', 'no individuals', 'organizations only', 'entities only'],
+    'small_business': ['not for small business', 'large businesses only', 'enterprise only'],
+    'farmer': ['not for farmers', 'non-agricultural'],
+    'teacher': ['not for individuals', 'institutions only'],
+    'homeowner': ['not for individuals', 'organizations only', 'businesses only'],
+  }
+
+  const patterns = exclusionPatterns[profile.entityType] || []
+  const isExcluded = patterns.some(pattern => combinedText.includes(pattern))
+
+  if (isExcluded) {
+    return {
+      passes: false,
+      reason: `This grant explicitly excludes ${profile.entityType} applicants`,
+    }
+  }
+
   return { passes: true }
 }
 
@@ -338,13 +459,31 @@ export function checkIndustryMinimum(
 export function runHardFilters(
   profile: UserProfile,
   grant: GrantForRelevance,
-  options?: { requireUrl?: boolean }
+  options?: {
+    requireUrl?: boolean
+    filterInstitutionOnly?: boolean  // Default true for discover page
+  }
 ): HardFilterResult {
   // URL check (optional, defaults to true for discover page)
   if (options?.requireUrl !== false) {
     const urlCheck = checkUrlExists(grant)
     if (!urlCheck.passes) {
       return urlCheck
+    }
+  }
+
+  // Institution-only filter (for small entity users)
+  // This is the NEW filter that excludes grants meant only for universities, governments, etc.
+  if (options?.filterInstitutionOnly !== false && isSmallEntityUser(profile)) {
+    const institutionCheck = checkNotInstitutionOnly(grant)
+    if (!institutionCheck.passes) {
+      return institutionCheck
+    }
+
+    // Also check if grant explicitly excludes user's entity type
+    const excludedCheck = checkNotExcludedEntityType(profile, grant)
+    if (!excludedCheck.passes) {
+      return excludedCheck
     }
   }
 
