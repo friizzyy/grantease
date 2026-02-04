@@ -47,6 +47,7 @@ interface MissingField {
   icon: React.ReactNode
   impact: 'high' | 'medium' | 'low'
   description: string
+  settingsField?: string // The field name to highlight in settings
 }
 
 function getMissingFields(profile: ProfileData | null): MissingField[] {
@@ -60,6 +61,7 @@ function getMissingFields(profile: ProfileData | null): MissingField[] {
         icon: <User className="w-4 h-4" />,
         impact: 'high',
         description: 'Set up your profile to see personalized grant matches',
+        settingsField: 'entityType',
       },
     ]
   }
@@ -71,6 +73,7 @@ function getMissingFields(profile: ProfileData | null): MissingField[] {
       icon: <Building2 className="w-4 h-4" />,
       impact: 'high',
       description: 'Required for eligibility matching',
+      settingsField: 'entityType',
     })
   }
 
@@ -81,6 +84,7 @@ function getMissingFields(profile: ProfileData | null): MissingField[] {
       icon: <MapPin className="w-4 h-4" />,
       impact: 'high',
       description: 'Many grants are region-specific',
+      settingsField: 'state',
     })
   }
 
@@ -91,6 +95,7 @@ function getMissingFields(profile: ProfileData | null): MissingField[] {
       icon: <Target className="w-4 h-4" />,
       impact: 'high',
       description: 'Helps match grants to your mission',
+      settingsField: 'industryTags',
     })
   }
 
@@ -101,6 +106,7 @@ function getMissingFields(profile: ProfileData | null): MissingField[] {
       icon: <User className="w-4 h-4" />,
       impact: 'medium',
       description: 'Some grants target specific org sizes',
+      settingsField: 'sizeBand',
     })
   }
 
@@ -111,6 +117,7 @@ function getMissingFields(profile: ProfileData | null): MissingField[] {
       icon: <DollarSign className="w-4 h-4" />,
       impact: 'medium',
       description: 'Matches you with appropriately sized grants',
+      settingsField: 'annualBudget',
     })
   }
 
@@ -152,6 +159,19 @@ export function ProfileCompletenessBanner({
     onDismiss?.()
   }
 
+  // Build the settings URL with tab and highlight field
+  const getSettingsUrl = (field?: string) => {
+    const params = new URLSearchParams()
+    params.set('tab', 'matching')
+    if (field) {
+      params.set('highlight', field)
+    }
+    return `/app/settings?${params.toString()}`
+  }
+
+  // Get the first missing field for targeted navigation
+  const firstMissingField = missingFields[0]?.settingsField
+
   // Compact version for inline display
   if (compact) {
     return (
@@ -169,7 +189,7 @@ export function ProfileCompletenessBanner({
               {missingFields.length > 0 ? `Add ${missingFields[0].label.toLowerCase()} to improve` : 'Complete your profile'}
             </span>
           </div>
-          <Link href="/app/settings">
+          <Link href={getSettingsUrl(firstMissingField)}>
             <Button variant="ghost" size="sm" className="text-pulse-accent">
               Improve
               <ChevronRight className="w-4 h-4 ml-1" />
@@ -275,9 +295,13 @@ export function ProfileCompletenessBanner({
 
             {/* Actions */}
             <div className="flex items-center gap-2 shrink-0 ml-4">
-              <Link href={profile?.onboardingCompleted ? '/app/settings' : '/onboarding/step-1'}>
+              <Link href={profile?.onboardingCompleted ? getSettingsUrl(firstMissingField) : '/onboarding/step-1'}>
                 <Button size="sm">
-                  {profile?.onboardingCompleted ? 'Complete Profile' : 'Finish Setup'}
+                  {missingFields.length > 0
+                    ? `Add ${missingFields[0].label}`
+                    : profile?.onboardingCompleted
+                    ? 'View Settings'
+                    : 'Finish Setup'}
                   <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               </Link>

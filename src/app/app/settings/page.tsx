@@ -12,8 +12,9 @@
  * - Persisted profile changes
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -152,24 +153,34 @@ function SettingRow({
 }
 
 // Info card for displaying profile data
-function InfoCard({
-  icon: Icon,
-  label,
-  value,
-  isEditing,
-  children,
-}: {
-  icon: React.ElementType
-  label: string
-  value?: string
-  isEditing?: boolean
-  children?: React.ReactNode
-}) {
+const InfoCard = React.forwardRef<
+  HTMLDivElement,
+  {
+    icon: React.ElementType
+    label: string
+    value?: string
+    isEditing?: boolean
+    isHighlighted?: boolean
+    children?: React.ReactNode
+  }
+>(function InfoCard({ icon: Icon, label, value, isEditing, isHighlighted, children }, ref) {
   return (
-    <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all group">
+    <div
+      ref={ref}
+      className={`p-4 rounded-xl bg-white/[0.02] border transition-all group ${
+        isHighlighted
+          ? 'border-pulse-accent ring-2 ring-pulse-accent/30 animate-pulse'
+          : 'border-white/[0.06] hover:border-pulse-accent/20'
+      }`}
+    >
       <div className="flex items-center gap-2 mb-2">
-        <Icon className="w-4 h-4 text-pulse-accent" />
+        <Icon className={`w-4 h-4 ${isHighlighted ? 'text-pulse-accent' : 'text-pulse-accent'}`} />
         <span className="text-xs font-medium text-pulse-text-tertiary uppercase tracking-wider">{label}</span>
+        {isHighlighted && (
+          <span className="ml-auto text-xs bg-pulse-accent/20 text-pulse-accent px-2 py-0.5 rounded-full">
+            Update this
+          </span>
+        )}
       </div>
       {isEditing && children ? (
         children
@@ -180,7 +191,7 @@ function InfoCard({
       )}
     </div>
   )
-}
+})
 
 // Loading skeleton
 function SettingsSkeleton() {
@@ -196,12 +207,54 @@ function SettingsSkeleton() {
   )
 }
 
-export default function SettingsPage() {
+function SettingsPageContent() {
+  const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState('profile')
+  const [highlightedField, setHighlightedField] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { success, error: showError } = useToastActions()
+
+  // Refs for scrolling to specific fields
+  const fieldRefs = useRef<Record<string, HTMLDivElement | null>>({})
+
+  // Handle URL parameters for tab and highlight
+  useEffect(() => {
+    const tabParam = searchParams.get('tab')
+    const highlightParam = searchParams.get('highlight')
+
+    if (tabParam && tabs.some(t => t.id === tabParam)) {
+      setActiveTab(tabParam)
+    }
+
+    if (highlightParam) {
+      setHighlightedField(highlightParam)
+      // Auto-enable editing mode when navigating to a specific field
+      if (tabParam === 'matching') {
+        setIsEditingMatching(true)
+      }
+      // Clear highlight after animation
+      const timer = setTimeout(() => {
+        setHighlightedField(null)
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [searchParams])
+
+  // Scroll to highlighted field when it becomes available
+  useEffect(() => {
+    if (highlightedField && fieldRefs.current[highlightedField] && !isLoading) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        fieldRefs.current[highlightedField]?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        })
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [highlightedField, isLoading, activeTab])
 
   const [profile, setProfile] = useState({
     name: '',
@@ -697,10 +750,12 @@ export default function SettingsPage() {
                       {/* Profile Grid */}
                       <div className="grid md:grid-cols-2 gap-4 mb-6">
                         <InfoCard
+                          ref={(el) => { fieldRefs.current['entityType'] = el }}
                           icon={User}
                           label="Organization Type"
                           value={ENTITY_TYPES.find(t => t.value === onboardingProfile.entityType)?.label}
                           isEditing={isEditingMatching}
+                          isHighlighted={highlightedField === 'entityType'}
                         >
                           <Select
                             value={onboardingProfile.entityType || '__none__'}
@@ -721,10 +776,12 @@ export default function SettingsPage() {
                         </InfoCard>
 
                         <InfoCard
+                          ref={(el) => { fieldRefs.current['state'] = el }}
                           icon={MapPin}
                           label="Location"
                           value={`${US_STATES.find(s => s.value === onboardingProfile.state)?.label || 'Not set'}, US`}
                           isEditing={isEditingMatching}
+                          isHighlighted={highlightedField === 'state'}
                         >
                           <Select
                             value={onboardingProfile.state || '__none__'}
@@ -746,10 +803,22 @@ export default function SettingsPage() {
                       </div>
 
                       {/* Focus Areas */}
-                      <div className="mb-6">
+                      <div
+                        ref={(el) => { fieldRefs.current['industryTags'] = el }}
+                        className={`mb-6 p-4 -m-4 rounded-xl transition-all ${
+                          highlightedField === 'industryTags'
+                            ? 'ring-2 ring-pulse-accent/30 bg-pulse-accent/5'
+                            : ''
+                        }`}
+                      >
                         <div className="flex items-center gap-2 mb-3">
                           <Target className="w-4 h-4 text-pulse-accent" />
                           <span className="text-xs font-medium text-pulse-text-tertiary uppercase tracking-wider">Focus Areas</span>
+                          {highlightedField === 'industryTags' && (
+                            <span className="ml-auto text-xs bg-pulse-accent/20 text-pulse-accent px-2 py-0.5 rounded-full">
+                              Update this
+                            </span>
+                          )}
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {onboardingProfile.industryTags.map((tag) => {
@@ -810,10 +879,12 @@ export default function SettingsPage() {
                       {/* Size & Stage Grid */}
                       <div className="grid md:grid-cols-3 gap-4 mb-6">
                         <InfoCard
+                          ref={(el) => { fieldRefs.current['sizeBand'] = el }}
                           icon={Users}
                           label="Team Size"
                           value={SIZE_BANDS.find(s => s.value === onboardingProfile.sizeBand)?.label}
                           isEditing={isEditingMatching}
+                          isHighlighted={highlightedField === 'sizeBand'}
                         >
                           <Select
                             value={onboardingProfile.sizeBand || '__none__'}
@@ -834,10 +905,12 @@ export default function SettingsPage() {
                         </InfoCard>
 
                         <InfoCard
+                          ref={(el) => { fieldRefs.current['stage'] = el }}
                           icon={Layers}
                           label="Stage"
                           value={STAGES.find(s => s.value === onboardingProfile.stage)?.label}
                           isEditing={isEditingMatching}
+                          isHighlighted={highlightedField === 'stage'}
                         >
                           <Select
                             value={onboardingProfile.stage || '__none__'}
@@ -858,10 +931,12 @@ export default function SettingsPage() {
                         </InfoCard>
 
                         <InfoCard
+                          ref={(el) => { fieldRefs.current['annualBudget'] = el }}
                           icon={DollarSign}
                           label="Annual Budget"
                           value={BUDGET_RANGES.find(b => b.value === onboardingProfile.annualBudget)?.label}
                           isEditing={isEditingMatching}
+                          isHighlighted={highlightedField === 'annualBudget'}
                         >
                           <Select
                             value={onboardingProfile.annualBudget || '__none__'}
@@ -1238,5 +1313,30 @@ export default function SettingsPage() {
         )}
       </div>
     </div>
+  )
+}
+
+// Loading fallback for Suspense
+function SettingsLoading() {
+  return (
+    <div className="min-h-screen relative p-8 max-w-6xl mx-auto">
+      <div className="animate-pulse">
+        <div className="h-10 bg-pulse-surface rounded w-1/4 mb-4" />
+        <div className="h-6 bg-pulse-surface rounded w-1/2 mb-8" />
+        <div className="flex gap-8">
+          <div className="w-72 h-96 bg-pulse-surface rounded-xl" />
+          <div className="flex-1 h-96 bg-pulse-surface rounded-xl" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Wrapper with Suspense boundary for useSearchParams
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<SettingsLoading />}>
+      <SettingsPageContent />
+    </Suspense>
   )
 }
