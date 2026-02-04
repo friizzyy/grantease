@@ -330,13 +330,16 @@ export function checkGeographyEligibility(
 
 /**
  * Check if grant is relevant to user's industry/focus areas
- * This is the strictest filter - prevents showing irrelevant grants
+ *
+ * IMPORTANT: When INDUSTRY_FILTER_MODE is 'soft', this filter always passes
+ * but returns metadata for scoring. When 'hard', non-matching grants are eliminated.
  */
 export function checkIndustryRelevance(
   profile: UserProfileForEligibility,
   grant: GrantForEligibility
 ): EligibilityResult {
   const filterName = 'INDUSTRY_RELEVANCE'
+  const isSoftMode = HARD_FILTER_CONFIG.INDUSTRY_FILTER_MODE === 'soft'
 
   // No industry tags in profile - pass everything
   if (!profile.industryTags || profile.industryTags.length === 0) {
@@ -434,8 +437,21 @@ export function checkIndustryRelevance(
     }
   }
 
-  // No industry match found - fail
+  // No industry match found
   const userFocus = profile.industryTags.slice(0, 2).join(', ')
+
+  // In soft mode, pass but mark as low relevance for scoring
+  if (isSoftMode) {
+    return {
+      passes: true,
+      reason: `Grant may not be directly related to ${userFocus} - review for fit`,
+      filterName,
+      confidence: 'low',
+      details: { userIndustries: profile.industryTags, grantCategories, industryMatch: false },
+    }
+  }
+
+  // In hard mode, fail the grant
   return {
     passes: false,
     reason: `This grant doesn't appear to be related to ${userFocus}`,

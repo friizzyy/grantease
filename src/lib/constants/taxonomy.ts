@@ -558,6 +558,10 @@ export const HARD_FILTER_CONFIG = {
   ALLOW_UNKNOWN_STATUS: true,  // Allow but penalize
   UNKNOWN_STATUS_PENALTY: 20,  // Score penalty for unknown status
   MIN_QUALITY_SCORE: 0.2,      // Below this, exclude entirely
+  // Industry filtering mode:
+  // - 'hard': eliminate grants that don't match user's industry (strict)
+  // - 'soft': allow all grants but penalize non-matching in scoring (recommended)
+  INDUSTRY_FILTER_MODE: 'soft' as const,
 } as const
 
 // ============= HELPER FUNCTIONS =============
