@@ -17,7 +17,7 @@ import {
   Info,
 } from 'lucide-react'
 
-type EligibilityStatus = 'eligible' | 'likely_eligible' | 'check_requirements' | 'not_eligible'
+type EligibilityStatus = 'eligible' | 'likely_eligible' | 'check_requirements' | 'not_eligible' | 'uncertain'
 
 interface EligibilityInfo {
   label: string
@@ -66,6 +66,15 @@ const ELIGIBILITY_INFO: Record<EligibilityStatus, EligibilityInfo> = {
     borderColor: 'border-red-500/20',
     actionText: 'Consider other grants',
   },
+  uncertain: {
+    label: 'Uncertain',
+    description: 'We couldn\'t determine your eligibility with confidence. Review the grant requirements carefully.',
+    icon: <HelpCircle className="w-4 h-4" />,
+    color: 'text-gray-400',
+    bgColor: 'bg-gray-500/10',
+    borderColor: 'border-gray-500/20',
+    actionText: 'Review requirements manually',
+  },
 }
 
 interface EligibilityBadgeProps {
@@ -80,7 +89,7 @@ export function EligibilityBadge({
   size = 'md',
 }: EligibilityBadgeProps) {
   const [isHovered, setIsHovered] = useState(false)
-  const info = ELIGIBILITY_INFO[status]
+  const info = ELIGIBILITY_INFO[status] || ELIGIBILITY_INFO.uncertain
 
   const sizeClasses = size === 'sm'
     ? 'text-xs px-2 py-0.5 gap-1'
@@ -140,7 +149,7 @@ export function EligibilityExplanation({
   status,
   reasons = [],
 }: EligibilityExplanationProps) {
-  const info = ELIGIBILITY_INFO[status]
+  const info = ELIGIBILITY_INFO[status] || ELIGIBILITY_INFO.uncertain
 
   return (
     <div className={`p-4 rounded-lg border ${info.bgColor} ${info.borderColor}`}>
@@ -172,7 +181,7 @@ export function EligibilityExplanation({
 
 // Simple inline status indicator
 export function EligibilityDot({ status }: { status: EligibilityStatus }) {
-  const info = ELIGIBILITY_INFO[status]
+  const info = ELIGIBILITY_INFO[status] || ELIGIBILITY_INFO.uncertain
   return (
     <span
       className={`inline-block w-2 h-2 rounded-full ${info.bgColor.replace('/10', '')}`}
