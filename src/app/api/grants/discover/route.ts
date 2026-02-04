@@ -214,7 +214,8 @@ export async function GET(request: NextRequest) {
         sponsor: g.sponsor,
         summary: g.summary,
         categories: g.categories,
-        eligibility: { tags: g.eligibility },
+        eligibility: g.eligibility,
+        locations: g.locations,
 
         // Funding
         amountMin: g.amountMin,

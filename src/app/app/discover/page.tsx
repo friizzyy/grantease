@@ -365,7 +365,7 @@ function GrantCard({
           )}
 
           {/* Categories */}
-          {!aiMatch && grant.categories.length > 0 && (
+          {!aiMatch && grant.categories?.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-4">
               {grant.categories.slice(0, 3).map((cat, i) => (
                 <span
@@ -375,16 +375,16 @@ function GrantCard({
                   {cat}
                 </span>
               ))}
-              {grant.categories.length > 3 && (
+              {(grant.categories?.length ?? 0) > 3 && (
                 <span className="px-2 py-0.5 rounded-full bg-pulse-surface text-label-sm text-pulse-text-tertiary normal-case">
-                  +{grant.categories.length - 3}
+                  +{(grant.categories?.length ?? 0) - 3}
                 </span>
               )}
             </div>
           )}
 
           {/* Location */}
-          {grant.locations.length > 0 && grant.locations[0] !== 'National' && (
+          {grant.locations?.length > 0 && grant.locations[0] !== 'National' && (
             <div className="flex items-center gap-1.5 text-label-sm text-pulse-text-tertiary normal-case mb-3">
               <MapPin className="w-3 h-3" />
               <span>{grant.locations.slice(0, 2).join(', ')}</span>

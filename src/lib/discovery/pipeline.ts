@@ -148,6 +148,7 @@ export interface DiscoveryResult {
   // Categories
   categories: string[]
   eligibility: string[]
+  locations: string[]
 
   // URL
   url: string
@@ -558,6 +559,9 @@ export async function runDiscoveryPipeline(
       // Categories
       categories: original.categories,
       eligibility: original.eligibility.tags,
+      locations: original.locations.map(l =>
+        l.type === 'national' ? 'National' : (l.value || 'Unknown')
+      ),
 
       // URL
       url: original.url,
