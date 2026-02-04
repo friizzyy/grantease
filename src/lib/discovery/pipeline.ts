@@ -737,29 +737,55 @@ export async function loadGrantsFromDatabase(
     take: limit,
   })
 
-  return dbGrants.map(g => ({
-    id: g.id,
-    sourceId: g.sourceId,
-    sourceName: g.sourceName,
-    title: g.title,
-    sponsor: g.sponsor,
-    summary: g.summary,
-    description: g.description,
-    categories: safeJsonParse<string[]>(g.categories, []),
-    eligibility: {
-      tags: safeJsonParse<string[]>(g.eligibility, []),
-    },
-    locations: safeJsonParse<Array<{ type: string; value?: string }>>(g.locations, []),
-    amountMin: g.amountMin,
-    amountMax: g.amountMax,
-    amountText: g.amountText,
-    deadlineDate: g.deadlineDate,
-    deadlineType: g.deadlineType,
-    url: g.url,
-    status: g.status,
-    qualityScore: g.qualityScore,
-    fundingType: g.fundingType,
-    purposeTags: safeJsonParse<string[]>(g.purposeTags, []),
-    updatedAt: g.updatedAt,
-  }))
+  return dbGrants.map(g => {
+    // Parse eligibility correctly - it's stored as {"tags": [...], "industries": [...]}
+    const eligibilityData = safeJsonParse<{ tags?: string[]; industries?: string[]; rawText?: string }>(g.eligibility, {})
+
+    // Parse locations and transform to expected format
+    // DB stores: [{"state": "national", "country": "US"}] or [{"state": "CA", "country": "US"}]
+    // Engine expects: [{type: "national"}] or [{type: "state", value: "CA"}]
+    const rawLocations = safeJsonParse<Array<{ state?: string; country?: string; type?: string; value?: string }>>(g.locations, [])
+    const locations = rawLocations.map(loc => {
+      // If already in correct format, use as-is
+      if (loc.type) {
+        return { type: loc.type, value: loc.value }
+      }
+      // Transform from {state: "national"} to {type: "national"}
+      if (loc.state?.toLowerCase() === 'national' || loc.state?.toLowerCase() === 'nationwide') {
+        return { type: 'national' as const }
+      }
+      // Transform from {state: "CA"} to {type: "state", value: "CA"}
+      if (loc.state) {
+        return { type: 'state' as const, value: loc.state }
+      }
+      return { type: 'unknown' as const }
+    })
+
+    return {
+      id: g.id,
+      sourceId: g.sourceId,
+      sourceName: g.sourceName,
+      title: g.title,
+      sponsor: g.sponsor,
+      summary: g.summary,
+      description: g.description,
+      categories: safeJsonParse<string[]>(g.categories, []),
+      eligibility: {
+        tags: eligibilityData.tags || [],
+        rawText: eligibilityData.rawText,
+      },
+      locations,
+      amountMin: g.amountMin,
+      amountMax: g.amountMax,
+      amountText: g.amountText,
+      deadlineDate: g.deadlineDate,
+      deadlineType: g.deadlineType,
+      url: g.url,
+      status: g.status,
+      qualityScore: g.qualityScore,
+      fundingType: g.fundingType,
+      purposeTags: safeJsonParse<string[]>(g.purposeTags, []),
+      updatedAt: g.updatedAt,
+    }
+  })
 }
