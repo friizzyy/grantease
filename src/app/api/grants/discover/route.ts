@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { rateLimiters, rateLimitExceededResponse, getClientIdentifier } from '@/lib/rate-limit'
 import { isGeminiConfigured } from '@/lib/services/gemini-client'
+import { prisma } from '@/lib/db'
 
 // Import the new pipeline
 import {
@@ -55,8 +56,34 @@ export async function GET(request: NextRequest) {
     const useAI = searchParams.get('ai') !== 'false'
     const debug = searchParams.get('debug') === 'true'
 
-    // Load user profile
-    const profile = await loadUserProfile(session.user.id)
+    // Load user profile - try full profile first, then partial
+    let profile = await loadUserProfile(session.user.id)
+    let profileComplete = true
+
+    // If no full profile, try loading partial profile directly from database
+    if (!profile) {
+      const partialProfile = await prisma.userProfile.findUnique({
+        where: { userId: session.user.id },
+      })
+
+      if (partialProfile && partialProfile.entityType) {
+        // Create a minimal profile for matching
+        profile = {
+          id: partialProfile.id,
+          userId: partialProfile.userId,
+          entityType: partialProfile.entityType as any,
+          state: partialProfile.state,
+          industryTags: safeJsonParse(partialProfile.industryTags, []),
+          sizeBand: partialProfile.sizeBand,
+          annualBudget: partialProfile.annualBudget,
+          goals: [],
+          grantPreferences: safeJsonParse(partialProfile.grantPreferences, {}),
+          profileVersion: partialProfile.profileVersion,
+          confidenceScore: partialProfile.confidenceScore,
+        }
+        profileComplete = false
+      }
+    }
 
     if (!profile) {
       return NextResponse.json({
