@@ -33,7 +33,7 @@ describe('Input', () => {
   })
 
   it('should apply error styling when error prop is true', () => {
-    render(<Input error />)
+    render(<Input error="Invalid input" />)
     expect(screen.getByRole('textbox')).toHaveClass('border-pulse-error')
   })
 
