@@ -40,7 +40,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 bg-pulse-surface/95 backdrop-blur-md border border-pulse-border p-6 shadow-xl shadow-black/20 rounded-xl',
+        'fixed left-[50%] top-[50%] z-50 grid w-[calc(100%-2rem)] max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 bg-pulse-surface/95 backdrop-blur-md border border-pulse-border p-6 shadow-xl shadow-black/20 rounded-xl max-h-[85vh] overflow-y-auto overscroll-contain',
         'duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]',
         className
       )}
@@ -51,7 +51,7 @@ const DialogContent = React.forwardRef<
 
       {children}
 
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-md p-1 opacity-70 transition-all duration-200 hover:opacity-100 hover:bg-pulse-elevated hover:scale-110 focus:outline-none focus:ring-2 focus:ring-pulse-accent focus:ring-offset-2 focus:ring-offset-pulse-surface disabled:pointer-events-none">
+      <DialogPrimitive.Close className="absolute right-2 top-2 rounded-md min-w-[44px] min-h-[44px] flex items-center justify-center opacity-70 transition-colors duration-200 hover:opacity-100 hover:bg-pulse-elevated focus:outline-none focus:ring-2 focus:ring-pulse-accent focus:ring-offset-2 focus:ring-offset-pulse-surface disabled:pointer-events-none" style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}>
         <X className="h-4 w-4 text-pulse-text-secondary" />
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>

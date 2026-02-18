@@ -59,7 +59,7 @@ export function TrustSection() {
           </div>
 
           {/* Right column - stat cards */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {trustStats.map((stat, index) => {
               const Icon = stat.icon
               return (
@@ -70,7 +70,7 @@ export function TrustSection() {
                     'bg-pulse-surface/60 border border-pulse-border/40',
                     'transition-all duration-300',
                     'hover:border-pulse-accent/20 hover:bg-pulse-surface/80',
-                    index === 2 && 'col-span-3 md:col-span-1'
+                    ''
                   )}
                 >
                   <div className="w-10 h-10 rounded-xl bg-pulse-accent/10 border border-pulse-accent/20 flex items-center justify-center mx-auto mb-4">

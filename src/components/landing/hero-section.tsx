@@ -156,11 +156,13 @@ export function HeroSection({ categories }: HeroSectionProps) {
                 key={cat}
                 href={`/app/discover?category=${encodeURIComponent(cat)}`}
                 className={cn(
-                  'px-4 py-2 rounded-full text-body-sm font-medium',
+                  'px-4 py-2.5 min-h-[44px] inline-flex items-center rounded-full text-body-sm font-medium',
                   'bg-pulse-surface/60 border border-pulse-border/50 text-pulse-text-secondary',
-                  'transition-all duration-200',
-                  'hover:border-pulse-accent/30 hover:text-pulse-accent hover:bg-pulse-surface'
+                  'transition-colors duration-200',
+                  'hover:border-pulse-accent/30 hover:text-pulse-accent hover:bg-pulse-surface',
+                  'active:border-pulse-accent/30 active:text-pulse-accent'
                 )}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
               >
                 {cat}
               </Link>

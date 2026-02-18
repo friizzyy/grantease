@@ -71,11 +71,12 @@ export function Header() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 text-pulse-text-secondary hover:text-pulse-text"
+            className="md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center text-pulse-text-secondary hover:text-pulse-text active:text-pulse-text transition-colors"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-expanded={mobileMenuOpen}
             aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
             aria-controls="mobile-menu"
+            style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
           >
             {mobileMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
           </button>
@@ -90,12 +91,13 @@ export function Header() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+                    'px-4 py-3 min-h-[44px] flex items-center text-sm font-medium rounded-lg transition-colors',
                     pathname === item.href
                       ? 'text-pulse-accent bg-pulse-accent/10'
-                      : 'text-pulse-text-secondary hover:text-pulse-text hover:bg-pulse-surface'
+                      : 'text-pulse-text-secondary hover:text-pulse-text active:text-pulse-text hover:bg-pulse-surface'
                   )}
                   onClick={() => setMobileMenuOpen(false)}
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
                   {item.label}
                 </Link>

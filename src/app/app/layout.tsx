@@ -11,7 +11,7 @@ export default function AppLayout({
     <div className="min-h-screen">
       <PulseGridBackground />
       <AppSidebar isAdmin={true} />
-      <main className="ml-64 min-h-screen relative z-10">
+      <main className="md:ml-64 min-h-screen relative z-10 pt-14 md:pt-0">
         <PageTransition>
           {children}
         </PageTransition>

@@ -471,7 +471,7 @@ export default function WorkspacesPage() {
     : workspaces.filter(w => w.status === filter)
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <motion.div
         className="mb-8"

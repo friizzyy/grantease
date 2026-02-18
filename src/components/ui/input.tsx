@@ -54,8 +54,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         <input
           type={type}
           className={cn(
-            'flex h-10 w-full rounded-lg bg-pulse-surface/50 border border-pulse-border px-4 py-2 text-sm text-pulse-text placeholder:text-pulse-text-tertiary',
-            'transition-all duration-200',
+            'flex h-11 w-full rounded-lg bg-pulse-surface/50 border border-pulse-border px-4 py-2 text-base text-pulse-text placeholder:text-pulse-text-tertiary',
+            'transition-colors duration-200',
             'hover:border-pulse-border-hover hover:bg-pulse-surface/70',
             'focus:outline-none focus:border-pulse-accent/40',
             'disabled:cursor-not-allowed disabled:opacity-50',
@@ -122,8 +122,8 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 
         <textarea
           className={cn(
-            'flex min-h-[80px] w-full rounded-lg bg-pulse-surface/50 border border-pulse-border px-4 py-3 text-sm text-pulse-text placeholder:text-pulse-text-tertiary',
-            'transition-all duration-200',
+            'flex min-h-[80px] w-full rounded-lg bg-pulse-surface/50 border border-pulse-border px-4 py-3 text-base text-pulse-text placeholder:text-pulse-text-tertiary',
+            'transition-colors duration-200',
             'hover:border-pulse-border-hover hover:bg-pulse-surface/70',
             'focus:outline-none focus:border-pulse-accent/40',
             'disabled:cursor-not-allowed disabled:opacity-50',

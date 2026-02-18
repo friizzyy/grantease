@@ -199,7 +199,8 @@ export function OnboardingLayout({
             {showSkipAll && onSkipAll && (
               <button
                 onClick={onSkipAll}
-                className="text-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors"
+                className="min-h-[44px] px-3 flex items-center text-sm text-pulse-text-tertiary hover:text-pulse-text-secondary active:text-pulse-text-secondary transition-colors"
+                style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
               >
                 Skip →
               </button>
@@ -215,7 +216,7 @@ export function OnboardingLayout({
         </div>
 
         {/* Mobile progress */}
-        <div className="lg:hidden p-6 border-t border-white/[0.06]">
+        <div className="lg:hidden p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] border-t border-white/[0.06]">
           <div className="flex items-center justify-center gap-2">
             {Array.from({ length: totalSteps }).map((_, i) => (
               <div

@@ -542,7 +542,7 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
   const amountDisplay = formatAmount(grant.amountMin, grant.amountMax, grant.amountText)
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Back Button */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}

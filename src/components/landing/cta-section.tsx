@@ -22,7 +22,7 @@ export function CTASection() {
         {/* Content card */}
         <div
           className={cn(
-            'relative p-12 md:p-16 rounded-3xl text-center',
+            'relative p-6 sm:p-12 md:p-16 rounded-3xl text-center',
             'bg-gradient-to-br from-pulse-elevated/80 to-pulse-surface/60',
             'border border-pulse-border/40',
             'backdrop-blur-xl'

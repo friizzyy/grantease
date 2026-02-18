@@ -575,7 +575,7 @@ export default function SavedGrantsPage() {
 
   if (isLoading) {
     return (
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <motion.div
           className="mb-8"
           initial={{ opacity: 0, y: -20 }}
@@ -596,7 +596,7 @@ export default function SavedGrantsPage() {
 
   if (error) {
     return (
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <motion.div
           className="mb-8"
           initial={{ opacity: 0, y: -20 }}
@@ -610,7 +610,7 @@ export default function SavedGrantsPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <motion.div
         className="mb-8"

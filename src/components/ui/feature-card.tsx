@@ -25,11 +25,11 @@ export function FeatureCard({
   return (
     <div
       className={cn(
-        'group relative p-8 rounded-2xl',
+        'group relative p-5 sm:p-8 rounded-2xl',
         'bg-gradient-to-br from-pulse-surface/80 to-pulse-surface/40',
         'border border-pulse-border/50',
-        'transition-all duration-500 ease-out',
-        'hover:border-pulse-accent/30',
+        'transition-[border-color,box-shadow,transform] duration-500 ease-out',
+        'hover:border-pulse-accent/30 active:border-pulse-accent/30',
         'hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)]',
         'hover:-translate-y-1',
         className
@@ -99,9 +99,9 @@ export function BentoCard({
         'group relative overflow-hidden rounded-3xl',
         'bg-gradient-to-br from-pulse-elevated/90 to-pulse-surface/60',
         'border border-pulse-border/40',
-        'p-8',
-        'transition-all duration-500',
-        'hover:border-pulse-accent/20',
+        'p-5 sm:p-8',
+        'transition-[border-color,box-shadow] duration-500',
+        'hover:border-pulse-accent/20 active:border-pulse-accent/20',
         'hover:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.5)]',
         sizeClasses[size],
         className

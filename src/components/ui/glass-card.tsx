@@ -30,7 +30,7 @@ export function GlassCard({
   return (
     <div
       className={cn(
-        'relative rounded-2xl overflow-hidden transition-all duration-200',
+        'relative rounded-2xl overflow-hidden transition-[border-color,box-shadow,transform] duration-200',
         variantStyles[variant],
         borderStyles,
         interactive && [
@@ -38,6 +38,7 @@ export function GlassCard({
           'hover:-translate-y-1',
           'hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.4)]',
           'hover:border-pulse-accent/20',
+          'active:border-pulse-accent/20',
         ],
         className
       )}
@@ -61,7 +62,7 @@ export function GlassCardHeader({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('p-6 pb-4', className)} {...props}>
+    <div className={cn('p-4 sm:p-6 pb-3 sm:pb-4', className)} {...props}>
       {children}
     </div>
   )
@@ -73,7 +74,7 @@ export function GlassCardContent({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('px-6 pb-6', className)} {...props}>
+    <div className={cn('px-4 sm:px-6 pb-4 sm:pb-6', className)} {...props}>
       {children}
     </div>
   )

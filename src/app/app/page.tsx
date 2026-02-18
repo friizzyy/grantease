@@ -208,18 +208,18 @@ function AIRecommendationCard({ rec, index }: { rec: typeof aiRecommendations[0]
 // Loading skeleton
 function DashboardSkeleton() {
   return (
-    <div className="p-8 animate-pulse">
+    <div className="p-4 sm:p-6 lg:p-8 animate-pulse">
       <div className="mb-8">
         <div className="h-4 bg-pulse-surface rounded w-32 mb-2" />
         <div className="h-10 bg-pulse-surface rounded w-64 mb-6" />
         <div className="h-32 bg-pulse-surface rounded-2xl" />
       </div>
-      <div className="grid grid-cols-12 gap-5">
-        <div className="col-span-4 h-40 bg-pulse-surface rounded-2xl" />
-        <div className="col-span-8 h-40 bg-pulse-surface rounded-2xl" />
+      <div className="grid grid-cols-12 gap-4 sm:gap-5">
+        <div className="col-span-12 lg:col-span-4 h-40 bg-pulse-surface rounded-2xl" />
+        <div className="col-span-12 lg:col-span-8 h-40 bg-pulse-surface rounded-2xl" />
         <div className="col-span-12 h-48 bg-pulse-surface rounded-2xl" />
-        <div className="col-span-7 h-64 bg-pulse-surface rounded-2xl" />
-        <div className="col-span-5 h-64 bg-pulse-surface rounded-2xl" />
+        <div className="col-span-12 lg:col-span-7 h-64 bg-pulse-surface rounded-2xl" />
+        <div className="col-span-12 lg:col-span-5 h-64 bg-pulse-surface rounded-2xl" />
       </div>
     </div>
   )
@@ -310,14 +310,14 @@ export default function AppDashboard() {
   const firstName = userName.split(' ')[0]
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Header with AI Command Bar */}
       <motion.div
         className="mb-8"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <div className="flex items-start justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
           <div>
             <p className="text-pulse-text-tertiary font-mono text-micro uppercase tracking-wider mb-2">
               Command Center
@@ -326,7 +326,7 @@ export default function AppDashboard() {
               {getGreeting()}, {firstName}
             </h1>
           </div>
-          <Button size="sm" asChild>
+          <Button size="sm" asChild className="self-start shrink-0">
             <Link href="/app/discover">
               <Search className="w-4 h-4 mr-2" />
               Find Grants
@@ -361,9 +361,13 @@ export default function AppDashboard() {
                 onChange={(e) => setInputValue(e.target.value)}
                 onFocus={() => setCommandBarFocused(true)}
                 onBlur={() => setCommandBarFocused(false)}
-                className="w-full px-4 py-3 pr-12 rounded-xl bg-pulse-bg border border-pulse-border focus:border-pulse-accent focus:outline-none text-pulse-text placeholder:text-pulse-text-tertiary"
+                className="w-full px-4 py-3 pr-12 rounded-xl bg-pulse-bg border border-pulse-border focus:border-pulse-accent focus:outline-none text-base text-pulse-text placeholder:text-pulse-text-tertiary"
               />
-              <button className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-pulse-accent flex items-center justify-center hover:bg-pulse-accent/80 transition-colors">
+              <button
+                className="absolute right-1 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg bg-pulse-accent hover:bg-pulse-accent/80 active:bg-pulse-accent/70 transition-colors"
+                aria-label="Send"
+                style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+              >
                 <Send className="w-4 h-4 text-pulse-bg" />
               </button>
             </div>
@@ -373,7 +377,7 @@ export default function AppDashboard() {
               {quickCommands.map((cmd, i) => (
                 <motion.button
                   key={cmd}
-                  className="px-3 py-1.5 rounded-full bg-pulse-elevated border border-pulse-border text-xs text-pulse-text-secondary hover:border-pulse-accent/30 hover:text-pulse-text transition-all"
+                  className="px-3 py-2 min-h-[36px] rounded-full bg-pulse-elevated border border-pulse-border text-xs text-pulse-text-secondary hover:border-pulse-accent/30 hover:text-pulse-text active:border-pulse-accent/30 active:text-pulse-text transition-colors"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.2 + i * 0.05 }}
@@ -388,7 +392,7 @@ export default function AppDashboard() {
       </motion.div>
 
       {/* Bento Grid with AI Cards */}
-      <div className="grid grid-cols-12 gap-5">
+      <div className="grid grid-cols-12 gap-4 sm:gap-5">
         {/* Funding Potential */}
         <motion.div
           className="col-span-12 lg:col-span-4"
@@ -437,7 +441,7 @@ export default function AppDashboard() {
               <span className="text-pulse-text-tertiary text-xs">{totalGrants} grants</span>
             </div>
             {totalGrants > 0 ? (
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {applicationStages.map((stage, i) => (
                   <motion.div
                     key={stage.name}

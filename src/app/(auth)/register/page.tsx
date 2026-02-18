@@ -185,6 +185,7 @@ export default function RegisterPage() {
               <Input
                 id="name"
                 type="text"
+                autoComplete="name"
                 value={formData.name}
                 onChange={(e) => updateField('name', e.target.value)}
                 placeholder="John Doe"
@@ -204,6 +205,8 @@ export default function RegisterPage() {
               <Input
                 id="email"
                 type="email"
+                inputMode="email"
+                autoComplete="email"
                 value={formData.email}
                 onChange={(e) => updateField('email', e.target.value)}
                 placeholder="you@example.com"
@@ -223,6 +226,7 @@ export default function RegisterPage() {
               <Input
                 id="organization"
                 type="text"
+                autoComplete="organization"
                 value={formData.organization}
                 onChange={(e) => updateField('organization', e.target.value)}
                 placeholder="Your organization (optional)"
@@ -242,25 +246,26 @@ export default function RegisterPage() {
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
                   value={formData.password}
                   onChange={(e) => updateField('password', e.target.value)}
                   placeholder="••••••••"
                   icon={<Lock className="w-4 h-4" />}
                   required
                 />
-                <motion.button
+                <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-pulse-text-tertiary hover:text-pulse-text"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-pulse-text-tertiary hover:text-pulse-text active:text-pulse-text transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
                 >
                   {showPassword ? (
                     <EyeOff className="w-4 h-4" />
                   ) : (
                     <Eye className="w-4 h-4" />
                   )}
-                </motion.button>
+                </button>
               </div>
 
               {/* Password Requirements */}
@@ -314,6 +319,7 @@ export default function RegisterPage() {
               <Input
                 id="confirmPassword"
                 type="password"
+                autoComplete="new-password"
                 value={formData.confirmPassword}
                 onChange={(e) => updateField('confirmPassword', e.target.value)}
                 placeholder="••••••••"
@@ -340,31 +346,34 @@ export default function RegisterPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.45 }}
             >
-              <motion.button
+              <button
                 type="button"
+                role="checkbox"
+                aria-checked={agreedToTerms}
                 onClick={() => setAgreedToTerms(!agreedToTerms)}
-                className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                className={`mt-0.5 min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0 transition-colors`}
+                style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+              >
+                <span className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
                   agreedToTerms
                     ? 'bg-pulse-accent border-pulse-accent'
                     : 'border-pulse-border hover:border-pulse-border-hover'
-                }`}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <AnimatePresence>
-                  {agreedToTerms && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      exit={{ scale: 0 }}
-                      transition={springs.bouncy}
-                    >
-                      <Check className="w-3 h-3 text-pulse-bg" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.button>
-              <p className="text-xs text-pulse-text-secondary">
+                }`}>
+                  <AnimatePresence>
+                    {agreedToTerms && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        exit={{ scale: 0 }}
+                        transition={springs.bouncy}
+                      >
+                        <Check className="w-3 h-3 text-pulse-bg" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </span>
+              </button>
+              <p className="text-sm text-pulse-text-secondary">
                 I agree to the{' '}
                 <Link href="/terms" className="text-pulse-accent hover:underline">
                   Terms of Service

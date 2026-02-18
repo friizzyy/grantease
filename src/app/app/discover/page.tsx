@@ -309,11 +309,13 @@ function GrantCard({
             <button
               onClick={handleSave}
               disabled={saving}
-              className={`p-2 rounded-lg transition-all ${
+              className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors ${
                 isSaved
                   ? 'bg-pulse-accent/20 text-pulse-accent'
-                  : 'bg-pulse-surface text-pulse-text-tertiary hover:text-pulse-accent'
+                  : 'bg-pulse-surface text-pulse-text-tertiary hover:text-pulse-accent active:text-pulse-accent'
               }`}
+              aria-label={isSaved ? 'Unsave grant' : 'Save grant'}
+              style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
             >
               {saving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -640,7 +642,12 @@ function FilterPanel({
           <GlassCard className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-pulse-text">Filters & Sources</h3>
-              <button onClick={onClose} className="p-1 rounded hover:bg-pulse-surface">
+              <button
+                onClick={onClose}
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-pulse-surface active:bg-pulse-surface transition-colors"
+                aria-label="Close filters"
+                style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+              >
                 <X className="w-4 h-4 text-pulse-text-tertiary" />
               </button>
             </div>
@@ -657,7 +664,7 @@ function FilterPanel({
               />
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
               {/* Agency */}
               <div>
                 <label className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-3 block">
@@ -1036,7 +1043,7 @@ export default function DiscoverPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Profile Completeness Banner */}
       {profileLoaded && userProfile && (
         <ProfileCompletenessBanner
@@ -1051,7 +1058,7 @@ export default function DiscoverPage() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <div className="flex items-end justify-between flex-wrap gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Target className="w-5 h-5 text-pulse-accent" />
@@ -1069,17 +1076,18 @@ export default function DiscoverPage() {
               }
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {/* Mode Toggle */}
             <div className="flex items-center bg-pulse-surface rounded-lg p-1 border border-pulse-border">
               <button
                 onClick={handleForYou}
                 disabled={isAiMatching || loading}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-1.5 ${
+                className={`px-3 py-2 min-h-[44px] rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
                   isProfileMode
                     ? 'bg-pulse-accent text-pulse-bg'
-                    : 'text-pulse-text-secondary hover:text-pulse-text'
+                    : 'text-pulse-text-secondary hover:text-pulse-text active:text-pulse-text'
                 }`}
+                style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
               >
                 {(isAiMatching || (loading && isProfileMode)) ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1096,11 +1104,12 @@ export default function DiscoverPage() {
                   fetchGeneralGrants()
                 }}
                 disabled={loading}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-1.5 ${
+                className={`px-3 py-2 min-h-[44px] rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
                   !isProfileMode
                     ? 'bg-pulse-accent text-pulse-bg'
-                    : 'text-pulse-text-secondary hover:text-pulse-text'
+                    : 'text-pulse-text-secondary hover:text-pulse-text active:text-pulse-text'
                 }`}
+                style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
               >
                 <Globe className="w-3.5 h-3.5" />
                 Browse All
@@ -1124,16 +1133,17 @@ export default function DiscoverPage() {
         className="mb-6"
       >
         <GlassCard className="p-4">
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="relative flex-1 min-w-[200px]">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+            <div className="relative flex-1 min-w-0">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-pulse-text-tertiary" />
               <input
-                type="text"
+                type="search"
+                inputMode="search"
                 placeholder="Search grants by keyword..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="w-full pl-12 pr-4 py-3 rounded-xl bg-pulse-bg border border-pulse-border focus:border-pulse-accent focus:outline-none text-pulse-text placeholder:text-pulse-text-tertiary"
+                className="w-full pl-12 pr-4 py-3 rounded-xl bg-pulse-bg border border-pulse-border focus:border-pulse-accent focus:outline-none text-base text-pulse-text placeholder:text-pulse-text-tertiary"
               />
             </div>
             <Button
@@ -1175,7 +1185,8 @@ export default function DiscoverPage() {
               <button
                 key={suggestion.value}
                 onClick={() => handleSuggestion(suggestion.value)}
-                className="px-3 py-1 rounded-full bg-pulse-surface border border-pulse-border text-xs text-pulse-text-secondary hover:border-pulse-accent/30 hover:text-pulse-text transition-all capitalize"
+                className="px-3 py-2 min-h-[36px] rounded-full bg-pulse-surface border border-pulse-border text-xs text-pulse-text-secondary hover:border-pulse-accent/30 hover:text-pulse-text active:border-pulse-accent/30 active:text-pulse-text transition-colors capitalize"
+                style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
               >
                 {suggestion.label}
               </button>

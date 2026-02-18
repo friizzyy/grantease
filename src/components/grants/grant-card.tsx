@@ -41,7 +41,7 @@ export function GrantCard({ grant, saved, onSave, onUnsave, index = 0 }: GrantCa
   }
 
   return (
-    <Card className="p-6 group">
+    <Card className="p-4 sm:p-6 group">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-3">
         <motion.span

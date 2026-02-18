@@ -606,7 +606,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Back Button */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
