@@ -505,3 +505,22 @@ select:-webkit-autofill:active {
 .reveal-delay-3 { animation-delay: 0.3s; opacity: 0; }
 .reveal-delay-4 { animation-delay: 0.4s; opacity: 0; }
 .reveal-delay-5 { animation-delay: 0.5s; opacity: 0; }
+
+/* ==================== MOBILE OPTIMIZATIONS ==================== */
+@media (max-width: 768px) {
+  /* Tighter scrollbar on mobile */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  /* Ensure animation classes start hidden then animate in */
+  .animate-fade-in-up {
+    animation: fade-in-up 0.5s ease-out forwards;
+  }
+
+  /* Optimize touch targets globally */
+  a, button {
+    -webkit-tap-highlight-color: transparent;
+  }
+}

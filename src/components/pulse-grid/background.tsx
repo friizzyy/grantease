@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMotion } from '@/lib/motion/motion-context'
 import { lerp, clamp } from '@/lib/motion/animations'
 
@@ -15,6 +15,12 @@ interface GlowState {
 export function PulseGridBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const glowState = useRef<GlowState>({ x: 0.5, y: 0.4, targetX: 0.5, targetY: 0.4, intensity: 1 })
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detect mobile viewport on mount
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768)
+  }, [])
 
   // Use motion context for reactivity
   let motionState = {
@@ -40,7 +46,7 @@ export function PulseGridBackground() {
 
 
   useEffect(() => {
-    if (reducedMotion) return
+    if (reducedMotion || isMobile) return
 
     const canvas = canvasRef.current
     if (!canvas) return
@@ -175,9 +181,9 @@ export function PulseGridBackground() {
       window.removeEventListener('resize', resize)
       cancelAnimationFrame(animationId)
     }
-  }, [reducedMotion, scrollY, scrollVelocity, mousePosition])
+  }, [reducedMotion, isMobile, scrollY, scrollVelocity, mousePosition])
 
-  if (reducedMotion) {
+  if (reducedMotion || isMobile) {
     // Fallback for reduced motion - static gradient
     return (
       <>

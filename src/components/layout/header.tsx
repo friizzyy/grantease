@@ -71,7 +71,7 @@ export function Header() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 text-pulse-text-secondary hover:text-pulse-text"
+            className="md:hidden p-2.5 -mr-2.5 text-pulse-text-secondary hover:text-pulse-text min-w-[44px] min-h-[44px] flex items-center justify-center"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-expanded={mobileMenuOpen}
             aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
@@ -84,13 +84,13 @@ export function Header() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div id="mobile-menu" className="md:hidden py-4 border-t border-pulse-border" role="navigation" aria-label="Mobile navigation">
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+                    'px-4 py-3 text-base font-medium rounded-lg transition-colors min-h-[44px] flex items-center',
                     pathname === item.href
                       ? 'text-pulse-accent bg-pulse-accent/10'
                       : 'text-pulse-text-secondary hover:text-pulse-text hover:bg-pulse-surface'
@@ -100,11 +100,11 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
-              <div className="flex gap-2 mt-4 px-4">
-                <Button variant="outline" size="sm" className="flex-1" asChild>
+              <div className="flex gap-3 mt-4 px-4">
+                <Button variant="outline" size="default" className="flex-1 min-h-[44px]" asChild>
                   <Link href="/login">Sign In</Link>
                 </Button>
-                <Button size="sm" className="flex-1" asChild>
+                <Button size="default" className="flex-1 min-h-[44px]" asChild>
                   <Link href="/register">Build Profile</Link>
                 </Button>
               </div>

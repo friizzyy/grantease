@@ -21,11 +21,11 @@ import { FloatingCard, PulsingDot } from '@/components/marketing/HeroAnimations'
 
 export default function HomePage() {
   return (
-    <main className="pt-20">
+    <main className="pt-16 md:pt-20">
       {/* Hero - Clear value proposition */}
-      <section className="min-h-[95vh] flex items-center px-4 sm:px-6 lg:px-8 py-20 relative overflow-hidden">
-        {/* Ambient background */}
-        <div className="absolute inset-0 pointer-events-none">
+      <section className="min-h-[80vh] md:min-h-[95vh] flex items-center px-4 sm:px-6 lg:px-8 py-12 md:py-20 relative overflow-hidden">
+        {/* Ambient background - hidden on mobile for performance */}
+        <div className="absolute inset-0 pointer-events-none hidden md:block">
           <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-pulse-accent/[0.05] blur-[150px]" />
           <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-emerald-500/[0.03] blur-[120px]" />
         </div>
@@ -54,17 +54,17 @@ export default function HomePage() {
 
           <div className="text-center max-w-4xl mx-auto">
             {/* Premium badge */}
-            <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/[0.03] backdrop-blur-md border border-white/[0.08] mb-10">
+            <div className="inline-flex items-center gap-2 md:gap-3 px-3 md:px-5 py-2 md:py-2.5 rounded-full bg-white/[0.03] backdrop-blur-md border border-white/[0.08] mb-6 md:mb-10 opacity-0 animate-fade-in-up">
               <div className="flex items-center gap-1.5">
                 <PulsingDot />
                 <span className="text-xs font-medium text-pulse-accent uppercase tracking-wider">Now Available</span>
               </div>
-              <div className="w-px h-4 bg-white/10" />
-              <span className="text-sm text-pulse-text-secondary">Complete applications, not just find grants</span>
+              <div className="w-px h-4 bg-white/10 hidden sm:block" />
+              <span className="text-sm text-pulse-text-secondary hidden sm:inline">Complete applications, not just find grants</span>
             </div>
 
             {/* Main headline - Focus on outcome */}
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-pulse-text leading-[1.05] tracking-tight mb-8">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-pulse-text leading-[1.1] sm:leading-[1.05] tracking-tight mb-5 md:mb-8 opacity-0 animate-fade-in-up animation-delay-100">
               Find grants.
               <br />
               <span className="bg-gradient-to-r from-pulse-accent via-emerald-400 to-teal-400 bg-clip-text text-transparent">
@@ -72,21 +72,23 @@ export default function HomePage() {
               </span>
             </h1>
 
-            <p className="text-xl text-pulse-text-secondary max-w-2xl mx-auto mb-6 leading-relaxed">
+            <p className="text-base md:text-xl text-pulse-text-secondary max-w-2xl mx-auto mb-4 md:mb-6 leading-relaxed opacity-0 animate-fade-in-up animation-delay-200">
               We guide you through every step of applying. See grants in plain English.
               Get writing help for each section. Your data auto-fills every application. No grant writer needed.
             </p>
 
             {/* Key differentiator */}
-            <p className="text-lg text-pulse-accent font-medium mb-12">
+            <p className="text-base md:text-lg text-pulse-accent font-medium mb-8 md:mb-12 opacity-0 animate-fade-in-up animation-delay-300">
               You keep 100% of every dollar you win.
             </p>
 
             {/* Interactive Search Component */}
-            <HeroSearch />
+            <div className="opacity-0 animate-fade-in-up animation-delay-400">
+              <HeroSearch />
+            </div>
 
             {/* Trust indicators - More specific */}
-            <div className="flex flex-wrap justify-center gap-8 mt-10 text-sm text-pulse-text-tertiary">
+            <div className="flex flex-wrap justify-center gap-4 md:gap-8 mt-6 md:mt-10 text-sm text-pulse-text-tertiary opacity-0 animate-fade-in-up animation-delay-500">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-pulse-accent" />
                 <span>Free to start</span>
@@ -105,17 +107,17 @@ export default function HomePage() {
       </section>
 
       {/* The Problem Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white/[0.01] border-y border-white/[0.04]">
+      <section className="py-12 md:py-20 px-4 sm:px-6 lg:px-8 bg-white/[0.01] border-y border-white/[0.04]">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-pulse-text mb-6">
+          <h2 className="text-2xl md:text-4xl font-bold text-pulse-text mb-4 md:mb-6">
             Grant applications shouldn&apos;t be this hard
           </h2>
-          <p className="text-xl text-pulse-text-secondary max-w-3xl mx-auto mb-12 leading-relaxed">
+          <p className="text-base md:text-xl text-pulse-text-secondary max-w-3xl mx-auto mb-8 md:mb-12 leading-relaxed">
             Most people give up on grants, not because they don&apos;t qualify, but because
             the process is confusing, time-consuming, and overwhelming. We built this to change that.
           </p>
 
-          <div className="grid md:grid-cols-3 gap-6 text-left">
+          <div className="grid md:grid-cols-3 gap-4 md:gap-6 text-left">
             {[
               {
                 problem: 'Hours spent searching across dozens of websites',
@@ -130,8 +132,8 @@ export default function HomePage() {
                 solution: 'Your vault auto-fills applications. Never retype your address, EIN, or mission statement again',
               },
             ].map((item, i) => (
-              <div key={i} className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
-                <div className="flex items-start gap-3 mb-4">
+              <div key={i} className="p-4 md:p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+                <div className="flex items-start gap-3 mb-3 md:mb-4">
                   <div className="w-6 h-6 rounded-full bg-pulse-error/10 flex items-center justify-center shrink-0 mt-0.5">
                     <X className="w-3 h-3 text-pulse-error" />
                   </div>
@@ -141,7 +143,7 @@ export default function HomePage() {
                   <div className="w-6 h-6 rounded-full bg-pulse-accent/20 flex items-center justify-center shrink-0 mt-0.5">
                     <Check className="w-3 h-3 text-pulse-accent" />
                   </div>
-                  <p className="text-pulse-text font-medium">{item.solution}</p>
+                  <p className="text-sm md:text-base text-pulse-text font-medium">{item.solution}</p>
                 </div>
               </div>
             ))}
@@ -150,18 +152,18 @@ export default function HomePage() {
       </section>
 
       {/* How It Actually Works - Clear workflow */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
+      <section className="py-12 md:py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-pulse-text mb-4">
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="text-2xl md:text-4xl font-bold text-pulse-text mb-3 md:mb-4">
               From confused to confident in four steps
             </h2>
-            <p className="text-xl text-pulse-text-secondary max-w-2xl mx-auto">
+            <p className="text-base md:text-xl text-pulse-text-secondary max-w-2xl mx-auto">
               We guide you through the entire process, from finding the right grant to submitting a professional application.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-8">
             {[
               {
                 step: '1',
@@ -194,17 +196,17 @@ export default function HomePage() {
             ].map((item) => (
               <div key={item.step} className="relative">
                 {/* Step number */}
-                <div className="absolute -top-3 left-0 w-8 h-8 rounded-full bg-pulse-accent/20 flex items-center justify-center">
-                  <span className="text-sm font-bold text-pulse-accent">{item.step}</span>
+                <div className="absolute -top-3 left-0 w-7 md:w-8 h-7 md:h-8 rounded-full bg-pulse-accent/20 flex items-center justify-center">
+                  <span className="text-xs md:text-sm font-bold text-pulse-accent">{item.step}</span>
                 </div>
 
-                <div className="pt-8 h-full">
-                  <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] h-full hover:border-pulse-accent/30 transition-colors">
-                    <div className="w-12 h-12 rounded-xl bg-pulse-accent/10 flex items-center justify-center mb-4">
-                      <item.icon className="w-6 h-6 text-pulse-accent" />
+                <div className="pt-6 md:pt-8 h-full">
+                  <div className="p-4 md:p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] h-full hover:border-pulse-accent/30 transition-colors">
+                    <div className="w-10 md:w-12 h-10 md:h-12 rounded-xl bg-pulse-accent/10 flex items-center justify-center mb-3 md:mb-4">
+                      <item.icon className="w-5 md:w-6 h-5 md:h-6 text-pulse-accent" />
                     </div>
-                    <h3 className="text-lg font-semibold text-pulse-text mb-2">{item.title}</h3>
-                    <p className="text-sm text-pulse-text-secondary mb-4">{item.description}</p>
+                    <h3 className="text-base md:text-lg font-semibold text-pulse-text mb-1 md:mb-2">{item.title}</h3>
+                    <p className="text-xs md:text-sm text-pulse-text-secondary mb-2 md:mb-4 hidden sm:block">{item.description}</p>
                     <p className="text-xs text-pulse-accent font-medium">{item.detail}</p>
                   </div>
                 </div>
@@ -215,18 +217,18 @@ export default function HomePage() {
       </section>
 
       {/* What Makes Us Different */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white/[0.01] border-y border-white/[0.04]">
+      <section className="py-12 md:py-24 px-4 sm:px-6 lg:px-8 bg-white/[0.01] border-y border-white/[0.04]">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-pulse-text mb-4">
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="text-2xl md:text-4xl font-bold text-pulse-text mb-3 md:mb-4">
               This isn&apos;t just a grant database
             </h2>
-            <p className="text-xl text-pulse-text-secondary max-w-2xl mx-auto">
+            <p className="text-base md:text-xl text-pulse-text-secondary max-w-2xl mx-auto">
               Other sites help you find grants. We help you finish applications.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
             {[
               {
                 icon: Lightbulb,
@@ -261,13 +263,13 @@ export default function HomePage() {
             ].map((feature) => (
               <div
                 key={feature.title}
-                className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-colors"
+                className="p-4 md:p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-colors"
               >
-                <div className="w-12 h-12 rounded-xl bg-pulse-accent/10 flex items-center justify-center mb-4">
-                  <feature.icon className="w-6 h-6 text-pulse-accent" />
+                <div className="w-10 md:w-12 h-10 md:h-12 rounded-xl bg-pulse-accent/10 flex items-center justify-center mb-3 md:mb-4">
+                  <feature.icon className="w-5 md:w-6 h-5 md:h-6 text-pulse-accent" />
                 </div>
-                <h3 className="text-lg font-semibold text-pulse-text mb-2">{feature.title}</h3>
-                <p className="text-sm text-pulse-text-secondary">{feature.description}</p>
+                <h3 className="text-base md:text-lg font-semibold text-pulse-text mb-1 md:mb-2">{feature.title}</h3>
+                <p className="text-xs md:text-sm text-pulse-text-secondary">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -275,19 +277,19 @@ export default function HomePage() {
       </section>
 
       {/* Who It's For */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
+      <section className="py-12 md:py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-pulse-text mb-4">
+          <div className="text-center mb-8 md:mb-16">
+            <h2 className="text-2xl md:text-4xl font-bold text-pulse-text mb-3 md:mb-4">
               Built for people who do the work
             </h2>
-            <p className="text-xl text-pulse-text-secondary max-w-2xl mx-auto">
+            <p className="text-base md:text-xl text-pulse-text-secondary max-w-2xl mx-auto">
               Not for grant consultants or large institutions. For small organizations,
               business owners, and individuals who want funding without the complexity.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
             {[
               {
                 icon: Users,
@@ -312,17 +314,17 @@ export default function HomePage() {
             ].map((persona) => (
               <div
                 key={persona.title}
-                className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-center"
+                className="p-4 md:p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-center"
               >
-                <div className="w-16 h-16 rounded-2xl bg-pulse-accent/10 flex items-center justify-center mb-4 mx-auto">
+                <div className="w-12 md:w-16 h-12 md:h-16 rounded-2xl bg-pulse-accent/10 flex items-center justify-center mb-3 md:mb-4 mx-auto">
                   {'emoji' in persona ? (
-                    <span className="text-3xl">{persona.emoji}</span>
+                    <span className="text-2xl md:text-3xl">{persona.emoji}</span>
                   ) : (
-                    <persona.icon className="w-8 h-8 text-pulse-accent" />
+                    <persona.icon className="w-6 md:w-8 h-6 md:h-8 text-pulse-accent" />
                   )}
                 </div>
-                <h3 className="text-lg font-semibold text-pulse-text mb-2">{persona.title}</h3>
-                <p className="text-sm text-pulse-text-secondary">{persona.description}</p>
+                <h3 className="text-base md:text-lg font-semibold text-pulse-text mb-1 md:mb-2">{persona.title}</h3>
+                <p className="text-xs md:text-sm text-pulse-text-secondary">{persona.description}</p>
               </div>
             ))}
           </div>
@@ -330,9 +332,9 @@ export default function HomePage() {
       </section>
 
       {/* Social Proof / Stats */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 border-y border-white/[0.04] bg-white/[0.01]">
+      <section className="py-10 md:py-16 px-4 sm:px-6 lg:px-8 border-y border-white/[0.04] bg-white/[0.01]">
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 text-center">
             {[
               { value: '20,000+', label: 'Grants Available' },
               { value: '50+', label: 'Data Sources' },
@@ -340,8 +342,8 @@ export default function HomePage() {
               { value: '15 min', label: 'Avg. Time to First Match' },
             ].map((stat) => (
               <div key={stat.label}>
-                <div className="text-3xl md:text-4xl font-bold text-pulse-text mb-1">{stat.value}</div>
-                <div className="text-sm text-pulse-text-tertiary">{stat.label}</div>
+                <div className="text-2xl md:text-4xl font-bold text-pulse-text mb-1">{stat.value}</div>
+                <div className="text-xs md:text-sm text-pulse-text-tertiary">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -349,31 +351,31 @@ export default function HomePage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
+      <section className="py-14 md:py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-pulse-text mb-6">
+          <h2 className="text-3xl md:text-5xl font-bold text-pulse-text mb-4 md:mb-6">
             Ready to stop searching
             <br />
             <span className="text-pulse-accent">and start applying?</span>
           </h2>
-          <p className="text-xl text-pulse-text-secondary mb-4 max-w-2xl mx-auto">
+          <p className="text-base md:text-xl text-pulse-text-secondary mb-3 md:mb-4 max-w-2xl mx-auto">
             Build your profile in 5 minutes. See your matched grants instantly.
             Start your first application today.
           </p>
-          <p className="text-lg text-pulse-accent font-medium mb-10">
+          <p className="text-base md:text-lg text-pulse-accent font-medium mb-8 md:mb-10">
             Free to start. No credit card required.
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 md:gap-4">
             <Link
               href="/register"
-              className="inline-flex items-center gap-2 px-10 py-5 bg-pulse-accent text-pulse-bg font-semibold text-lg rounded-xl hover:bg-pulse-accent/90 transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-8 md:px-10 py-4 md:py-5 bg-pulse-accent text-pulse-bg font-semibold text-base md:text-lg rounded-xl hover:bg-pulse-accent/90 transition-colors min-h-[48px]"
             >
               Start Finding Grants
               <ArrowRight className="w-5 h-5" />
             </Link>
             <Link
               href="/how-it-works"
-              className="inline-flex items-center gap-2 px-10 py-5 bg-white/[0.03] border border-white/[0.08] text-pulse-text font-semibold text-lg rounded-xl hover:border-pulse-accent/30 transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-8 md:px-10 py-4 md:py-5 bg-white/[0.03] border border-white/[0.08] text-pulse-text font-semibold text-base md:text-lg rounded-xl hover:border-pulse-accent/30 transition-colors min-h-[48px]"
             >
               See How It Works
             </Link>

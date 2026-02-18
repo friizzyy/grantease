@@ -21,8 +21,8 @@ const footerLinks = {
 export function Footer() {
   return (
     <footer className="relative border-t border-pulse-border bg-pulse-bg/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2.5 mb-4">
@@ -93,7 +93,7 @@ export function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="mt-12 pt-8 border-t border-pulse-border flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="mt-8 md:mt-12 pt-6 md:pt-8 border-t border-pulse-border flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-body-sm text-pulse-text-tertiary">
             © {new Date().getFullYear()} Grants By AI. All rights reserved.
           </p>

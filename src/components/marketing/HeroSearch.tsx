@@ -148,13 +148,13 @@ export function HeroSearch() {
     <div className="max-w-3xl mx-auto">
       <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] rounded-2xl overflow-hidden shadow-2xl shadow-black/30">
         {/* Search input */}
-        <form onSubmit={handleSearchSubmit} className="p-5 border-b border-white/[0.06]">
-          <div className="flex items-center gap-4">
-            <div className="flex-1 flex items-center gap-3 px-4 py-3 bg-white/[0.03] border border-white/[0.06] rounded-xl focus-within:border-pulse-accent/50 transition-colors">
+        <form onSubmit={handleSearchSubmit} className="p-3 md:p-5 border-b border-white/[0.06]">
+          <div className="flex items-center gap-2 md:gap-4">
+            <div className="flex-1 flex items-center gap-2 md:gap-3 px-3 md:px-4 py-3 bg-white/[0.03] border border-white/[0.06] rounded-xl focus-within:border-pulse-accent/50 transition-colors min-h-[44px]">
               {isSearching ? (
-                <Loader2 className="w-5 h-5 text-pulse-accent animate-spin" />
+                <Loader2 className="w-5 h-5 text-pulse-accent animate-spin shrink-0" />
               ) : (
-                <Search className="w-5 h-5 text-pulse-text-tertiary" />
+                <Search className="w-5 h-5 text-pulse-text-tertiary shrink-0" />
               )}
               <input
                 ref={inputRef}
@@ -163,21 +163,22 @@ export function HeroSearch() {
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setTimeout(() => setIsFocused(false), 200)}
-                placeholder="Try: climate nonprofit, tech startup, education..."
-                className="flex-1 bg-transparent text-pulse-text placeholder:text-pulse-text-tertiary focus:outline-none"
+                placeholder="Try: climate, tech, education..."
+                className="flex-1 bg-transparent text-pulse-text placeholder:text-pulse-text-tertiary focus:outline-none text-base"
               />
             </div>
             <button
               type="submit"
-              className="flex items-center gap-2 px-6 py-3 bg-pulse-accent text-pulse-bg font-semibold rounded-xl hover:bg-pulse-accent/90 transition-colors"
+              className="flex items-center gap-2 px-4 md:px-6 py-3 bg-pulse-accent text-pulse-bg font-semibold rounded-xl hover:bg-pulse-accent/90 transition-colors min-h-[44px] min-w-[44px] justify-center"
             >
-              Search
+              <span className="hidden sm:inline">Search</span>
+              <Search className="w-5 h-5 sm:hidden" />
             </button>
           </div>
         </form>
 
         {/* Results */}
-        <div className="p-5">
+        <div className="p-3 md:p-5">
           <AnimatePresence mode="wait">
             {!hasSearched && !query.trim() ? (
               // Default state - show random clickable grants
@@ -194,7 +195,7 @@ export function HeroSearch() {
                   <span className="text-xs text-pulse-text-tertiary">Click to get started</span>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2 md:space-y-3">
                   {defaultGrants.map((grant, i) => (
                     <motion.button
                       key={grant.id}
@@ -202,15 +203,15 @@ export function HeroSearch() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.05 }}
                       onClick={() => handleResultClick(grant.name)}
-                      className="w-full flex items-center justify-between gap-4 p-4 bg-white/[0.02] border border-white/[0.04] rounded-xl hover:border-pulse-accent/30 hover:bg-white/[0.04] transition-all cursor-pointer text-left group"
+                      className="w-full flex items-center justify-between gap-3 md:gap-4 p-3 md:p-4 bg-white/[0.02] border border-white/[0.04] rounded-xl hover:border-pulse-accent/30 hover:bg-white/[0.04] transition-all cursor-pointer text-left group min-h-[44px]"
                     >
-                      <div className="flex items-center gap-4 min-w-0 flex-1">
-                        <div className="w-10 h-10 rounded-lg bg-pulse-accent/10 flex items-center justify-center shrink-0 group-hover:bg-pulse-accent/20 transition-colors">
-                          <DollarSign className="w-5 h-5 text-pulse-accent" />
+                      <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
+                        <div className="w-9 md:w-10 h-9 md:h-10 rounded-lg bg-pulse-accent/10 flex items-center justify-center shrink-0 group-hover:bg-pulse-accent/20 transition-colors">
+                          <DollarSign className="w-4 md:w-5 h-4 md:h-5 text-pulse-accent" />
                         </div>
                         <div className="min-w-0 text-left">
-                          <div className="font-medium text-pulse-text truncate group-hover:text-pulse-accent transition-colors">{grant.name}</div>
-                          <div className="text-sm text-pulse-text-tertiary">{grant.amount}</div>
+                          <div className="text-sm md:text-base font-medium text-pulse-text truncate group-hover:text-pulse-accent transition-colors">{grant.name}</div>
+                          <div className="text-xs md:text-sm text-pulse-text-tertiary">{grant.amount}</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-4 sm:gap-6 shrink-0">
@@ -218,7 +219,7 @@ export function HeroSearch() {
                           <div className="text-sm text-pulse-text">{grant.deadline}</div>
                           <div className="text-xs text-pulse-text-tertiary">remaining</div>
                         </div>
-                        <div className="text-xl sm:text-2xl font-bold text-pulse-accent">{grant.match}%</div>
+                        <div className="text-lg md:text-2xl font-bold text-pulse-accent">{grant.match}%</div>
                       </div>
                     </motion.button>
                   ))}
@@ -239,7 +240,7 @@ export function HeroSearch() {
                   <span className="text-xs text-pulse-text-tertiary">0.3s</span>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2 md:space-y-3">
                   {results.map((grant, i) => (
                     <motion.button
                       key={grant.id}
@@ -247,15 +248,15 @@ export function HeroSearch() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.05 }}
                       onClick={() => handleResultClick(grant.name)}
-                      className="w-full flex items-center justify-between gap-4 p-4 bg-white/[0.02] border border-white/[0.04] rounded-xl hover:border-pulse-accent/30 hover:bg-white/[0.04] transition-all cursor-pointer text-left group"
+                      className="w-full flex items-center justify-between gap-3 md:gap-4 p-3 md:p-4 bg-white/[0.02] border border-white/[0.04] rounded-xl hover:border-pulse-accent/30 hover:bg-white/[0.04] transition-all cursor-pointer text-left group min-h-[44px]"
                     >
-                      <div className="flex items-center gap-4 min-w-0 flex-1">
-                        <div className="w-10 h-10 rounded-lg bg-pulse-accent/10 flex items-center justify-center shrink-0 group-hover:bg-pulse-accent/20 transition-colors">
-                          <DollarSign className="w-5 h-5 text-pulse-accent" />
+                      <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
+                        <div className="w-9 md:w-10 h-9 md:h-10 rounded-lg bg-pulse-accent/10 flex items-center justify-center shrink-0 group-hover:bg-pulse-accent/20 transition-colors">
+                          <DollarSign className="w-4 md:w-5 h-4 md:h-5 text-pulse-accent" />
                         </div>
                         <div className="min-w-0 text-left">
-                          <div className="font-medium text-pulse-text truncate group-hover:text-pulse-accent transition-colors">{grant.name}</div>
-                          <div className="text-sm text-pulse-text-tertiary">{grant.amount}</div>
+                          <div className="text-sm md:text-base font-medium text-pulse-text truncate group-hover:text-pulse-accent transition-colors">{grant.name}</div>
+                          <div className="text-xs md:text-sm text-pulse-text-tertiary">{grant.amount}</div>
                         </div>
                       </div>
                       <div className="flex items-center gap-4 sm:gap-6 shrink-0">
@@ -263,7 +264,7 @@ export function HeroSearch() {
                           <div className="text-sm text-pulse-text">{grant.deadline}</div>
                           <div className="text-xs text-pulse-text-tertiary">remaining</div>
                         </div>
-                        <div className="text-xl sm:text-2xl font-bold text-pulse-accent">{grant.match}%</div>
+                        <div className="text-lg md:text-2xl font-bold text-pulse-accent">{grant.match}%</div>
                       </div>
                     </motion.button>
                   ))}
@@ -287,11 +288,11 @@ export function HeroSearch() {
           </AnimatePresence>
 
           {/* CTA fade */}
-          <div className="relative mt-4 pt-6">
+          <div className="relative mt-3 md:mt-4 pt-4 md:pt-6">
             <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-t from-transparent to-pulse-bg/50 pointer-events-none" />
             <button
               onClick={() => handleResultClick()}
-              className="inline-flex items-center gap-2 text-pulse-accent font-semibold hover:underline"
+              className="inline-flex items-center gap-2 text-pulse-accent font-semibold hover:underline py-2 min-h-[44px]"
             >
               Sign up free to see all results
               <ArrowRight className="w-4 h-4" />
