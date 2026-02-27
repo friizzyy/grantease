@@ -7,6 +7,16 @@ import { calculateRelevance, type GrantForRelevance } from '@/lib/relevance/engi
 import { UserProfile, EntityType } from '@/lib/types/onboarding'
 import { safeJsonParse } from '@/lib/api-utils'
 import { rateLimiters, rateLimitExceededResponse, getClientIdentifier } from '@/lib/rate-limit'
+import { z } from 'zod'
+
+const unifiedSearchPostSchema = z.object({
+  keyword: z.string().max(500).optional(),
+  state: z.string().max(10).optional(),
+  status: z.enum(['open', 'forecasted', 'closed', 'all']).default('open'),
+  categories: z.array(z.string().max(100)).max(20).optional(),
+  limit: z.number().int().min(1).max(100).default(25),
+  useProfile: z.boolean().default(true),
+})
 
 /**
  * STRICT CATEGORY KEYWORDS - grants must contain these to match a category search
@@ -314,15 +324,23 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
+    const validated = unifiedSearchPostSchema.safeParse(body)
+
+    if (!validated.success) {
+      return NextResponse.json(
+        { success: false, error: 'Validation failed', details: validated.error.flatten() },
+        { status: 400 }
+      )
+    }
 
     const {
       keyword,
       state,
-      status = 'open',
+      status,
       categories,
-      limit = 25,
-      useProfile = true,
-    } = body
+      limit,
+      useProfile,
+    } = validated.data
 
     // Get user profile if logged in
     let userProfile: UserProfile | null = null

@@ -17,6 +17,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { safeJsonParse } from '@/lib/api-utils';
 import { rateLimiters, rateLimitExceededResponse } from '@/lib/rate-limit';
+import { z } from 'zod';
 
 import {
   runDiscoveryPipeline,
@@ -84,11 +85,9 @@ export async function GET(request: NextRequest) {
 
     if (grants.length === 0) {
       // Database is empty - this is a critical issue
-      console.warn('[Discover] No grants in database, health:', health);
 
       // Try Gemini as fallback if configured
       if (isGeminiConfigured()) {
-        console.log('[Discover] Attempting Gemini fallback...');
 
         try {
           // Build profile for Gemini - use type assertion to bypass strict type checking
@@ -115,11 +114,11 @@ export async function GET(request: NextRequest) {
             confidenceScore: profile.confidenceScore || 0.5,
           } as Parameters<typeof geminiDiscover>[0];
 
-          const geminiGrants = await geminiDiscover(geminiProfile, {});
+          const geminiResult = await geminiDiscover(geminiProfile, {});
 
-          if (geminiGrants.length > 0) {
+          if (geminiResult.grants.length > 0) {
             // Transform Gemini grants to GrantData format
-            grants = geminiGrants.slice(0, limit).map((g, index) => ({
+            grants = geminiResult.grants.slice(0, limit).map((g, index) => ({
               id: `gemini_${Date.now()}_${index}`,
               sourceId: `gemini_${index}`,
               sourceName: 'gemini_live',
@@ -145,7 +144,6 @@ export async function GET(request: NextRequest) {
               updatedAt: new Date(),
             }));
 
-            console.log(`[Discover] Gemini returned ${geminiGrants.length} grants`);
           }
         } catch (geminiError) {
           console.error('[Discover] Gemini fallback failed:', geminiError);
@@ -210,6 +208,22 @@ export async function GET(request: NextRequest) {
   }
 }
 
+const discoverPostSchema = z.object({
+  limit: z.number().int().min(1).max(50).default(20),
+  sortBy: z.enum(['best_match', 'deadline_soon', 'highest_funding']).default('best_match'),
+  useAI: z.boolean().default(true),
+  includeDebug: z.boolean().default(false),
+  filters: z.object({
+    status: z.string().optional(),
+    state: z.string().optional(),
+    includeNational: z.boolean().optional(),
+    categories: z.array(z.string()).optional(),
+    fundingType: z.string().optional(),
+    minAmount: z.number().optional(),
+    maxAmount: z.number().optional(),
+  }).default({}),
+});
+
 /**
  * POST /api/discover
  *
@@ -229,13 +243,21 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsed = discoverPostSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: 'Validation failed', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
     const {
-      limit = 20,
-      sortBy = 'best_match',
-      useAI = true,
-      includeDebug = false,
-      filters = {},
-    } = body;
+      limit,
+      sortBy,
+      useAI,
+      includeDebug,
+      filters,
+    } = parsed.data;
 
     // Load user profile
     const profile = await loadUserProfile(session.user.id);
@@ -271,10 +293,11 @@ export async function POST(request: NextRequest) {
     let grants = await loadGrantsFromDatabase(dbOptions);
 
     // Apply additional filters
-    if (filters.categories?.length > 0) {
+    if (filters.categories && filters.categories.length > 0) {
+      const filterCategories = filters.categories;
       grants = grants.filter((g) =>
         g.categories.some((c) =>
-          filters.categories.some(
+          filterCategories.some(
             (fc: string) =>
               c.toLowerCase().includes(fc.toLowerCase()) ||
               fc.toLowerCase().includes(c.toLowerCase())
@@ -287,12 +310,14 @@ export async function POST(request: NextRequest) {
       grants = grants.filter((g) => g.fundingType === filters.fundingType);
     }
 
-    if (filters.minAmount) {
-      grants = grants.filter((g) => !g.amountMax || g.amountMax >= filters.minAmount);
+    if (filters.minAmount != null) {
+      const min = filters.minAmount;
+      grants = grants.filter((g) => !g.amountMax || g.amountMax >= min);
     }
 
-    if (filters.maxAmount) {
-      grants = grants.filter((g) => !g.amountMin || g.amountMin <= filters.maxAmount);
+    if (filters.maxAmount != null) {
+      const max = filters.maxAmount;
+      grants = grants.filter((g) => !g.amountMin || g.amountMin <= max);
     }
 
     // Check if we have grants

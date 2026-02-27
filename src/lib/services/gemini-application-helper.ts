@@ -8,8 +8,12 @@
  * - Provide strategy advice
  */
 
-import { generateJSON, generateText, isGeminiConfigured } from './gemini-client'
+import { generateJSON, generateJSONWithUsage, generateText, isGeminiConfigured, type GeminiUsage } from './gemini-client'
 import type { UserProfile } from '@/lib/types/onboarding'
+import { sanitizePromptInput, sanitizePromptArray } from '@/lib/utils/prompt-sanitizer'
+
+/** Zero usage constant for null/error returns */
+const ZERO_USAGE: GeminiUsage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
 
 /**
  * Grant details for application help
@@ -100,9 +104,9 @@ export interface ApplicationPlan {
 export async function generateApplicationPlan(
   grant: GrantForApplication,
   profile: UserProfile
-): Promise<ApplicationPlan | null> {
+): Promise<{ result: ApplicationPlan | null; usage: GeminiUsage }> {
   if (!isGeminiConfigured()) {
-    return null
+    return { result: null, usage: ZERO_USAGE }
   }
 
   const deadline = grant.deadline
@@ -112,22 +116,22 @@ export async function generateApplicationPlan(
   const prompt = `You are a grant application strategist helping someone prepare a strong application.
 
 ## GRANT DETAILS
-Title: ${grant.title}
-Sponsor: ${grant.sponsor}
-${grant.description ? `Description: ${grant.description}` : ''}
-${grant.requirements ? `Requirements: ${grant.requirements}` : ''}
-${grant.eligibility ? `Eligibility: ${grant.eligibility}` : ''}
+Title: ${sanitizePromptInput(grant.title, 500)}
+Sponsor: ${sanitizePromptInput(grant.sponsor, 500)}
+${grant.description ? `Description: ${sanitizePromptInput(grant.description)}` : ''}
+${grant.requirements ? `Requirements: ${sanitizePromptInput(grant.requirements)}` : ''}
+${grant.eligibility ? `Eligibility: ${sanitizePromptInput(grant.eligibility)}` : ''}
 Deadline: ${deadline}
 ${grant.amountMin || grant.amountMax ? `Funding: $${grant.amountMin?.toLocaleString() || '?'} - $${grant.amountMax?.toLocaleString() || '?'}` : ''}
-URL: ${grant.url}
+URL: ${sanitizePromptInput(grant.url, 500)}
 
 ## APPLICANT PROFILE
-- Type: ${profile.entityType}
-- Location: ${profile.state || 'USA'}
-- Focus: ${profile.industryTags?.join(', ')}
-- Size: ${profile.sizeBand || 'Not specified'}
-- Stage: ${profile.stage || 'Not specified'}
-${profile.companyName ? `- Organization: ${profile.companyName}` : ''}
+- Type: ${sanitizePromptInput(profile.entityType, 100)}
+- Location: ${sanitizePromptInput(profile.state, 100) || 'USA'}
+- Focus: ${sanitizePromptArray(profile.industryTags)}
+- Size: ${sanitizePromptInput(profile.sizeBand, 50) || 'Not specified'}
+- Stage: ${sanitizePromptInput(profile.stage, 50) || 'Not specified'}
+${profile.companyName ? `- Organization: ${sanitizePromptInput(profile.companyName, 500)}` : ''}
 
 ## YOUR TASK
 Create a comprehensive application preparation plan with:
@@ -216,11 +220,11 @@ Return as detailed JSON:
 Make the plan actionable and realistic. Consider the applicant's specific situation.`
 
   try {
-    const result = await generateJSON<ApplicationPlan>(prompt, true)
-    return result
+    const { data, usage } = await generateJSONWithUsage<ApplicationPlan>(prompt, true)
+    return { result: data, usage }
   } catch (error) {
     console.error('Application plan generation error:', error)
-    return null
+    return { result: null, usage: ZERO_USAGE }
   }
 }
 
@@ -229,15 +233,15 @@ Make the plan actionable and realistic. Consider the applicant's specific situat
  */
 export async function generateChecklist(
   grant: GrantForApplication
-): Promise<ChecklistItem[] | null> {
+): Promise<{ result: ChecklistItem[] | null; usage: GeminiUsage }> {
   if (!isGeminiConfigured()) {
-    return null
+    return { result: null, usage: ZERO_USAGE }
   }
 
   const prompt = `Create an application checklist for this grant:
 
-Grant: ${grant.title} from ${grant.sponsor}
-${grant.requirements ? `Requirements: ${grant.requirements}` : ''}
+Grant: ${sanitizePromptInput(grant.title, 500)} from ${sanitizePromptInput(grant.sponsor, 500)}
+${grant.requirements ? `Requirements: ${sanitizePromptInput(grant.requirements)}` : ''}
 Deadline: ${grant.deadline || 'Not specified'}
 
 Return JSON array of checklist items:
@@ -256,9 +260,10 @@ Return JSON array of checklist items:
 Include ALL steps from gathering documents through final submission.`
 
   try {
-    return await generateJSON<ChecklistItem[]>(prompt, false)
+    const { data, usage } = await generateJSONWithUsage<ChecklistItem[]>(prompt, false)
+    return { result: data, usage }
   } catch {
-    return null
+    return { result: null, usage: ZERO_USAGE }
   }
 }
 
@@ -268,9 +273,9 @@ Include ALL steps from gathering documents through final submission.`
 export async function generateTimeline(
   grant: GrantForApplication,
   availableHoursPerWeek: number = 10
-): Promise<Array<{ week: number; tasks: string[]; hoursNeeded: number }> | null> {
+): Promise<{ result: Array<{ week: number; tasks: string[]; hoursNeeded: number }> | null; usage: GeminiUsage }> {
   if (!isGeminiConfigured()) {
-    return null
+    return { result: null, usage: ZERO_USAGE }
   }
 
   const deadline = grant.deadline
@@ -283,7 +288,7 @@ export async function generateTimeline(
 
   const prompt = `Create a week-by-week timeline for this grant application:
 
-Grant: ${grant.title}
+Grant: ${sanitizePromptInput(grant.title, 500)}
 Deadline: ${deadline.toLocaleDateString()}
 Weeks available: ${weeksUntilDeadline}
 Hours available per week: ${availableHoursPerWeek}
@@ -300,40 +305,43 @@ Return JSON timeline:
 Spread work realistically across available time. Leave buffer for review.`
 
   try {
-    return await generateJSON(prompt, false)
+    const { data, usage } = await generateJSONWithUsage<Array<{ week: number; tasks: string[]; hoursNeeded: number }>>(prompt, false)
+    return { result: data, usage }
   } catch {
-    return null
+    return { result: null, usage: ZERO_USAGE }
   }
 }
 
 /**
  * Get strategy advice for a specific grant
  */
-export async function getStrategyAdvice(
-  grant: GrantForApplication,
-  profile: UserProfile
-): Promise<{
+interface StrategyAdviceResult {
   overallStrategy: string
   keyMessages: string[]
   differentiators: string[]
   risksToAddress: string[]
   suggestedApproach: string
-} | null> {
+}
+
+export async function getStrategyAdvice(
+  grant: GrantForApplication,
+  profile: UserProfile
+): Promise<{ result: StrategyAdviceResult | null; usage: GeminiUsage }> {
   if (!isGeminiConfigured()) {
-    return null
+    return { result: null, usage: ZERO_USAGE }
   }
 
   const prompt = `Provide strategic advice for this grant application:
 
-GRANT: ${grant.title} from ${grant.sponsor}
-${grant.description ? `About: ${grant.description}` : ''}
+GRANT: ${sanitizePromptInput(grant.title, 500)} from ${sanitizePromptInput(grant.sponsor, 500)}
+${grant.description ? `About: ${sanitizePromptInput(grant.description)}` : ''}
 
 APPLICANT:
-- Type: ${profile.entityType}
-- Focus: ${profile.industryTags?.join(', ')}
-- Location: ${profile.state}
-${profile.companyName ? `- Organization: ${profile.companyName}` : ''}
-${profile.companyDescription ? `- Description: ${profile.companyDescription}` : ''}
+- Type: ${sanitizePromptInput(profile.entityType, 100)}
+- Focus: ${sanitizePromptArray(profile.industryTags)}
+- Location: ${sanitizePromptInput(profile.state, 100)}
+${profile.companyName ? `- Organization: ${sanitizePromptInput(profile.companyName, 500)}` : ''}
+${profile.companyDescription ? `- Description: ${sanitizePromptInput(profile.companyDescription)}` : ''}
 
 What strategic approach should they take?
 
@@ -347,38 +355,41 @@ Return JSON:
 }`
 
   try {
-    return await generateJSON(prompt, true)
+    const { data, usage } = await generateJSONWithUsage<StrategyAdviceResult>(prompt, true)
+    return { result: data, usage }
   } catch {
-    return null
+    return { result: null, usage: ZERO_USAGE }
   }
 }
 
 /**
  * Review draft application section
  */
-export async function reviewApplicationSection(
-  sectionName: string,
-  content: string,
-  grantContext: { title: string; sponsor: string; requirements?: string }
-): Promise<{
+interface SectionReviewResult {
   score: number
   strengths: string[]
   improvements: string[]
   rewriteSuggestions: string[]
   criticalIssues: string[]
-} | null> {
+}
+
+export async function reviewApplicationSection(
+  sectionName: string,
+  content: string,
+  grantContext: { title: string; sponsor: string; requirements?: string }
+): Promise<{ result: SectionReviewResult | null; usage: GeminiUsage }> {
   if (!isGeminiConfigured()) {
-    return null
+    return { result: null, usage: ZERO_USAGE }
   }
 
   const prompt = `Review this grant application section:
 
-GRANT: ${grantContext.title} from ${grantContext.sponsor}
-${grantContext.requirements ? `Requirements: ${grantContext.requirements}` : ''}
+GRANT: ${sanitizePromptInput(grantContext.title, 500)} from ${sanitizePromptInput(grantContext.sponsor, 500)}
+${grantContext.requirements ? `Requirements: ${sanitizePromptInput(grantContext.requirements)}` : ''}
 
-SECTION: ${sectionName}
+SECTION: ${sanitizePromptInput(sectionName, 200)}
 CONTENT:
-${content}
+${sanitizePromptInput(content, 5000)}
 
 Evaluate this section and provide feedback.
 
@@ -394,8 +405,9 @@ Return JSON:
 Be constructive but honest. Focus on making the application competitive.`
 
   try {
-    return await generateJSON(prompt, true)
+    const { data, usage } = await generateJSONWithUsage<SectionReviewResult>(prompt, true)
+    return { result: data, usage }
   } catch {
-    return null
+    return { result: null, usage: ZERO_USAGE }
   }
 }

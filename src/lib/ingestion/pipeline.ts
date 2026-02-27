@@ -43,7 +43,8 @@ export async function runSourceIngestion(
 ): Promise<IngestionRunStats> {
   const source = getSourceById(sourceId);
   if (!source) {
-    throw new Error(`Unknown source: ${sourceId}`);
+    const availableSources = getEnabledSources().map(s => s.id).join(', ');
+    throw new Error(`Unknown ingestion source "${sourceId}". Available sources: [${availableSources}]`);
   }
 
   const stats: IngestionRunStats = {

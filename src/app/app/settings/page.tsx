@@ -240,6 +240,7 @@ function SettingsPageContent() {
       }, 3000)
       return () => clearTimeout(timer)
     }
+    return undefined
   }, [searchParams])
 
   // Scroll to highlighted field when it becomes available
@@ -254,6 +255,7 @@ function SettingsPageContent() {
       }, 300)
       return () => clearTimeout(timer)
     }
+    return undefined
   }, [highlightedField, isLoading, activeTab])
 
   const [profile, setProfile] = useState({

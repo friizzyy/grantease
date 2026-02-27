@@ -49,7 +49,6 @@ export const authOptions: NextAuthOptions = {
           GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            allowDangerousEmailAccountLinking: true,
           }),
         ]
       : []),
@@ -59,7 +58,6 @@ export const authOptions: NextAuthOptions = {
           GitHubProvider({
             clientId: process.env.GITHUB_CLIENT_ID,
             clientSecret: process.env.GITHUB_CLIENT_SECRET,
-            allowDangerousEmailAccountLinking: true,
           }),
         ]
       : []),
@@ -75,16 +73,19 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id
-      }
-      // Handle OAuth account linking
-      if (account && user) {
-        token.accessToken = account.access_token
+        // Fetch role from database to include in JWT
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { role: true },
+        })
+        token.role = dbUser?.role ?? 'user'
       }
       return token
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string
+        session.user.role = token.role
       }
       return session
     },
@@ -169,7 +170,6 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, isNewUser }) {
       if (isNewUser) {
         // New user signed up - they'll be redirected to onboarding
-        console.log(`New user registered: ${user.email}`)
       }
     },
   },

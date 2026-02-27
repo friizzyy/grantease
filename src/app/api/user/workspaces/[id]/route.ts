@@ -3,6 +3,18 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
 import { safeJsonParse } from '@/lib/api-utils'
+import { z } from 'zod'
+
+const updateWorkspaceSchema = z.object({
+  status: z.enum(['not_started', 'in_progress', 'submitted', 'awarded', 'rejected']).optional(),
+  checklist: z.array(z.object({
+    id: z.string(),
+    text: z.string(),
+    completed: z.boolean(),
+  })).optional(),
+  notes: z.string().max(50000).optional(),
+  name: z.string().min(1).max(500).optional(),
+})
 
 export async function GET(
   request: NextRequest,
@@ -71,7 +83,16 @@ export async function PATCH(
 
     const { id } = await params
     const body = await request.json()
-    const { status, checklist, notes, name } = body
+    const validated = updateWorkspaceSchema.safeParse(body)
+
+    if (!validated.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: validated.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const { status, checklist, notes, name } = validated.data
 
     // Verify ownership
     const existing = await prisma.workspace.findFirst({

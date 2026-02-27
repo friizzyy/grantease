@@ -193,7 +193,7 @@ function SavedGrantCard({
                     Move to collection
                   </button>
                   <Link
-                    href={`/app/workspace/new?grantId=${grant.id}`}
+                    href="/app/workspace"
                     role="menuitem"
                     className="w-full px-4 py-2 text-left text-sm text-pulse-text hover:bg-pulse-surface flex items-center gap-2"
                   >

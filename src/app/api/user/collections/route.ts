@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
+import { z } from 'zod'
+
+const createCollectionSchema = z.object({
+  name: z.string().min(1, 'Collection name is required').max(200),
+  description: z.string().max(1000).nullable().optional(),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color format').optional(),
+  icon: z.string().max(50).optional(),
+})
 
 /**
  * GET /api/user/collections
@@ -99,14 +107,16 @@ export async function POST(request: NextRequest) {
     const userId = session.user.id
 
     const body = await request.json()
-    const { name, description, color, icon } = body
+    const validated = createCollectionSchema.safeParse(body)
 
-    if (!name) {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Collection name is required' },
+        { error: 'Invalid input', details: validated.error.flatten() },
         { status: 400 }
       )
     }
+
+    const { name, description, color, icon } = validated.data
 
     // Check for duplicate names
     const existing = await prisma.grantCollection.findFirst({

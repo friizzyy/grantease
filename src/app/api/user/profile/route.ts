@@ -3,6 +3,36 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { safeJsonParse } from '@/lib/api-utils'
+import { z } from 'zod'
+
+const profileCreateSchema = z.object({
+  entityType: z.string().min(1, 'Entity type is required').max(100),
+  country: z.string().max(10).default('US'),
+  state: z.string().max(10).nullable().optional(),
+  industryTags: z.array(z.string().max(100)).max(50).optional(),
+  sizeBand: z.string().max(50).nullable().optional(),
+  stage: z.string().max(50).nullable().optional(),
+  annualBudget: z.string().max(50).nullable().optional(),
+  industryAttributes: z.record(z.unknown()).optional(),
+  grantPreferences: z.record(z.unknown()).optional(),
+  onboardingStep: z.number().int().min(1).max(20).optional(),
+  onboardingCompleted: z.boolean().optional(),
+  organization: z.string().max(500).optional(),
+})
+
+const profilePatchSchema = z.object({
+  entityType: z.string().min(1).max(100).optional(),
+  country: z.string().max(10).optional(),
+  state: z.string().max(10).nullable().optional(),
+  industryTags: z.array(z.string().max(100)).max(50).optional(),
+  sizeBand: z.string().max(50).nullable().optional(),
+  stage: z.string().max(50).nullable().optional(),
+  annualBudget: z.string().max(50).nullable().optional(),
+  industryAttributes: z.record(z.unknown()).optional(),
+  grantPreferences: z.record(z.unknown()).optional(),
+  onboardingStep: z.number().int().min(1).max(20).optional(),
+  onboardingCompleted: z.boolean().optional(),
+})
 
 /**
  * GET /api/user/profile
@@ -61,6 +91,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    const validated = profileCreateSchema.safeParse(body)
+
+    if (!validated.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: validated.error.flatten() },
+        { status: 400 }
+      )
+    }
+
     const {
       entityType,
       country,
@@ -73,12 +112,7 @@ export async function POST(request: NextRequest) {
       grantPreferences,
       onboardingStep,
       onboardingCompleted,
-    } = body
-
-    // Validate required fields
-    if (!entityType) {
-      return NextResponse.json({ error: 'Entity type is required' }, { status: 400 })
-    }
+    } = validated.data
 
     const profileData = {
       userId: session.user.id,
@@ -94,7 +128,7 @@ export async function POST(request: NextRequest) {
       onboardingStep: onboardingStep || 1,
       onboardingCompleted: onboardingCompleted || false,
       onboardingCompletedAt: onboardingCompleted ? new Date() : null,
-      confidenceScore: calculateConfidenceScore(body),
+      confidenceScore: calculateConfidenceScore(validated.data),
     }
 
     const profile = await prisma.userProfile.upsert({
@@ -107,10 +141,10 @@ export async function POST(request: NextRequest) {
     })
 
     // Also update user's organization if provided
-    if (body.organization) {
+    if (validated.data.organization) {
       await prisma.user.update({
         where: { id: session.user.id },
-        data: { organization: body.organization },
+        data: { organization: validated.data.organization },
       })
     }
 
@@ -141,6 +175,14 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
+    const validated = profilePatchSchema.safeParse(body)
+
+    if (!validated.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: validated.error.flatten() },
+        { status: 400 }
+      )
+    }
 
     // Get existing profile
     const existing = await prisma.userProfile.findUnique({
@@ -150,23 +192,23 @@ export async function PATCH(request: NextRequest) {
     // If no profile exists, create one with the provided data
     if (!existing) {
       // Use provided entityType or default to 'nonprofit'
-      const entityType = body.entityType || 'nonprofit'
+      const entityType = validated.data.entityType || 'nonprofit'
 
       const profileData = {
         userId: session.user.id,
         entityType,
-        country: body.country || 'US',
-        state: body.state || null,
-        industryTags: JSON.stringify(body.industryTags || []),
-        sizeBand: body.sizeBand || null,
-        stage: body.stage || null,
-        annualBudget: body.annualBudget || null,
-        industryAttributes: JSON.stringify(body.industryAttributes || {}),
-        grantPreferences: JSON.stringify(body.grantPreferences || {}),
-        onboardingStep: body.onboardingStep || 1,
-        onboardingCompleted: body.onboardingCompleted || false,
-        onboardingCompletedAt: body.onboardingCompleted ? new Date() : null,
-        confidenceScore: calculateConfidenceScore(body),
+        country: validated.data.country || 'US',
+        state: validated.data.state || null,
+        industryTags: JSON.stringify(validated.data.industryTags || []),
+        sizeBand: validated.data.sizeBand || null,
+        stage: validated.data.stage || null,
+        annualBudget: validated.data.annualBudget || null,
+        industryAttributes: JSON.stringify(validated.data.industryAttributes || {}),
+        grantPreferences: JSON.stringify(validated.data.grantPreferences || {}),
+        onboardingStep: validated.data.onboardingStep || 1,
+        onboardingCompleted: validated.data.onboardingCompleted || false,
+        onboardingCompletedAt: validated.data.onboardingCompleted ? new Date() : null,
+        confidenceScore: calculateConfidenceScore(validated.data),
       }
 
       const profile = await prisma.userProfile.create({
@@ -185,26 +227,27 @@ export async function PATCH(request: NextRequest) {
 
     // Build update data for existing profile
     const updateData: Record<string, unknown> = {}
+    const data = validated.data
 
-    if (body.entityType !== undefined) updateData.entityType = body.entityType
-    if (body.country !== undefined) updateData.country = body.country
-    if (body.state !== undefined) updateData.state = body.state
-    if (body.industryTags !== undefined) updateData.industryTags = JSON.stringify(body.industryTags)
-    if (body.sizeBand !== undefined) updateData.sizeBand = body.sizeBand
-    if (body.stage !== undefined) updateData.stage = body.stage
-    if (body.annualBudget !== undefined) updateData.annualBudget = body.annualBudget
-    if (body.industryAttributes !== undefined) updateData.industryAttributes = JSON.stringify(body.industryAttributes)
-    if (body.grantPreferences !== undefined) updateData.grantPreferences = JSON.stringify(body.grantPreferences)
-    if (body.onboardingStep !== undefined) updateData.onboardingStep = body.onboardingStep
-    if (body.onboardingCompleted !== undefined) {
-      updateData.onboardingCompleted = body.onboardingCompleted
-      if (body.onboardingCompleted) {
+    if (data.entityType !== undefined) updateData.entityType = data.entityType
+    if (data.country !== undefined) updateData.country = data.country
+    if (data.state !== undefined) updateData.state = data.state
+    if (data.industryTags !== undefined) updateData.industryTags = JSON.stringify(data.industryTags)
+    if (data.sizeBand !== undefined) updateData.sizeBand = data.sizeBand
+    if (data.stage !== undefined) updateData.stage = data.stage
+    if (data.annualBudget !== undefined) updateData.annualBudget = data.annualBudget
+    if (data.industryAttributes !== undefined) updateData.industryAttributes = JSON.stringify(data.industryAttributes)
+    if (data.grantPreferences !== undefined) updateData.grantPreferences = JSON.stringify(data.grantPreferences)
+    if (data.onboardingStep !== undefined) updateData.onboardingStep = data.onboardingStep
+    if (data.onboardingCompleted !== undefined) {
+      updateData.onboardingCompleted = data.onboardingCompleted
+      if (data.onboardingCompleted) {
         updateData.onboardingCompletedAt = new Date()
       }
     }
 
     // Recalculate confidence score
-    const mergedData = { ...existing, ...body }
+    const mergedData = { ...existing, ...data }
     updateData.confidenceScore = calculateConfidenceScore(mergedData)
 
     const profile = await prisma.userProfile.update({

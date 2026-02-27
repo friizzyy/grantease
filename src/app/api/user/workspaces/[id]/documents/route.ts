@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
+import { z } from 'zod'
+
+const createDocumentSchema = z.object({
+  name: z.string().min(1, 'Document name is required').max(500),
+  type: z.string().min(1, 'Document type is required').max(100),
+  url: z.string().max(2000).nullable().optional(),
+  notes: z.string().max(5000).nullable().optional(),
+})
 
 /**
  * GET /api/user/workspaces/[id]/documents
@@ -79,21 +87,16 @@ export async function POST(
     }
 
     const body = await request.json()
-    const { name, type, url, notes } = body
+    const validated = createDocumentSchema.safeParse(body)
 
-    if (!name) {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Document name is required' },
+        { success: false, error: 'Validation failed', details: validated.error.flatten() },
         { status: 400 }
       )
     }
 
-    if (!type) {
-      return NextResponse.json(
-        { error: 'Document type is required' },
-        { status: 400 }
-      )
-    }
+    const { name, type, url, notes } = validated.data
 
     const document = await prisma.workspaceDocument.create({
       data: {

@@ -13,6 +13,7 @@
 
 import { generateJSON, isGeminiConfigured } from './gemini-client'
 import type { EntityType, SizeBand, Stage, BudgetRange } from '@/lib/types/onboarding'
+import { sanitizePromptInput } from '@/lib/utils/prompt-sanitizer'
 
 /**
  * Raw business info that can be provided by user
@@ -153,10 +154,10 @@ export async function analyzeBusinessProfile(
 Analyze the following business information and extract/infer as much detail as possible.
 
 ## INPUT DATA
-${input.companyName ? `Company Name: ${input.companyName}` : ''}
-${input.websiteUrl ? `Website: ${input.websiteUrl}` : ''}
-${input.description ? `User Description: ${input.description}` : ''}
-${websiteContent ? `\nWebsite Content:\n${websiteContent}` : ''}
+${input.companyName ? `Company Name: ${sanitizePromptInput(input.companyName, 500)}` : ''}
+${input.websiteUrl ? `Website: ${sanitizePromptInput(input.websiteUrl, 500)}` : ''}
+${input.description ? `User Description: ${sanitizePromptInput(input.description, 3000)}` : ''}
+${websiteContent ? `\nWebsite Content:\n${sanitizePromptInput(websiteContent, 10000)}` : ''}
 
 ## YOUR TASK
 Create a detailed business profile that will help match this organization with relevant grants.
@@ -269,9 +270,11 @@ export async function quickAnalyzeByName(
     return null
   }
 
+  const sanitizedName = sanitizePromptInput(companyName, 500)
+
   const prompt = `Quick business analysis for grant matching.
 
-Company Name: "${companyName}"
+Company Name: "${sanitizedName}"
 
 Based on just the company name, make your best guess about:
 1. What type of business this is
@@ -280,7 +283,7 @@ Based on just the company name, make your best guess about:
 
 Return JSON:
 {
-  "companyName": "${companyName}",
+  "companyName": "${sanitizedName}",
   "tagline": "Best guess one-liner",
   "suggestedEntityType": "small_business",
   "primaryIndustry": "Best guess industry",
@@ -314,7 +317,7 @@ export async function enhanceProfileWithContext(
 ${JSON.stringify(existingProfile, null, 2)}
 
 ## ADDITIONAL CONTEXT FROM USER
-${additionalContext}
+${sanitizePromptInput(additionalContext, 5000)}
 
 ## TASK
 Update and enhance the profile with the new information. Fill in any gaps and improve confidence scores where the new info confirms or clarifies details.

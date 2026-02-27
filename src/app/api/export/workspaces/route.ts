@@ -57,8 +57,9 @@ export async function GET(request: NextRequest) {
 
     // Format data for export
     const exportData = workspaces.map(ws => {
-      const checklist = JSON.parse(ws.checklist || '[]')
-      const completedItems = checklist.filter((item: { completed: boolean }) => item.completed).length
+      const parsedChecklist: unknown = JSON.parse(ws.checklist || '[]')
+      const checklist = Array.isArray(parsedChecklist) ? parsedChecklist as Array<{ completed: boolean }> : []
+      const completedItems = checklist.filter(item => item.completed).length
       const totalItems = checklist.length
 
       const base = {

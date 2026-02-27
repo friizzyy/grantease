@@ -1110,8 +1110,6 @@ function generateContentHash(grant: SeedGrant): string {
 }
 
 async function seedGrants() {
-  console.log('Starting grant seeding...');
-  console.log(`Total grants to seed: ${SEED_GRANTS.length}`);
 
   let created = 0;
   let updated = 0;
@@ -1181,25 +1179,18 @@ async function seedGrants() {
           },
         });
         updated++;
-        console.log(`  Updated: ${seedGrant.title}`);
       } else {
         // Create new grant
         await prisma.grant.create({
           data: grantData,
         });
         created++;
-        console.log(`  Created: ${seedGrant.title}`);
       }
     } catch (error) {
       console.error(`  Error seeding "${seedGrant.title}":`, error);
       skipped++;
     }
   }
-
-  console.log('\nSeeding complete!');
-  console.log(`  Created: ${created}`);
-  console.log(`  Updated: ${updated}`);
-  console.log(`  Skipped: ${skipped}`);
 
   // Update ingestion source record
   await prisma.ingestionSource.upsert({

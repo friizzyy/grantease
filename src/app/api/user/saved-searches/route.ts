@@ -2,6 +2,25 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
+import { z } from 'zod'
+
+const createSearchSchema = z.object({
+  name: z.string().min(1, 'Search name is required').max(200),
+  query: z.string().max(500).optional(),
+  filters: z.record(z.unknown()).optional(),
+  alertEnabled: z.boolean().optional(),
+  alertFreq: z.enum(['daily', 'weekly', 'monthly']).optional(),
+})
+
+const updateSearchSchema = z.object({
+  id: z.string().min(1, 'Search ID is required').max(200),
+  alertEnabled: z.boolean().optional(),
+  alertFreq: z.enum(['daily', 'weekly', 'monthly']).optional(),
+})
+
+const deleteSearchQuerySchema = z.object({
+  id: z.string().min(1, 'Search ID is required').max(200),
+})
 
 /**
  * GET /api/user/saved-searches
@@ -75,14 +94,16 @@ export async function POST(request: NextRequest) {
     const userId = session.user.id
 
     const body = await request.json()
-    const { name, query, filters, alertEnabled, alertFreq } = body
+    const validated = createSearchSchema.safeParse(body)
 
-    if (!name) {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Search name is required' },
+        { error: 'Invalid input', details: validated.error.flatten() },
         { status: 400 }
       )
     }
+
+    const { name, query, filters, alertEnabled, alertFreq } = validated.data
 
     const savedSearch = await prisma.savedSearch.create({
       data: {
@@ -119,14 +140,16 @@ export async function PATCH(request: NextRequest) {
     const userId = session.user.id
 
     const body = await request.json()
-    const { id, alertEnabled, alertFreq } = body
+    const validated = updateSearchSchema.safeParse(body)
 
-    if (!id) {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Search ID is required' },
+        { error: 'Invalid input', details: validated.error.flatten() },
         { status: 400 }
       )
     }
+
+    const { id, alertEnabled, alertFreq } = validated.data
 
     // Verify ownership
     const existing = await prisma.savedSearch.findFirst({
@@ -172,14 +195,18 @@ export async function DELETE(request: NextRequest) {
     const userId = session.user.id
 
     const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
+    const queryValidated = deleteSearchQuerySchema.safeParse({
+      id: searchParams.get('id'),
+    })
 
-    if (!id) {
+    if (!queryValidated.success) {
       return NextResponse.json(
-        { error: 'Search ID is required' },
+        { error: 'Invalid input', details: queryValidated.error.flatten() },
         { status: 400 }
       )
     }
+
+    const { id } = queryValidated.data
 
     // Verify ownership
     const existing = await prisma.savedSearch.findFirst({

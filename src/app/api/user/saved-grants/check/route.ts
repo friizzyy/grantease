@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
+import { z } from 'zod'
+
+const checkGrantsSchema = z.object({
+  grantIds: z.array(z.string().min(1)).min(1, 'grantIds must be a non-empty array').max(100, 'Maximum 100 grants per check request'),
+})
 
 /**
  * POST /api/user/saved-grants/check
@@ -25,30 +30,16 @@ export async function POST(request: NextRequest) {
     const userId = session.user.id
 
     const body = await request.json()
-    const { grantIds } = body
+    const validated = checkGrantsSchema.safeParse(body)
 
-    if (!Array.isArray(grantIds) || grantIds.length === 0) {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'grantIds must be a non-empty array' },
+        { error: 'Invalid input', details: validated.error.flatten() },
         { status: 400 }
       )
     }
 
-    // Limit to 100 grants per request
-    if (grantIds.length > 100) {
-      return NextResponse.json(
-        { error: 'Maximum 100 grants per check request' },
-        { status: 400 }
-      )
-    }
-
-    // Validate all IDs are strings
-    if (!grantIds.every(id => typeof id === 'string' && id.length > 0)) {
-      return NextResponse.json(
-        { error: 'All grantIds must be non-empty strings' },
-        { status: 400 }
-      )
-    }
+    const { grantIds } = validated.data
 
     // Find which of the provided grants are saved
     const savedGrants = await prisma.savedGrant.findMany({

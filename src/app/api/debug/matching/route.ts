@@ -11,10 +11,10 @@ import {
 
 // Import engines for detailed tracing
 import { runEligibilityEngine, filterEligibleGrants } from '@/lib/eligibility/engine'
-import { calculateScore, scoreAndSortGrants } from '@/lib/scoring/engine'
+import { calculateScore, scoreAndSortGrants, type GrantForScoring } from '@/lib/scoring/engine'
 import { getCacheStats } from '@/lib/cache/match-cache'
 
-import { EntityType, IndustryTag, BudgetRange } from '@/lib/constants/taxonomy'
+import { EntityType, IndustryTag, BudgetRange, PurposeTag } from '@/lib/constants/taxonomy'
 import { safeJsonParse } from '@/lib/api-utils'
 
 /**
@@ -217,11 +217,11 @@ export async function GET(request: NextRequest) {
 
         const eligibilityResult = runEligibilityEngine(eligibilityProfile, grantForEligibility)
 
-        const grantForScoring = {
+        const grantForScoring: GrantForScoring = {
           ...grantForEligibility,
           amountText: grant.amountText,
           fundingType: grant.fundingType,
-          purposeTags: grant.purposeTags,
+          purposeTags: grant.purposeTags as PurposeTag[] | undefined,
           deadlineDate: grant.deadlineDate,
         }
 
@@ -233,7 +233,7 @@ export async function GET(request: NextRequest) {
             sizeBand: profile.sizeBand,
             annualBudget: profile.annualBudget as BudgetRange | null,
           },
-          grantForScoring as any
+          grantForScoring
         )
 
         return {

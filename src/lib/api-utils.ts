@@ -200,11 +200,3 @@ export function safeJsonParse<T>(value: string | null | undefined, fallback: T):
   }
 }
 
-/**
- * Request logging utility for development
- */
-export function logRequest(method: string, path: string, data?: unknown) {
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[API] ${method} ${path}`, data ? JSON.stringify(data, null, 2) : '')
-  }
-}

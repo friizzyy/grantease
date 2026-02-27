@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
+import { z } from 'zod'
+
+const bulkSaveSchema = z.object({
+  action: z.enum(['save', 'unsave']),
+  grantIds: z.array(z.string().min(1)).min(1, 'grantIds must be a non-empty array').max(50, 'Maximum 50 grants per bulk operation'),
+})
 
 /**
  * POST /api/user/saved-grants/bulk
@@ -20,37 +26,16 @@ export async function POST(request: NextRequest) {
     const userId = session.user.id
 
     const body = await request.json()
-    const { action, grantIds } = body
+    const validated = bulkSaveSchema.safeParse(body)
 
-    if (!action || !['save', 'unsave'].includes(action)) {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Action must be "save" or "unsave"' },
+        { error: 'Invalid input', details: validated.error.flatten() },
         { status: 400 }
       )
     }
 
-    if (!Array.isArray(grantIds) || grantIds.length === 0) {
-      return NextResponse.json(
-        { error: 'grantIds must be a non-empty array' },
-        { status: 400 }
-      )
-    }
-
-    // Limit to 50 grants per request to prevent abuse
-    if (grantIds.length > 50) {
-      return NextResponse.json(
-        { error: 'Maximum 50 grants per bulk operation' },
-        { status: 400 }
-      )
-    }
-
-    // Validate all IDs are strings
-    if (!grantIds.every(id => typeof id === 'string' && id.length > 0)) {
-      return NextResponse.json(
-        { error: 'All grantIds must be non-empty strings' },
-        { status: 400 }
-      )
-    }
+    const { action, grantIds } = validated.data
 
     if (action === 'save') {
       // Verify all grants exist

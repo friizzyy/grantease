@@ -110,7 +110,7 @@ const aiRecommendations = [
     title: 'Start an application',
     description: 'Create a workspace to begin drafting your grant application',
     action: 'New Workspace',
-    href: '/app/workspace/new',
+    href: '/app/discover',
   },
 ]
 

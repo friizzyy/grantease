@@ -3,6 +3,36 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
 import crypto from 'crypto'
+import { z } from 'zod'
+
+const saveGrantSchema = z.object({
+  grantId: z.string().min(1, 'Grant ID is required').max(200),
+  notes: z.string().max(5000).optional(),
+  grantData: z.object({
+    sourceId: z.string().max(200).optional(),
+    sourceName: z.string().max(200).optional(),
+    title: z.string().max(500).optional(),
+    sponsor: z.string().max(500).optional(),
+    summary: z.string().max(10000).optional(),
+    description: z.string().max(50000).optional().nullable(),
+    categories: z.array(z.string()).optional(),
+    eligibility: z.union([z.array(z.string()), z.record(z.unknown())]).optional(),
+    locations: z.array(z.string()).optional(),
+    amountMin: z.number().nullable().optional(),
+    amountMax: z.number().nullable().optional(),
+    amountText: z.string().max(500).nullable().optional(),
+    deadlineType: z.string().max(50).optional(),
+    deadlineDate: z.string().optional(),
+    url: z.string().max(2000).optional(),
+    contact: z.record(z.unknown()).nullable().optional(),
+    requirements: z.array(z.string()).optional(),
+    status: z.string().max(50).optional(),
+  }).optional(),
+})
+
+const deleteGrantQuerySchema = z.object({
+  grantId: z.string().min(1, 'Grant ID is required').max(200),
+})
 
 // Generate a hash fingerprint for deduplication
 function generateHashFingerprint(data: { title: string; sponsor: string; sourceId: string }): string {
@@ -74,14 +104,16 @@ export async function POST(request: NextRequest) {
     const userId = session.user.id
 
     const body = await request.json()
-    const { grantId, notes, grantData } = body
+    const validated = saveGrantSchema.safeParse(body)
 
-    if (!grantId) {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Grant ID is required' },
+        { error: 'Invalid input', details: validated.error.flatten() },
         { status: 400 }
       )
     }
+
+    const { grantId, notes, grantData } = validated.data
 
     // Check if grant exists
     let grant = await prisma.grant.findUnique({
@@ -163,14 +195,18 @@ export async function DELETE(request: NextRequest) {
     const userId = session.user.id
 
     const { searchParams } = new URL(request.url)
-    const grantId = searchParams.get('grantId')
+    const queryValidated = deleteGrantQuerySchema.safeParse({
+      grantId: searchParams.get('grantId'),
+    })
 
-    if (!grantId) {
+    if (!queryValidated.success) {
       return NextResponse.json(
-        { error: 'Grant ID is required' },
+        { error: 'Invalid input', details: queryValidated.error.flatten() },
         { status: 400 }
       )
     }
+
+    const { grantId } = queryValidated.data
 
     await prisma.savedGrant.delete({
       where: {

@@ -11,6 +11,18 @@ import {
   type GrantForEligibility,
 } from '@/lib/services/gemini-eligibility-checker'
 import { isGeminiConfigured } from '@/lib/services/gemini-client'
+import { z } from 'zod'
+
+const eligibilityCheckSchema = z.object({
+  grantId: z.string().min(1, 'Grant ID is required').max(200),
+  grantTitle: z.string().min(1, 'Grant title is required').max(500),
+  grantSponsor: z.string().max(500).optional(),
+  eligibilityText: z.string().max(10000).optional(),
+  requirements: z.string().max(10000).optional(),
+  description: z.string().max(10000).optional(),
+  url: z.string().min(1, 'URL is required').max(2000),
+  mode: z.enum(['full', 'quick']).default('full'),
+})
 
 /**
  * POST /api/ai/eligibility-check
@@ -48,6 +60,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    const validated = eligibilityCheckSchema.safeParse(body)
+
+    if (!validated.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: validated.error.flatten() },
+        { status: 400 }
+      )
+    }
+
     const {
       grantId,
       grantTitle,
@@ -56,15 +77,8 @@ export async function POST(request: NextRequest) {
       requirements,
       description,
       url,
-      mode = 'full',
-    } = body
-
-    if (!grantId || !grantTitle || !url) {
-      return NextResponse.json(
-        { error: 'Grant ID, title, and URL are required' },
-        { status: 400 }
-      )
-    }
+      mode,
+    } = validated.data
 
     // Load user profile
     const dbProfile = await prisma.userProfile.findUnique({
@@ -101,7 +115,7 @@ export async function POST(request: NextRequest) {
     const grant: GrantForEligibility = {
       id: grantId,
       title: grantTitle,
-      sponsor: grantSponsor,
+      sponsor: grantSponsor || 'Unknown',
       eligibilityText,
       requirements,
       description,
@@ -122,7 +136,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Full analysis
-    const result = await checkEligibility(grant, profile)
+    const { result, usage } = await checkEligibility(grant, profile)
     const analysisTime = Date.now() - startTime
 
     if (!result) {
@@ -132,16 +146,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Log usage
+    // Log usage with actual token counts from the API response
     try {
       await prisma.aIUsageLog.create({
         data: {
           userId: session.user.id,
           type: 'eligibility_check',
           model: 'gemini-1.5-pro',
-          promptTokens: 0,
-          completionTokens: 0,
-          totalTokens: 0,
+          promptTokens: usage.promptTokens,
+          completionTokens: usage.completionTokens,
+          totalTokens: usage.totalTokens,
           responseTime: analysisTime,
           grantId,
           success: true,

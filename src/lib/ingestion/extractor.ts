@@ -5,7 +5,7 @@
  * The LLM only assists with extraction - it does NOT replace scraping.
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getGeminiExtractionModel } from '@/lib/services/gemini-client';
 import {
   RawGrantPage,
   ExtractedGrant,
@@ -14,9 +14,7 @@ import {
   IngestionError,
 } from './types';
 import { ENTITY_TYPE_MAP, CATEGORY_MAP, STATE_CODES } from './sources';
-
-// Initialize Gemini
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || '');
+import { sanitizePromptInput } from '@/lib/utils/prompt-sanitizer';
 
 // Extraction prompt template
 const EXTRACTION_PROMPT = `You are a grant data extraction system. Extract structured grant information from the provided text.
@@ -98,35 +96,39 @@ export async function extractWithLLM(
   request: LLMExtractionRequest
 ): Promise<LLMExtractionResponse> {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = getGeminiExtractionModel();
+    if (!model) {
+      return {
+        success: false,
+        confidence: 0,
+        error: 'Gemini API key not configured',
+      };
+    }
 
-    // Build pre-extracted context
+    // Build pre-extracted context (sanitize scraped content for prompt safety)
     let preExtractedText = '';
     if (request.preExtracted) {
       preExtractedText = '\nPRE-EXTRACTED HINTS (verify these against the text):';
       if (request.preExtracted.title) {
-        preExtractedText += `\n- Title hint: ${request.preExtracted.title}`;
+        preExtractedText += `\n- Title hint: ${sanitizePromptInput(request.preExtracted.title, 500)}`;
       }
       if (request.preExtracted.sponsor) {
-        preExtractedText += `\n- Sponsor hint: ${request.preExtracted.sponsor}`;
+        preExtractedText += `\n- Sponsor hint: ${sanitizePromptInput(request.preExtracted.sponsor, 500)}`;
       }
       if (request.preExtracted.deadlineText) {
-        preExtractedText += `\n- Deadline hint: ${request.preExtracted.deadlineText}`;
+        preExtractedText += `\n- Deadline hint: ${sanitizePromptInput(request.preExtracted.deadlineText, 200)}`;
       }
       if (request.preExtracted.amountText) {
-        preExtractedText += `\n- Amount hint: ${request.preExtracted.amountText}`;
+        preExtractedText += `\n- Amount hint: ${sanitizePromptInput(request.preExtracted.amountText, 200)}`;
       }
     }
 
-    // Truncate raw text to prevent token overflow
+    // Truncate raw text to prevent token overflow and sanitize for prompt safety
     const maxTextLength = 15000;
-    let rawText = request.rawText;
-    if (rawText.length > maxTextLength) {
-      rawText = rawText.substring(0, maxTextLength) + '\n\n[Text truncated...]';
-    }
+    const rawText = sanitizePromptInput(request.rawText, maxTextLength);
 
-    const prompt = EXTRACTION_PROMPT.replace('{SOURCE_NAME}', request.sourceName)
-      .replace('{SOURCE_URL}', request.sourceUrl)
+    const prompt = EXTRACTION_PROMPT.replace('{SOURCE_NAME}', sanitizePromptInput(request.sourceName, 200))
+      .replace('{SOURCE_URL}', sanitizePromptInput(request.sourceUrl, 500))
       .replace('{RAW_TEXT}', rawText)
       .replace('{PRE_EXTRACTED}', preExtractedText);
 

@@ -11,9 +11,12 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check } from 'lucide-react'
+import { Check, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import * as LucideIcons from 'lucide-react'
+
+// Type-safe icon lookup from lucide-react namespace
+const LucideIconMap = LucideIcons as unknown as Record<string, LucideIcon>
 
 // Color mappings for different entity/option types
 const GRADIENT_COLORS: Record<string, string> = {
@@ -51,7 +54,7 @@ export function OptionCard({
   id,
 }: OptionCardProps) {
   const [isHovered, setIsHovered] = useState(false)
-  const IconComponent = icon ? (LucideIcons as any)[icon] : null
+  const IconComponent = icon ? LucideIconMap[icon] : null
   const gradientColor = id ? (GRADIENT_COLORS[id] || GRADIENT_COLORS.default) : GRADIENT_COLORS.default
 
   return (
@@ -165,7 +168,7 @@ export function OptionChip({
   onClick,
   disabled = false,
 }: OptionChipProps) {
-  const IconComponent = icon ? (LucideIcons as any)[icon] : null
+  const IconComponent = icon ? LucideIconMap[icon] : null
 
   return (
     <button

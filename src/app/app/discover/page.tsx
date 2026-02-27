@@ -3,11 +3,16 @@
 /**
  * DISCOVER PAGE - Multi-Source Grant Discovery
  * Searches across Grants.gov, SAM.gov, USAspending, California Grants, and more
+ *
+ * Filter state is persisted in URL search params (useSearchParams) to enable:
+ * - Shareable/bookmarkable filter URLs
+ * - State preserved on page refresh
+ * - Browser back/forward navigation through filter changes
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search,
@@ -735,10 +740,62 @@ function FilterPanel({
   )
 }
 
-export default function DiscoverPage() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [showFilters, setShowFilters] = useState(false)
-  const [filters, setFilters] = useState({ agency: '', status: 'open', state: '' })
+/**
+ * Helper to build updated URL search params from current params + partial updates.
+ * Null or empty string values are removed from the URL to keep it clean.
+ * Default values (e.g. status=open, mode=foryou) are also omitted to keep URLs minimal.
+ */
+function buildSearchParams(
+  current: URLSearchParams,
+  updates: Record<string, string | null>,
+): URLSearchParams {
+  const params = new URLSearchParams(current.toString())
+  for (const [key, value] of Object.entries(updates)) {
+    if (value === null || value === '') {
+      params.delete(key)
+    } else {
+      params.set(key, value)
+    }
+  }
+  // Remove default values to keep the URL clean
+  if (params.get('status') === 'open') params.delete('status')
+  if (params.get('mode') === 'foryou') params.delete('mode')
+  return params
+}
+
+/**
+ * Main discover page content component.
+ * Separated from the default export so it can be wrapped in a Suspense boundary
+ * (required by Next.js for components using useSearchParams).
+ */
+function DiscoverPageContent() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  // --- Read filter state from URL search params ---
+  const searchQuery = searchParams.get('q') || ''
+  const filterAgency = searchParams.get('agency') || ''
+  const filterStatus = searchParams.get('status') || 'open'
+  const filterState = searchParams.get('state') || ''
+  const showFilters = searchParams.get('filters') === '1'
+  const mode = searchParams.get('mode') || 'foryou'
+  const isProfileMode = mode === 'foryou'
+  const urlSources = searchParams.get('sources') || ''
+
+  // Derived filters object for the FilterPanel (reads from URL)
+  const filters = { agency: filterAgency, status: filterStatus, state: filterState }
+
+  // Local input state for the search box (syncs to URL on submit, not on every keystroke)
+  const [searchInput, setSearchInput] = useState(searchQuery)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Sync local search input when URL param changes (e.g. browser back/forward)
+  useEffect(() => {
+    setSearchInput(searchQuery)
+  }, [searchQuery])
+
+  // --- Non-filter state (API responses, transient UI) ---
   const [grants, setGrants] = useState<Grant[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -749,30 +806,56 @@ export default function DiscoverPage() {
   const [isAiMatching, setIsAiMatching] = useState(false)
   const [aiMatchResults, setAiMatchResults] = useState<AIMatchResult[] | null>(null)
   const [aiMatchError, setAiMatchError] = useState<string | null>(null)
-  const [isProfileMode, setIsProfileMode] = useState(true) // Start in profile mode
-  const [userState, setUserState] = useState<string | null>(null) // User's state from profile
+  const [userState, setUserState] = useState<string | null>(null)
   const [profileLoaded, setProfileLoaded] = useState(false)
   const [hasProfile, setHasProfile] = useState(false)
-  const [userProfile, setUserProfile] = useState<UserProfileData | null>(null) // Full profile for completeness banner
-  const [showSaveSearchModal, setShowSaveSearchModal] = useState(false) // Save search modal state
-  const limit = 20 // Show top 20 most relevant
+  const [userProfile, setUserProfile] = useState<UserProfileData | null>(null)
+  const [showSaveSearchModal, setShowSaveSearchModal] = useState(false)
+  const [sourcesInitialized, setSourcesInitialized] = useState(false)
+  const limit = 20
 
-  // Fetch available sources, profile data, and auto-run AI match on load
+  // --- URL update helper ---
+  // Replaces router.replace with updated search params (no scroll, no full navigation)
+  const updateURL = useCallback((updates: Record<string, string | null>) => {
+    const params = buildSearchParams(searchParams, updates)
+    const paramString = params.toString()
+    const newUrl = paramString ? `${pathname}?${paramString}` : pathname
+    router.replace(newUrl, { scroll: false })
+  }, [searchParams, router, pathname])
+
+  // Initialize selectedSources from URL if present, otherwise from API
   useEffect(() => {
+    if (urlSources && !sourcesInitialized) {
+      setSelectedSources(urlSources.split(',').filter(Boolean))
+      setSourcesInitialized(true)
+    }
+  }, [urlSources, sourcesInitialized])
+
+  // --- Initialization: fetch sources + profile, then load grants ---
+  const initializedRef = useRef(false)
+  useEffect(() => {
+    if (initializedRef.current) return
+    initializedRef.current = true
+
     async function initialize() {
       try {
-        // Fetch sources and profile in parallel
         const [sourcesResponse, profileResponse] = await Promise.all([
           fetch('/api/grants/sources'),
           fetch('/api/user/profile'),
         ])
 
+        let configuredSources: string[] = []
         if (sourcesResponse.ok) {
           const data = await sourcesResponse.json()
           setSources(data.sources || [])
-          setSelectedSources(data.configured || [])
+          configuredSources = data.configured || []
+          // Only use API-configured sources if no URL sources param was provided
+          if (!urlSources) {
+            setSelectedSources(configuredSources)
+          }
         }
 
+        let profileState: string | null = null
         if (profileResponse.ok) {
           const profileData = await profileResponse.json()
           if (profileData.profile) {
@@ -786,15 +869,32 @@ export default function DiscoverPage() {
               onboardingCompleted: profileData.profile.onboardingCompleted,
             })
             setUserState(profileData.profile.state)
-            // Pre-fill state filter if user has a state
-            if (profileData.profile.state) {
-              setFilters(prev => ({ ...prev, state: profileData.profile.state }))
+            profileState = profileData.profile.state
+
+            // Pre-fill state filter from profile if not already set in URL
+            if (profileData.profile.state && !filterState) {
+              updateURL({ state: profileData.profile.state })
             }
           }
         }
 
-        // Try to auto-load personalized grants
-        await loadPersonalizedGrants()
+        setSourcesInitialized(true)
+
+        // Decide which mode to load based on URL
+        if (isProfileMode && !searchQuery) {
+          // "For You" mode: load personalized grants
+          await loadPersonalizedGrants()
+        } else {
+          // Browse mode or has a search query: load general grants
+          const effectiveSources = urlSources
+            ? urlSources.split(',').filter(Boolean)
+            : configuredSources
+          await fetchGeneralGrants(searchQuery, {
+            agency: filterAgency,
+            status: filterStatus,
+            state: filterState || profileState || '',
+          }, effectiveSources)
+        }
       } catch (err) {
         console.error('Failed to initialize:', err)
         setSelectedSources(['grants-gov'])
@@ -804,26 +904,27 @@ export default function DiscoverPage() {
       }
     }
     initialize()
+  // Only run once on mount; URL params are read at call time
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Load personalized grants based on profile (auto-runs on page load)
+  // --- Data fetching functions ---
+
   const loadPersonalizedGrants = async () => {
     setLoading(true)
     setError(null)
     setAiMatchError(null)
 
     try {
-      // Try the new discover endpoint first
       const response = await fetch('/api/grants/discover?limit=' + limit)
       const data = await response.json()
 
       if (!response.ok) {
         if (data.profileComplete === false) {
-          // No profile - show message and switch to browse mode
           setHasProfile(false)
-          setIsProfileMode(false)
           setAiMatchError('Complete your profile to see personalized grants tailored to your organization.')
-          // Fetch general grants instead
+          // Switch to browse mode via URL
+          updateURL({ mode: 'browse' })
           await fetchGeneralGrants()
         } else {
           throw new Error(data.error || data.message || 'Failed to get matches')
@@ -834,7 +935,6 @@ export default function DiscoverPage() {
       setHasProfile(true)
 
       if (data.grants && data.grants.length > 0) {
-        // Extract AI match results from the enriched grants
         const matchResults: AIMatchResult[] = data.grants.map((g: Grant & {
           fitScore?: number
           fitSummary?: string
@@ -860,7 +960,6 @@ export default function DiscoverPage() {
         setAiMatchResults(matchResults)
         setGrants(data.grants)
         setTotal(data.total || data.grants.length)
-        setIsProfileMode(true)
       } else {
         setAiMatchError('No matching grants found. Try updating your focus areas in Settings or browse all grants.')
         await fetchGeneralGrants()
@@ -874,20 +973,27 @@ export default function DiscoverPage() {
     }
   }
 
-  // Fetch general grants (when not in profile mode or as fallback)
-  const fetchGeneralGrants = async (query?: string) => {
+  const fetchGeneralGrants = async (
+    query?: string,
+    overrideFilters?: { agency: string; status: string; state: string },
+    overrideSources?: string[],
+  ) => {
     setLoading(true)
     setError(null)
+
+    // Use provided overrides or fall back to current URL-derived state
+    const effectiveFilters = overrideFilters || filters
+    const effectiveSources = overrideSources || selectedSources
 
     try {
       const params = new URLSearchParams()
       if (query) params.set('q', query)
-      if (filters.agency) params.set('agency', filters.agency)
-      if (filters.state) params.set('state', filters.state)
-      params.set('status', filters.status)
-      params.set('sources', selectedSources.length > 0 ? selectedSources.join(',') : 'grants-gov')
+      if (effectiveFilters.agency) params.set('agency', effectiveFilters.agency)
+      if (effectiveFilters.state) params.set('state', effectiveFilters.state)
+      params.set('status', effectiveFilters.status)
+      params.set('sources', effectiveSources.length > 0 ? effectiveSources.join(',') : 'grants-gov')
       params.set('limit', String(limit))
-      params.set('useProfile', 'true') // Still apply profile filtering
+      params.set('useProfile', 'true')
 
       const response = await fetch(`/api/grants/unified-search?${params}`)
 
@@ -899,8 +1005,7 @@ export default function DiscoverPage() {
       setGrants(data.grants || [])
       setTotal(data.totalCount || 0)
       setSourceCounts(data.sources || [])
-      setAiMatchResults(null) // Clear AI results when doing general search
-      setIsProfileMode(false)
+      setAiMatchResults(null)
     } catch (err) {
       console.error('Error fetching grants:', err)
       setError('Unable to load grants. Please try again.')
@@ -912,50 +1017,87 @@ export default function DiscoverPage() {
     }
   }
 
-  // Toggle source selection
+  // --- Event handlers (update URL instead of local state) ---
+
   const handleToggleSource = (name: string) => {
-    setSelectedSources(prev =>
-      prev.includes(name)
-        ? prev.filter(s => s !== name)
-        : [...prev, name]
-    )
+    const newSources = selectedSources.includes(name)
+      ? selectedSources.filter(s => s !== name)
+      : [...selectedSources, name]
+    setSelectedSources(newSources)
+    // Persist to URL when applied (not on every toggle, since filter panel has an Apply button)
   }
 
-  // Legacy fetchGrants for compatibility
-  const fetchGrants = useCallback(async (query?: string) => {
-    await fetchGeneralGrants(query)
-  }, [filters.agency, filters.status, filters.state, selectedSources])
-
-  // Handle search - switches to browse mode
   const handleSearch = () => {
-    setIsProfileMode(false)
+    // Debounce protection: clear any pending debounce
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+      debounceRef.current = null
+    }
+
+    // Update URL with search query and switch to browse mode
+    updateURL({
+      q: searchInput || null,
+      mode: 'browse',
+      sources: selectedSources.length > 0 ? selectedSources.join(',') : null,
+    })
+
     setAiMatchResults(null)
-    fetchGeneralGrants(searchQuery)
+    fetchGeneralGrants(searchInput)
   }
 
-  // Handle quick suggestion click
   const handleSuggestion = (suggestion: string) => {
-    setSearchQuery(suggestion)
-    setIsProfileMode(false)
+    setSearchInput(suggestion)
+    updateURL({
+      q: suggestion,
+      mode: 'browse',
+      sources: selectedSources.length > 0 ? selectedSources.join(',') : null,
+    })
+
     setAiMatchResults(null)
     fetchGeneralGrants(suggestion)
   }
 
-  // Handle filter apply
   const handleApplyFilters = () => {
-    setShowFilters(false)
-    setIsProfileMode(false)
+    // Write the current filter panel state to URL and close the panel
+    updateURL({
+      agency: filters.agency || null,
+      status: filters.status || null,
+      state: filters.state || null,
+      filters: null, // Close the panel
+      mode: 'browse',
+      sources: selectedSources.length > 0 ? selectedSources.join(',') : null,
+    })
+
     setAiMatchResults(null)
     fetchGeneralGrants(searchQuery)
   }
 
-  // Return to personalized "For You" mode
+  const setFilters = (newFilters: { agency: string; status: string; state: string }) => {
+    // Update URL immediately for filter panel changes so they stay in sync
+    updateURL({
+      agency: newFilters.agency || null,
+      status: newFilters.status || null,
+      state: newFilters.state || null,
+    })
+  }
+
   const handleForYou = async () => {
     if (isAiMatching) return
     setIsAiMatching(true)
-    setSearchQuery('')
+    setSearchInput('')
     setAiMatchResults(null)
     setAiMatchError(null)
+
+    // Clear search/browse params and switch to foryou mode
+    updateURL({
+      q: null,
+      mode: null, // foryou is default, so null removes it
+      agency: null,
+      status: null,
+      state: filterState || null, // Keep user's state filter
+      filters: null,
+      sources: null,
+    })
 
     try {
       await loadPersonalizedGrants()
@@ -964,76 +1106,61 @@ export default function DiscoverPage() {
     }
   }
 
-  // AI-powered grant matching (same as For You)
-  const handleAiMatch = async () => {
-    await handleForYou()
+  const handleBrowseAll = () => {
+    setSearchInput('')
+    setAiMatchResults(null)
+    updateURL({
+      q: null,
+      mode: 'browse',
+      sources: selectedSources.length > 0 ? selectedSources.join(',') : null,
+    })
+    fetchGeneralGrants()
   }
 
-  // Legacy handler kept for compatibility
-  const _legacyAiMatch = async () => {
-    if (isAiMatching) return
-    setIsAiMatching(true)
-    setAiMatchResults(null)
-    setAiMatchError(null)
+  const handleToggleFilterPanel = () => {
+    updateURL({ filters: showFilters ? null : '1' })
+  }
 
-    try {
-      const response = await fetch('/api/grants/match', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          maxResults: limit,
-          minScore: 30,
-        }),
-      })
+  const handleCloseFilterPanel = () => {
+    updateURL({ filters: null })
+  }
 
-      const data = await response.json()
+  const handleClearSearch = () => {
+    setSearchInput('')
+    updateURL({
+      q: null,
+      agency: null,
+      status: null,
+      state: null,
+      mode: 'browse',
+      sources: selectedSources.length > 0 ? selectedSources.join(',') : null,
+    })
+    fetchGeneralGrants('')
+  }
 
-      if (!response.ok) {
-        if (data.profileComplete === false) {
-          setAiMatchError('Complete your profile to get personalized grant matches. Go to Settings → Profile to set up your organization details.')
-        } else {
-          throw new Error(data.error || data.message || 'Failed to get AI matches')
-        }
-        return
-      }
+  // Debounced search input handler
+  const handleSearchInputChange = (value: string) => {
+    setSearchInput(value)
 
-      if (data.matches && data.matches.length > 0) {
-        const matchedGrants = data.matches
-          .filter((m: { grant: Grant | null }) => m.grant)
-          .map((m: { grant: Grant }) => m.grant)
-
-        setAiMatchResults(data.matches.map((m: AIMatchResult & { grant?: Grant }) => ({
-          grantId: m.grantId || m.grant?.id,
-          score: m.score,
-          reasons: m.reasons || [],
-          eligibilityStatus: m.eligibilityStatus,
-          nextSteps: m.nextSteps,
-          whatYouCanFund: m.whatYouCanFund,
-          applicationTips: m.applicationTips,
-          urgency: m.urgency,
-          fitSummary: m.fitSummary,
-        })))
-
-        setGrants(matchedGrants)
-        setTotal(matchedGrants.length)
-        setIsProfileMode(true)
-      } else {
-        setAiMatchError('No matching grants found for your profile. Try updating your focus areas in Settings.')
-      }
-    } catch (err) {
-      console.error('AI match error:', err)
-      setAiMatchError(err instanceof Error ? err.message : 'AI matching failed')
-    } finally {
-      setIsAiMatching(false)
+    // Debounce URL update for the search input to avoid excessive history entries
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
     }
+    debounceRef.current = setTimeout(() => {
+      // Only update URL param on debounce if the user hasn't submitted yet
+      // This provides a "live URL" feel without flooding the history
+      updateURL({ q: value || null })
+    }, 500)
   }
 
-  // Clear AI match results
-  const clearAiMatch = () => {
-    setAiMatchResults(null)
-    setAiMatchError(null)
-    fetchGrants(searchQuery)
-  }
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current)
+      }
+    }
+  }, [])
 
   return (
     <div className="p-8">
@@ -1089,12 +1216,7 @@ export default function DiscoverPage() {
                 For You
               </button>
               <button
-                onClick={() => {
-                  setIsProfileMode(false)
-                  setAiMatchResults(null)
-                  setSearchQuery('')
-                  fetchGeneralGrants()
-                }}
+                onClick={handleBrowseAll}
                 disabled={loading}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-1.5 ${
                   !isProfileMode
@@ -1130,15 +1252,16 @@ export default function DiscoverPage() {
               <input
                 type="text"
                 placeholder="Search grants by keyword..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search grants by keyword"
+                value={searchInput}
+                onChange={(e) => handleSearchInputChange(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 className="w-full pl-12 pr-4 py-3 rounded-xl bg-pulse-bg border border-pulse-border focus:border-pulse-accent focus:outline-none text-pulse-text placeholder:text-pulse-text-tertiary"
               />
             </div>
             <Button
               variant={showFilters ? 'default' : 'outline'}
-              onClick={() => setShowFilters(!showFilters)}
+              onClick={handleToggleFilterPanel}
             >
               <SlidersHorizontal className="w-4 h-4 mr-2" />
               Filters
@@ -1157,7 +1280,7 @@ export default function DiscoverPage() {
               Search
             </Button>
             {/* Save Search Button */}
-            {(searchQuery || filters.agency || filters.state) && (
+            {(searchQuery || filterAgency || filterState) && (
               <Button
                 variant="outline"
                 onClick={() => setShowSaveSearchModal(true)}
@@ -1187,7 +1310,7 @@ export default function DiscoverPage() {
       {/* Filter Panel */}
       <FilterPanel
         isOpen={showFilters}
-        onClose={() => setShowFilters(false)}
+        onClose={handleCloseFilterPanel}
         onApply={handleApplyFilters}
         filters={filters}
         setFilters={setFilters}
@@ -1220,11 +1343,7 @@ export default function DiscoverPage() {
                   </p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={() => {
-                setIsProfileMode(false)
-                setAiMatchResults(null)
-                fetchGeneralGrants()
-              }}>
+              <Button variant="outline" size="sm" onClick={handleBrowseAll}>
                 Browse All Grants
               </Button>
             </div>
@@ -1245,7 +1364,7 @@ export default function DiscoverPage() {
             <div className="flex items-center gap-3">
               <AlertCircle className="w-5 h-5 text-pulse-error" />
               <p className="text-sm text-pulse-error">{error}</p>
-              <Button variant="ghost" size="sm" onClick={() => fetchGrants(searchQuery)}>
+              <Button variant="ghost" size="sm" onClick={() => fetchGeneralGrants(searchQuery)}>
                 <RefreshCw className="w-4 h-4 mr-1" />
                 Retry
               </Button>
@@ -1268,7 +1387,7 @@ export default function DiscoverPage() {
           <p className="text-pulse-text-secondary mb-4">
             Select at least one data source to search for grants
           </p>
-          <Button variant="outline" onClick={() => setShowFilters(true)}>
+          <Button variant="outline" onClick={() => updateURL({ filters: '1' })}>
             <SlidersHorizontal className="w-4 h-4 mr-2" />
             Open Filters
           </Button>
@@ -1298,7 +1417,7 @@ export default function DiscoverPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => isProfileMode ? loadPersonalizedGrants() : fetchGrants(searchQuery)}
+            onClick={() => isProfileMode ? loadPersonalizedGrants() : fetchGeneralGrants(searchQuery)}
             disabled={loading}
           >
             <RefreshCw className={`w-4 h-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
@@ -1336,11 +1455,7 @@ export default function DiscoverPage() {
           <p className="text-pulse-text-secondary mb-4">
             Try adjusting your search terms or filters
           </p>
-          <Button variant="outline" onClick={() => {
-            setSearchQuery('')
-            setFilters({ agency: '', status: 'open', state: '' })
-            fetchGrants()
-          }}>
+          <Button variant="outline" onClick={handleClearSearch}>
             Clear Search
           </Button>
         </motion.div>
@@ -1399,24 +1514,11 @@ export default function DiscoverPage() {
         </div>
       )}
 
-      {/* Load More - Only show in browse mode when there are more results */}
-      {!isProfileMode && grants.length > 0 && grants.length < total && (
-        <motion.div
-          className="flex items-center justify-center mt-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Button
-            variant="outline"
-            onClick={() => {
-              fetchGrants(searchQuery)
-            }}
-          >
-            Load More Grants
-            <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
-        </motion.div>
+      {/* End of results indicator */}
+      {!isProfileMode && grants.length > 0 && grants.length >= total && (
+        <div className="flex items-center justify-center mt-8">
+          <span className="text-sm text-pulse-text-tertiary">Showing all {grants.length} results</span>
+        </div>
       )}
 
       {/* Save Search Modal */}
@@ -1425,9 +1527,9 @@ export default function DiscoverPage() {
         onClose={() => setShowSaveSearchModal(false)}
         currentQuery={searchQuery}
         currentFilters={{
-          agency: filters.agency,
-          status: filters.status,
-          state: filters.state,
+          agency: filterAgency,
+          status: filterStatus,
+          state: filterState,
           sources: selectedSources,
         }}
         onSaved={() => {
@@ -1435,5 +1537,41 @@ export default function DiscoverPage() {
         }}
       />
     </div>
+  )
+}
+
+// Loading fallback for the Suspense boundary
+function DiscoverLoading() {
+  return (
+    <div className="p-8">
+      <div className="mb-8 animate-pulse">
+        <div className="h-4 bg-pulse-surface rounded w-32 mb-4" />
+        <div className="h-8 bg-pulse-surface rounded w-64 mb-2" />
+        <div className="h-4 bg-pulse-surface rounded w-96" />
+      </div>
+      <div className="mb-6 animate-pulse">
+        <div className="h-16 bg-pulse-surface rounded-lg" />
+      </div>
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="p-5 animate-pulse rounded-lg border border-pulse-border bg-pulse-elevated">
+            <div className="h-4 bg-pulse-surface rounded w-1/3 mb-4" />
+            <div className="h-6 bg-pulse-surface rounded w-full mb-2" />
+            <div className="h-4 bg-pulse-surface rounded w-2/3 mb-4" />
+            <div className="h-16 bg-pulse-surface rounded w-full mb-4" />
+            <div className="h-4 bg-pulse-surface rounded w-1/2" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Default export wraps in Suspense boundary (required for useSearchParams)
+export default function DiscoverPage() {
+  return (
+    <Suspense fallback={<DiscoverLoading />}>
+      <DiscoverPageContent />
+    </Suspense>
   )
 }

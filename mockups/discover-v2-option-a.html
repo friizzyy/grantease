@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>V2 Discover - Option A: Card Grid with Sidebar Stats</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'pulse-bg': '#0a0a0f',
+            'pulse-surface': '#12121a',
+            'pulse-border': '#1e1e2e',
+            'pulse-accent': '#40ffaa',
+            'pulse-text': '#f4f4f5',
+            'pulse-text-secondary': '#a1a1aa',
+            'pulse-text-tertiary': '#71717a',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            serif: ['Fraunces', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background: #0a0a0f; }
+    .glass-card {
+      background: rgba(18, 18, 26, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(30, 30, 46, 0.8);
+    }
+    .glow-accent { box-shadow: 0 0 40px rgba(64, 255, 170, 0.1); }
+
+    /* Animated Grid Background */
+    .grid-background {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .grid-lines {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      animation: gridMove 20s linear infinite;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(60px, 60px); }
+    }
+
+    .glow-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      animation: orbFloat 15s ease-in-out infinite;
+    }
+
+    .glow-orb-1 {
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(64, 255, 170, 0.08) 0%, transparent 70%);
+      top: -200px;
+      left: 30%;
+      animation-delay: 0s;
+    }
+
+    .glow-orb-2 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(64, 255, 170, 0.05) 0%, transparent 70%);
+      bottom: -150px;
+      right: 10%;
+      animation-delay: -5s;
+    }
+
+    .glow-orb-3 {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(64, 255, 170, 0.04) 0%, transparent 70%);
+      top: 50%;
+      left: -100px;
+      animation-delay: -10s;
+    }
+
+    @keyframes orbFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); opacity: 1; }
+      25% { transform: translate(30px, -20px) scale(1.05); opacity: 0.8; }
+      50% { transform: translate(-20px, 30px) scale(0.95); opacity: 1; }
+      75% { transform: translate(20px, 20px) scale(1.02); opacity: 0.9; }
+    }
+
+    /* Pulse dots at grid intersections */
+    .pulse-dots {
+      position: absolute;
+      inset: 0;
+    }
+
+    .pulse-dot {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: rgba(64, 255, 170, 0.3);
+      animation: pulseDot 3s ease-in-out infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 0.3; }
+      50% { transform: scale(1.5); opacity: 0.6; }
+    }
+
+    /* Noise overlay */
+    .noise-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+
+    /* Content layer */
+    .content-layer {
+      position: relative;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="font-sans text-pulse-text min-h-screen">
+
+  <!-- Animated Background -->
+  <div class="grid-background">
+    <div class="grid-lines"></div>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+    <div class="glow-orb glow-orb-3"></div>
+    <div class="pulse-dots">
+      <div class="pulse-dot" style="top: 120px; left: 180px; animation-delay: 0s;"></div>
+      <div class="pulse-dot" style="top: 120px; left: 540px; animation-delay: 0.5s;"></div>
+      <div class="pulse-dot" style="top: 120px; left: 900px; animation-delay: 1s;"></div>
+      <div class="pulse-dot" style="top: 300px; left: 300px; animation-delay: 1.5s;"></div>
+      <div class="pulse-dot" style="top: 300px; left: 660px; animation-delay: 2s;"></div>
+      <div class="pulse-dot" style="top: 300px; left: 1020px; animation-delay: 2.5s;"></div>
+      <div class="pulse-dot" style="top: 480px; left: 180px; animation-delay: 0.3s;"></div>
+      <div class="pulse-dot" style="top: 480px; left: 540px; animation-delay: 0.8s;"></div>
+      <div class="pulse-dot" style="top: 480px; left: 900px; animation-delay: 1.3s;"></div>
+      <div class="pulse-dot" style="top: 660px; left: 300px; animation-delay: 1.8s;"></div>
+      <div class="pulse-dot" style="top: 660px; left: 660px; animation-delay: 2.3s;"></div>
+      <div class="pulse-dot" style="top: 660px; left: 1020px; animation-delay: 0.1s;"></div>
+    </div>
+  </div>
+  <div class="noise-overlay"></div>
+
+  <!-- OPTION A: Sidebar Stats + Grid Layout -->
+  <div class="flex min-h-screen content-layer">
+
+    <!-- Left Sidebar - Stats & Filters -->
+    <aside class="w-80 border-r border-pulse-border p-6 sticky top-0 h-screen overflow-y-auto">
+
+      <!-- Profile Summary -->
+      <div class="glass-card rounded-2xl p-5 mb-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-pulse-accent to-emerald-500 flex items-center justify-center">
+            <svg class="w-6 h-6 text-pulse-bg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-pulse-text">Your Farm</h3>
+            <p class="text-sm text-pulse-text-tertiary">Mixed Operation • CA</p>
+          </div>
+        </div>
+        <a href="#" class="text-sm text-pulse-accent hover:underline">Edit Profile →</a>
+      </div>
+
+      <!-- Match Stats -->
+      <div class="glass-card rounded-2xl p-5 mb-6">
+        <h4 class="text-xs font-medium text-pulse-text-tertiary uppercase tracking-wider mb-4">Your Matches</h4>
+        <div class="text-4xl font-bold text-pulse-accent mb-1">24</div>
+        <p class="text-sm text-pulse-text-secondary mb-4">grants matched</p>
+
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-pulse-text-secondary">Excellent Match</span>
+            <span class="text-sm font-medium text-emerald-400">8</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-pulse-text-secondary">Strong Match</span>
+            <span class="text-sm font-medium text-amber-400">10</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-pulse-text-secondary">Good Match</span>
+            <span class="text-sm font-medium text-orange-400">6</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Funding Goals Filter -->
+      <div class="glass-card rounded-2xl p-5 mb-6">
+        <h4 class="text-xs font-medium text-pulse-text-tertiary uppercase tracking-wider mb-4">Filter by Goal</h4>
+        <div class="space-y-2">
+          <button class="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-pulse-accent/10 border border-pulse-accent/30 text-pulse-accent text-sm">
+            <span>All Goals</span>
+            <span class="text-xs bg-pulse-accent/20 px-2 py-0.5 rounded-full">24</span>
+          </button>
+          <button class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 text-pulse-text-secondary text-sm transition-colors">
+            <span>Equipment</span>
+            <span class="text-xs text-pulse-text-tertiary">12</span>
+          </button>
+          <button class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 text-pulse-text-secondary text-sm transition-colors">
+            <span>Conservation</span>
+            <span class="text-xs text-pulse-text-tertiary">8</span>
+          </button>
+          <button class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 text-pulse-text-secondary text-sm transition-colors">
+            <span>Irrigation</span>
+            <span class="text-xs text-pulse-text-tertiary">6</span>
+          </button>
+          <button class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 text-pulse-text-secondary text-sm transition-colors">
+            <span>Livestock</span>
+            <span class="text-xs text-pulse-text-tertiary">5</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="space-y-2">
+        <button class="w-full flex items-center gap-2 px-4 py-3 rounded-xl bg-pulse-surface/50 border border-pulse-border text-sm text-pulse-text-secondary hover:text-pulse-text hover:border-pulse-accent/30 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+          </svg>
+          Saved Grants
+        </button>
+        <button class="w-full flex items-center gap-2 px-4 py-3 rounded-xl bg-pulse-surface/50 border border-pulse-border text-sm text-pulse-text-secondary hover:text-pulse-text hover:border-pulse-accent/30 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          Refresh Matches
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-8">
+
+      <!-- Header -->
+      <div class="mb-8">
+        <div class="flex items-center gap-2 mb-2">
+          <svg class="w-5 h-5 text-pulse-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+          </svg>
+          <span class="text-sm font-medium text-pulse-text-tertiary uppercase tracking-wider">Farm Grants</span>
+        </div>
+        <h1 class="text-4xl font-serif text-pulse-text mb-2">Grants For Your Farm</h1>
+        <p class="text-pulse-text-secondary">Personalized opportunities ranked by relevance to your operation</p>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="glass-card rounded-2xl p-4 mb-8">
+        <div class="relative">
+          <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-pulse-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" placeholder="Search your matched grants..." class="w-full pl-12 pr-4 py-3 rounded-xl bg-pulse-bg/50 border border-pulse-border focus:border-pulse-accent focus:outline-none text-pulse-text placeholder:text-pulse-text-tertiary">
+        </div>
+      </div>
+
+      <!-- Grant Grid -->
+      <div class="grid lg:grid-cols-2 gap-5">
+
+        <!-- Grant Card 1 - Excellent Match -->
+        <div class="glass-card rounded-2xl p-6 hover:border-pulse-accent/40 transition-all cursor-pointer group">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-medium border border-emerald-500/20">
+                92/100 Excellent
+              </span>
+              <span class="px-2 py-1 rounded-lg bg-pulse-surface text-pulse-text-tertiary text-xs">
+                USDA NRCS
+              </span>
+            </div>
+            <button class="p-2 rounded-lg hover:bg-white/5 text-pulse-text-tertiary hover:text-pulse-accent transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+              </svg>
+            </button>
+          </div>
+
+          <h3 class="text-lg font-semibold text-pulse-text mb-2 group-hover:text-pulse-accent transition-colors">
+            Environmental Quality Incentives Program (EQIP)
+          </h3>
+          <p class="text-sm text-pulse-text-secondary mb-4 line-clamp-2">
+            Cost-share for conservation practices: irrigation efficiency, fencing, livestock facilities, soil health, and more.
+          </p>
+
+          <div class="flex items-center gap-2 mb-4 p-3 rounded-xl bg-pulse-accent/5 border border-pulse-accent/10">
+            <svg class="w-4 h-4 text-pulse-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span class="text-sm text-pulse-accent">Funds irrigation/water systems and equipment</span>
+          </div>
+
+          <div class="flex items-center justify-between pt-4 border-t border-pulse-border/50">
+            <div class="flex items-center gap-4">
+              <span class="text-sm font-medium text-pulse-text">Up to $450K</span>
+              <span class="text-xs text-pulse-text-tertiary">Nationwide</span>
+            </div>
+            <span class="text-xs text-pulse-text-tertiary">Rolling deadline</span>
+          </div>
+        </div>
+
+        <!-- Grant Card 2 - Strong Match -->
+        <div class="glass-card rounded-2xl p-6 hover:border-pulse-accent/40 transition-all cursor-pointer group">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-1 rounded-lg bg-amber-500/10 text-amber-400 text-xs font-medium border border-amber-500/20">
+                78/100 Strong
+              </span>
+              <span class="px-2 py-1 rounded-lg bg-pulse-surface text-pulse-text-tertiary text-xs">
+                USDA FSA
+              </span>
+            </div>
+            <button class="p-2 rounded-lg hover:bg-white/5 text-pulse-text-tertiary hover:text-pulse-accent transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+              </svg>
+            </button>
+          </div>
+
+          <h3 class="text-lg font-semibold text-pulse-text mb-2 group-hover:text-pulse-accent transition-colors">
+            FSA Farm Operating Microloans
+          </h3>
+          <p class="text-sm text-pulse-text-secondary mb-4 line-clamp-2">
+            Low-interest loans up to $50,000 for small and beginning farmers - simplified application process.
+          </p>
+
+          <div class="flex items-center gap-2 mb-4 p-3 rounded-xl bg-pulse-accent/5 border border-pulse-accent/10">
+            <svg class="w-4 h-4 text-pulse-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span class="text-sm text-pulse-accent">Designed for small farms</span>
+          </div>
+
+          <div class="flex items-center justify-between pt-4 border-t border-pulse-border/50">
+            <div class="flex items-center gap-4">
+              <span class="text-sm font-medium text-pulse-text">Up to $50K</span>
+              <span class="text-xs text-pulse-text-tertiary">Nationwide</span>
+            </div>
+            <span class="text-xs text-pulse-text-tertiary">Rolling deadline</span>
+          </div>
+        </div>
+
+        <!-- Grant Card 3 -->
+        <div class="glass-card rounded-2xl p-6 hover:border-pulse-accent/40 transition-all cursor-pointer group">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-1 rounded-lg bg-amber-500/10 text-amber-400 text-xs font-medium border border-amber-500/20">
+                72/100 Strong
+              </span>
+              <span class="px-2 py-1 rounded-lg bg-pulse-surface text-pulse-text-tertiary text-xs">
+                CDFA
+              </span>
+            </div>
+            <button class="p-2 rounded-lg hover:bg-white/5 text-pulse-text-tertiary hover:text-pulse-accent transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+              </svg>
+            </button>
+          </div>
+
+          <h3 class="text-lg font-semibold text-pulse-text mb-2 group-hover:text-pulse-accent transition-colors">
+            California SWEEP - Water Efficiency
+          </h3>
+          <p class="text-sm text-pulse-text-secondary mb-4 line-clamp-2">
+            Up to $200,000 for California farmers to upgrade irrigation systems and save water.
+          </p>
+
+          <div class="flex items-center gap-2 mb-4 p-3 rounded-xl bg-pulse-accent/5 border border-pulse-accent/10">
+            <svg class="w-4 h-4 text-pulse-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span class="text-sm text-pulse-accent">For CA farmers - your state!</span>
+          </div>
+
+          <div class="flex items-center justify-between pt-4 border-t border-pulse-border/50">
+            <div class="flex items-center gap-4">
+              <span class="text-sm font-medium text-pulse-text">Up to $200K</span>
+              <span class="text-xs text-pulse-text-tertiary">California</span>
+            </div>
+            <span class="text-xs text-pulse-text-tertiary">Check website</span>
+          </div>
+        </div>
+
+        <!-- Grant Card 4 -->
+        <div class="glass-card rounded-2xl p-6 hover:border-pulse-accent/40 transition-all cursor-pointer group">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-1 rounded-lg bg-orange-500/10 text-orange-400 text-xs font-medium border border-orange-500/20">
+                58/100 Good
+              </span>
+              <span class="px-2 py-1 rounded-lg bg-pulse-surface text-pulse-text-tertiary text-xs">
+                SARE
+              </span>
+            </div>
+            <button class="p-2 rounded-lg hover:bg-white/5 text-pulse-text-tertiary hover:text-pulse-accent transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+              </svg>
+            </button>
+          </div>
+
+          <h3 class="text-lg font-semibold text-pulse-text mb-2 group-hover:text-pulse-accent transition-colors">
+            Western SARE Farmer/Rancher Grant
+          </h3>
+          <p class="text-sm text-pulse-text-secondary mb-4 line-clamp-2">
+            Grants for Western US farmers to explore sustainable practices on their own land.
+          </p>
+
+          <div class="flex items-center gap-2 mb-4 p-3 rounded-xl bg-pulse-accent/5 border border-pulse-accent/10">
+            <svg class="w-4 h-4 text-pulse-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span class="text-sm text-pulse-accent">Funds conservation practices</span>
+          </div>
+
+          <div class="flex items-center justify-between pt-4 border-t border-pulse-border/50">
+            <div class="flex items-center gap-4">
+              <span class="text-sm font-medium text-pulse-text">$2.5K - $25K</span>
+              <span class="text-xs text-pulse-text-tertiary">Western US</span>
+            </div>
+            <span class="text-xs text-amber-400">Nov 2026</span>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+</body>
+</html>

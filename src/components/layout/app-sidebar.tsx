@@ -54,7 +54,7 @@ export function AppSidebar({ isAdmin = false }: AppSidebarProps) {
   }
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-64 bg-pulse-surface/50 border-r border-pulse-border backdrop-blur-sm z-40">
+    <aside className="fixed left-0 top-0 bottom-0 w-52 bg-pulse-surface/50 border-r border-pulse-border backdrop-blur-sm z-40">
       <div className="flex flex-col h-full">
         {/* Logo */}
         <div className="p-6 border-b border-pulse-border">

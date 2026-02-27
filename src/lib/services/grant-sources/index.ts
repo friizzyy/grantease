@@ -144,15 +144,17 @@ export async function searchGrants(
 
     if (params.keyword) {
       // Keyword search
-      grants = await searchGrantsByKeyword(params.keyword, {
+      const keywordResult = await searchGrantsByKeyword(params.keyword, {
         state: params.state || profile?.state,
         entityType: profile?.entityType,
       })
+      grants = keywordResult.grants
     } else if (profile) {
       // Profile-based discovery
-      grants = await discoverGrants(profile as UserProfile, {
+      const discoverResult = await discoverGrants(profile as UserProfile, {
         searchFocus: 'all',
       })
+      grants = discoverResult.grants
     }
 
     // Apply filters

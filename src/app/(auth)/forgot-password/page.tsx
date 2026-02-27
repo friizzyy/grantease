@@ -155,6 +155,7 @@ export default function ForgotPasswordPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <motion.div
+                role="alert"
                 initial={{ opacity: 0, height: 0, y: -10 }}
                 animate={{ opacity: 1, height: 'auto', y: 0 }}
                 className="p-3 rounded-lg bg-pulse-error/10 border border-pulse-error/20"

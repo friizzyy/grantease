@@ -186,7 +186,7 @@ export async function updateApplicationFormData(
   })
 
   if (!existing) {
-    throw new Error('Application not found')
+    throw new Error(`Application not found (applicationId: ${applicationId}) when attempting to update form data`)
   }
 
   // Merge with existing form data

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
+export const revalidate = 0
+
 /**
  * GET /api/health
  *

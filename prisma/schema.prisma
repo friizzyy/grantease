@@ -95,6 +95,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -103,6 +104,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model VerificationToken {
@@ -195,6 +198,7 @@ model Grant {
   @@unique([sourceName, sourceId])
   @@index([status])
   @@index([deadlineDate])
+  @@index([status, deadlineDate])
   @@index([hashFingerprint])
   @@index([qualityScore])
   @@index([isNational])
@@ -212,6 +216,7 @@ model SavedGrant {
   grant Grant @relation(fields: [grantId], references: [id], onDelete: Cascade)
 
   @@unique([userId, grantId])
+  @@index([userId])
 }
 
 model SavedSearch {
@@ -227,6 +232,8 @@ model SavedSearch {
   updatedAt    DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 // ==================== WORKSPACE ====================
@@ -247,6 +254,8 @@ model Workspace {
   grant Grant @relation(fields: [grantId], references: [id], onDelete: Cascade)
 
   documents WorkspaceDocument[]
+
+  @@index([userId])
 }
 
 model WorkspaceDocument {
@@ -316,6 +325,7 @@ model Notification {
   @@index([userId])
   @@index([read])
   @@index([createdAt])
+  @@index([userId, read])
 }
 
 model NotificationPreferences {
@@ -410,6 +420,7 @@ model AIUsageLog {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([userId, createdAt])
   @@index([type])
   @@index([createdAt])
   @@index([grantId])

@@ -184,11 +184,12 @@ export function GrantDetailModal({
     // Handle string (JSON) format
     if (typeof locations === 'string') {
       try {
-        const parsed = JSON.parse(locations)
+        const parsed: unknown = JSON.parse(locations)
         if (Array.isArray(parsed)) {
-          const states = parsed.filter((l: { type?: string; value?: string }) => l.type === 'state').map((l: { value?: string }) => l.value)
+          const typedParsed = parsed as Array<{ type?: string; value?: string }>
+          const states = typedParsed.filter(l => l.type === 'state').map(l => l.value)
           if (states.length > 0) return states.join(', ')
-          if (parsed.some((l: { type?: string }) => l.type === 'national')) return 'Nationwide'
+          if (typedParsed.some(l => l.type === 'national')) return 'Nationwide'
         }
       } catch {
         return 'See details'
@@ -343,8 +344,12 @@ export function GrantDetailModal({
                     if (grant.eligibility) {
                       if (typeof grant.eligibility === 'string') {
                         try {
-                          const parsed = JSON.parse(grant.eligibility)
-                          tags = parsed.tags || parsed || []
+                          const parsed: unknown = JSON.parse(grant.eligibility)
+                          if (Array.isArray(parsed)) {
+                            tags = parsed as string[]
+                          } else if (typeof parsed === 'object' && parsed !== null && 'tags' in parsed) {
+                            tags = (parsed as { tags: string[] }).tags || []
+                          }
                         } catch {
                           tags = []
                         }

@@ -41,6 +41,5 @@ export async function requireAuth(): Promise<
  */
 export async function isAdmin(): Promise<boolean> {
   const session = await getSession()
-  // You can extend this to check the user's role from the database
-  return !!session?.user?.id
+  return session?.user?.role === 'admin'
 }

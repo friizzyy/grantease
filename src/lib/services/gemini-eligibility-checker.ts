@@ -5,8 +5,12 @@
  * to determine if they're actually eligible before applying.
  */
 
-import { generateJSON, isGeminiConfigured } from './gemini-client'
+import { generateJSON, generateJSONWithUsage, isGeminiConfigured, type GeminiUsage } from './gemini-client'
 import type { UserProfile } from '@/lib/types/onboarding'
+import { sanitizePromptInput, sanitizePromptArray } from '@/lib/utils/prompt-sanitizer'
+
+/** Zero usage constant for null/error returns */
+const ZERO_USAGE: GeminiUsage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
 
 /**
  * Grant details for eligibility check
@@ -63,7 +67,7 @@ export interface EligibilityAnalysis {
 function buildProfileContext(profile: UserProfile): string {
   const parts: string[] = []
 
-  // Entity type
+  // Entity type (use label lookup for known types, sanitize fallback)
   const entityLabels: Record<string, string> = {
     individual: 'Individual / Sole Proprietor',
     nonprofit: 'Nonprofit Organization (501c3)',
@@ -73,14 +77,14 @@ function buildProfileContext(profile: UserProfile): string {
     government: 'Government Entity',
     tribal: 'Tribal Organization',
   }
-  parts.push(`Organization Type: ${entityLabels[profile.entityType] || profile.entityType}`)
+  parts.push(`Organization Type: ${entityLabels[profile.entityType] || sanitizePromptInput(profile.entityType, 100)}`)
 
   if (profile.state) {
-    parts.push(`Location: ${profile.state}, USA`)
+    parts.push(`Location: ${sanitizePromptInput(profile.state, 100)}, USA`)
   }
 
   if (profile.industryTags?.length) {
-    parts.push(`Industry/Focus: ${profile.industryTags.join(', ')}`)
+    parts.push(`Industry/Focus: ${sanitizePromptArray(profile.industryTags)}`)
   }
 
   if (profile.sizeBand) {
@@ -90,7 +94,7 @@ function buildProfileContext(profile: UserProfile): string {
       'medium': '11-50 employees',
       'large': '50+ employees',
     }
-    parts.push(`Size: ${sizeLabels[profile.sizeBand] || profile.sizeBand}`)
+    parts.push(`Size: ${sizeLabels[profile.sizeBand] || sanitizePromptInput(profile.sizeBand, 50)}`)
   }
 
   if (profile.stage) {
@@ -100,7 +104,7 @@ function buildProfileContext(profile: UserProfile): string {
       'growth': 'Growth stage (2-5 years)',
       'established': 'Established (5+ years)',
     }
-    parts.push(`Stage: ${stageLabels[profile.stage] || profile.stage}`)
+    parts.push(`Stage: ${stageLabels[profile.stage] || sanitizePromptInput(profile.stage, 50)}`)
   }
 
   if (profile.annualBudget) {
@@ -111,18 +115,18 @@ function buildProfileContext(profile: UserProfile): string {
       '1m_5m': '$1 million - $5 million',
       'over_5m': 'Over $5 million',
     }
-    parts.push(`Annual Budget/Revenue: ${budgetLabels[profile.annualBudget] || profile.annualBudget}`)
+    parts.push(`Annual Budget/Revenue: ${budgetLabels[profile.annualBudget] || sanitizePromptInput(profile.annualBudget, 50)}`)
   }
 
   // Additional details
   if (profile.certifications?.length) {
-    parts.push(`Certifications: ${profile.certifications.join(', ')}`)
+    parts.push(`Certifications: ${sanitizePromptArray(profile.certifications)}`)
   }
 
   if (profile.farmDetails) {
     const farmParts: string[] = []
-    if (profile.farmDetails.farmType) farmParts.push(`Type: ${profile.farmDetails.farmType}`)
-    if (profile.farmDetails.acreage) farmParts.push(`Acreage: ${profile.farmDetails.acreage}`)
+    if (profile.farmDetails.farmType) farmParts.push(`Type: ${sanitizePromptInput(profile.farmDetails.farmType, 100)}`)
+    if (profile.farmDetails.acreage) farmParts.push(`Acreage: ${sanitizePromptInput(profile.farmDetails.acreage, 50)}`)
     if (profile.farmDetails.organic) farmParts.push('Certified Organic')
     if (farmParts.length) {
       parts.push(`Farm Details: ${farmParts.join(', ')}`)
@@ -133,14 +137,15 @@ function buildProfileContext(profile: UserProfile): string {
 }
 
 /**
- * Check eligibility for a specific grant
+ * Check eligibility for a specific grant.
+ * Returns both the analysis and token usage metadata.
  */
 export async function checkEligibility(
   grant: GrantForEligibility,
   profile: UserProfile
-): Promise<EligibilityAnalysis | null> {
+): Promise<{ result: EligibilityAnalysis | null; usage: GeminiUsage }> {
   if (!isGeminiConfigured()) {
-    return null
+    return { result: null, usage: ZERO_USAGE }
   }
 
   const profileContext = buildProfileContext(profile)
@@ -151,12 +156,12 @@ export async function checkEligibility(
 ${profileContext}
 
 ## GRANT DETAILS
-Title: ${grant.title}
-Sponsor: ${grant.sponsor}
-${grant.description ? `Description: ${grant.description}` : ''}
-${grant.eligibilityText ? `Eligibility Requirements: ${grant.eligibilityText}` : ''}
-${grant.requirements ? `Application Requirements: ${grant.requirements}` : ''}
-URL: ${grant.url}
+Title: ${sanitizePromptInput(grant.title, 500)}
+Sponsor: ${sanitizePromptInput(grant.sponsor, 500)}
+${grant.description ? `Description: ${sanitizePromptInput(grant.description)}` : ''}
+${grant.eligibilityText ? `Eligibility Requirements: ${sanitizePromptInput(grant.eligibilityText)}` : ''}
+${grant.requirements ? `Application Requirements: ${sanitizePromptInput(grant.requirements)}` : ''}
+URL: ${sanitizePromptInput(grant.url, 500)}
 
 ## YOUR TASK
 Analyze EVERY eligibility requirement and determine if the applicant meets it.
@@ -210,11 +215,11 @@ Be honest and specific. If you're not sure about something, say so.
 It's better to flag potential issues than to miss them.`
 
   try {
-    const result = await generateJSON<EligibilityAnalysis>(prompt, true)
-    return result
+    const { data, usage } = await generateJSONWithUsage<EligibilityAnalysis>(prompt, true)
+    return { result: data, usage }
   } catch (error) {
     console.error('Eligibility check error:', error)
-    return null
+    return { result: null, usage: ZERO_USAGE }
   }
 }
 
@@ -235,10 +240,10 @@ export async function quickEligibilityCheck(
 
   const prompt = `Quick eligibility check:
 
-APPLICANT: ${profile.entityType} in ${profile.state || 'USA'}, focus: ${profile.industryTags?.join(', ')}
+APPLICANT: ${sanitizePromptInput(profile.entityType, 100)} in ${sanitizePromptInput(profile.state, 100) || 'USA'}, focus: ${sanitizePromptArray(profile.industryTags)}
 
-GRANT: "${grant.title}" from ${grant.sponsor}
-${grant.eligibilityText ? `Requirements: ${grant.eligibilityText}` : ''}
+GRANT: "${sanitizePromptInput(grant.title, 500)}" from ${sanitizePromptInput(grant.sponsor, 500)}
+${grant.eligibilityText ? `Requirements: ${sanitizePromptInput(grant.eligibilityText)}` : ''}
 
 Is this applicant likely eligible? Return JSON:
 {

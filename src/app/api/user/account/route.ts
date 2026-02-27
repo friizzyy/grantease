@@ -4,6 +4,14 @@ import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
 import { rateLimiters, rateLimitExceededResponse } from '@/lib/rate-limit'
+import { z } from 'zod'
+
+const deleteAccountSchema = z.object({
+  password: z.string().optional(),
+  confirmation: z.literal('DELETE MY ACCOUNT', {
+    errorMap: () => ({ message: 'Please type "DELETE MY ACCOUNT" to confirm' }),
+  }),
+})
 
 /**
  * DELETE /api/user/account
@@ -27,15 +35,16 @@ export async function DELETE(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { password, confirmation } = body
+    const validated = deleteAccountSchema.safeParse(body)
 
-    // Require explicit confirmation
-    if (confirmation !== 'DELETE MY ACCOUNT') {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Please type "DELETE MY ACCOUNT" to confirm' },
+        { error: validated.error.errors[0].message },
         { status: 400 }
       )
     }
+
+    const { password, confirmation } = validated.data
 
     // Get user with password hash
     const user = await prisma.user.findUnique({

@@ -110,12 +110,16 @@ export function SaveSearchModal({
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
         onClick={(e) => e.target === e.currentTarget && onClose()}
+        onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           className="w-full max-w-md"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="save-search-title"
         >
           <GlassCard className="p-6">
             {/* Header */}
@@ -125,12 +129,13 @@ export function SaveSearchModal({
                   <Bookmark className="w-5 h-5 text-pulse-accent" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-pulse-text">Save Search</h2>
+                  <h2 id="save-search-title" className="text-lg font-semibold text-pulse-text">Save Search</h2>
                   <p className="text-sm text-pulse-text-tertiary">Get notified about new grants</p>
                 </div>
               </div>
               <button
                 onClick={onClose}
+                aria-label="Close"
                 className="p-2 rounded-lg text-pulse-text-tertiary hover:text-pulse-text hover:bg-pulse-surface transition-colors"
               >
                 <X className="w-5 h-5" />

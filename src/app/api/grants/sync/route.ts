@@ -41,15 +41,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    console.log(`Starting Gemini grant discovery (keyword: ${keyword})...`)
 
-    const grants = await searchGrantsByKeyword(keyword, { state })
+    const { grants } = await searchGrantsByKeyword(keyword, { state })
 
     results.grantsFound = grants.length
     results.grants = grants
     results.duration = Date.now() - startTime
 
-    console.log(`Discovery completed in ${results.duration}ms - Found ${results.grantsFound} grants`)
 
     return NextResponse.json(results)
   } catch (error) {

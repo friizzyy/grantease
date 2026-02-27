@@ -3,6 +3,25 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
 import { safeJsonParse } from '@/lib/api-utils'
+import { z } from 'zod'
+
+const createNotificationSchema = z.object({
+  type: z.string().min(1, 'Type is required').max(100),
+  title: z.string().min(1, 'Title is required').max(500),
+  message: z.string().min(1, 'Message is required').max(5000),
+  link: z.string().max(2000).nullable().optional(),
+  metadata: z.record(z.unknown()).nullable().optional(),
+})
+
+const bulkUpdateNotificationsSchema = z.discriminatedUnion('action', [
+  z.object({
+    action: z.literal('mark_all_read'),
+  }),
+  z.object({
+    action: z.literal('mark_read'),
+    ids: z.array(z.string().min(1)).min(1).max(200),
+  }),
+])
 
 /**
  * GET /api/user/notifications
@@ -83,14 +102,16 @@ export async function POST(request: NextRequest) {
     const userId = session.user.id
 
     const body = await request.json()
-    const { type, title, message, link, metadata } = body
+    const validated = createNotificationSchema.safeParse(body)
 
-    if (!type || !title || !message) {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Type, title, and message are required' },
+        { error: 'Invalid input', details: validated.error.flatten() },
         { status: 400 }
       )
     }
+
+    const { type, title, message, link, metadata } = validated.data
 
     const notification = await prisma.notification.create({
       data: {
@@ -132,9 +153,16 @@ export async function PATCH(request: NextRequest) {
     const userId = session.user.id
 
     const body = await request.json()
-    const { action, ids } = body
+    const validated = bulkUpdateNotificationsSchema.safeParse(body)
 
-    if (action === 'mark_all_read') {
+    if (!validated.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: validated.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    if (validated.data.action === 'mark_all_read') {
       await prisma.notification.updateMany({
         where: { userId, read: false },
         data: { read: true, readAt: new Date() },
@@ -142,18 +170,13 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: true, message: 'All notifications marked as read' })
     }
 
-    if (action === 'mark_read' && Array.isArray(ids)) {
-      await prisma.notification.updateMany({
-        where: { userId, id: { in: ids } },
-        data: { read: true, readAt: new Date() },
-      })
-      return NextResponse.json({ success: true, message: `${ids.length} notifications marked as read` })
-    }
-
-    return NextResponse.json(
-      { error: 'Invalid action' },
-      { status: 400 }
-    )
+    // action === 'mark_read'
+    const { ids } = validated.data
+    await prisma.notification.updateMany({
+      where: { userId, id: { in: ids } },
+      data: { read: true, readAt: new Date() },
+    })
+    return NextResponse.json({ success: true, message: `${ids.length} notifications marked as read` })
   } catch (error) {
     console.error('Update notifications error:', error)
     return NextResponse.json(

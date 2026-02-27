@@ -7,6 +7,7 @@
 
 import { prisma } from '@/lib/db'
 import { safeJsonParse } from '@/lib/api-utils'
+import type { UserVault as PrismaUserVault } from '@prisma/client'
 import type {
   ParsedUserVault,
   VaultDocument,
@@ -409,8 +410,7 @@ export async function calculateVaultCompleteness(userId: string): Promise<VaultC
 
 // ============= HELPER FUNCTIONS =============
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function parseVault(vault: any): ParsedUserVault {
+function parseVault(vault: PrismaUserVault): ParsedUserVault {
   return {
     ...vault,
     certifications: safeJsonParse<CertificationType[]>(vault.certifications || '[]', []),

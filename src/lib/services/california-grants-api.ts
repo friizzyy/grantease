@@ -92,7 +92,7 @@ export class CaliforniaGrantsService {
 
     const response = await fetch(this.dataUrl)
     if (!response.ok) {
-      throw new Error(`Failed to fetch California grants data: ${response.status}`)
+      throw new Error(`California Grants Portal API fetchAllGrants failed (HTTP ${response.status}): unable to retrieve CSV data from data.ca.gov`)
     }
 
     const csvText = await response.text()

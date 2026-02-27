@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
+import { z } from 'zod'
+
+const updateNotificationSchema = z.object({
+  read: z.boolean().optional(),
+})
 
 /**
  * GET /api/user/notifications/[id]
@@ -78,7 +83,16 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { read } = body
+    const validated = updateNotificationSchema.safeParse(body)
+
+    if (!validated.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: validated.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const { read } = validated.data
 
     const notification = await prisma.notification.update({
       where: { id },

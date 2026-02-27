@@ -4,10 +4,14 @@
  * Uses Gemini AI to help users write grant applications
  */
 
-import { generateText, generateJSON, isGeminiConfigured, getGeminiProModel } from './gemini-client'
+import { generateText, generateTextWithUsage, generateJSON, generateJSONWithUsage, isGeminiConfigured, getGeminiProModel, extractUsageFromResult, type GeminiUsage } from './gemini-client'
 import { UserProfile } from '@/lib/types/onboarding'
+import { sanitizePromptInput, sanitizePromptArray } from '@/lib/utils/prompt-sanitizer'
 
 export { isGeminiConfigured }
+
+/** Zero usage constant for null/error returns */
+const ZERO_USAGE: GeminiUsage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
 
 /**
  * Grant application section types
@@ -150,20 +154,20 @@ function buildProfileContext(profile: UserProfile): string {
       government: 'Government Entity',
       tribal: 'Tribal Organization',
     }
-    parts.push(`Organization Type: ${labels[profile.entityType] || profile.entityType}`)
+    parts.push(`Organization Type: ${labels[profile.entityType] || sanitizePromptInput(profile.entityType, 100)}`)
   }
 
-  if (profile.state) parts.push(`Location: ${profile.state}`)
-  if (profile.industryTags?.length) parts.push(`Focus Areas: ${profile.industryTags.join(', ')}`)
-  if (profile.sizeBand) parts.push(`Size: ${profile.sizeBand} employees`)
+  if (profile.state) parts.push(`Location: ${sanitizePromptInput(profile.state, 100)}`)
+  if (profile.industryTags?.length) parts.push(`Focus Areas: ${sanitizePromptArray(profile.industryTags)}`)
+  if (profile.sizeBand) parts.push(`Size: ${sanitizePromptInput(profile.sizeBand, 50)} employees`)
 
   if (profile.industryAttributes) {
     const attrs = profile.industryAttributes
-    if (attrs.farmType) parts.push(`Type: ${attrs.farmType}`)
-    if (attrs.acreage) parts.push(`Acreage: ${attrs.acreage}`)
-    if (attrs.yearsInOperation) parts.push(`Years Operating: ${attrs.yearsInOperation}`)
+    if (attrs.farmType) parts.push(`Type: ${sanitizePromptInput(String(attrs.farmType), 100)}`)
+    if (attrs.acreage) parts.push(`Acreage: ${sanitizePromptInput(String(attrs.acreage), 50)}`)
+    if (attrs.yearsInOperation) parts.push(`Years Operating: ${sanitizePromptInput(String(attrs.yearsInOperation), 50)}`)
     if (attrs.products && Array.isArray(attrs.products)) {
-      parts.push(`Products: ${attrs.products.join(', ')}`)
+      parts.push(`Products: ${sanitizePromptArray(attrs.products as string[])}`)
     }
   }
 
@@ -176,30 +180,30 @@ function buildProfileContext(profile: UserProfile): string {
 export async function generateSectionContent(
   request: WritingRequest,
   profile: UserProfile
-): Promise<WritingResponse | null> {
+): Promise<{ result: WritingResponse | null; usage: GeminiUsage }> {
   if (!isGeminiConfigured()) {
-    return null
+    return { result: null, usage: ZERO_USAGE }
   }
 
   const sectionGuidance = getSectionGuidance(request.section)
   const profileContext = buildProfileContext(profile)
 
-  const prompt = `You are an expert grant writer helping a ${profile.entityType || 'organization'} write a grant application.
+  const prompt = `You are an expert grant writer helping a ${sanitizePromptInput(profile.entityType, 100) || 'organization'} write a grant application.
 
 ## APPLICANT PROFILE
 ${profileContext}
 
 ## GRANT DETAILS
-- Grant: ${request.grantTitle}
-- Sponsor: ${request.grantSponsor}
-${request.grantRequirements ? `- Requirements: ${request.grantRequirements}` : ''}
+- Grant: ${sanitizePromptInput(request.grantTitle, 500)}
+- Sponsor: ${sanitizePromptInput(request.grantSponsor, 500)}
+${request.grantRequirements ? `- Requirements: ${sanitizePromptInput(request.grantRequirements)}` : ''}
 
 ## SECTION TO WRITE: ${request.section.replace(/_/g, ' ').toUpperCase()}
 
 ${sectionGuidance}
 
-${request.userDraft ? `## USER'S CURRENT DRAFT (improve this):\n${request.userDraft}` : ''}
-${request.userNotes ? `## USER'S NOTES/IDEAS (expand on these):\n${request.userNotes}` : ''}
+${request.userDraft ? `## USER'S CURRENT DRAFT (improve this):\n${sanitizePromptInput(request.userDraft, 5000)}` : ''}
+${request.userNotes ? `## USER'S NOTES/IDEAS (expand on these):\n${sanitizePromptInput(request.userNotes, 3000)}` : ''}
 
 ## REQUIREMENTS
 - Word limit: ${request.wordLimit || 500} words
@@ -220,11 +224,11 @@ Return JSON:
 Write compelling, professional grant content.`
 
   try {
-    const result = await generateJSON<WritingResponse>(prompt, true)
-    return result
+    const { data, usage } = await generateJSONWithUsage<WritingResponse>(prompt, true)
+    return { result: data, usage }
   } catch (error) {
     console.error('Gemini writing error:', error)
-    return null
+    return { result: null, usage: ZERO_USAGE }
   }
 }
 
@@ -236,20 +240,20 @@ export async function improveDraft(
   section: SectionType,
   grantContext: { title: string; sponsor: string },
   profile: UserProfile
-): Promise<string | null> {
+): Promise<{ result: string | null; usage: GeminiUsage }> {
   if (!isGeminiConfigured()) {
-    return null
+    return { result: null, usage: ZERO_USAGE }
   }
 
   const sectionGuidance = getSectionGuidance(section)
 
   const prompt = `You are an expert grant writer. Improve this draft for a ${section.replace(/_/g, ' ')} section.
 
-GRANT: ${grantContext.title} from ${grantContext.sponsor}
-APPLICANT: ${profile.entityType} in ${profile.state}, focusing on ${profile.industryTags?.join(', ')}
+GRANT: ${sanitizePromptInput(grantContext.title, 500)} from ${sanitizePromptInput(grantContext.sponsor, 500)}
+APPLICANT: ${sanitizePromptInput(profile.entityType, 100)} in ${sanitizePromptInput(profile.state, 100)}, focusing on ${sanitizePromptArray(profile.industryTags)}
 
 DRAFT TO IMPROVE:
-${draft}
+${sanitizePromptInput(draft, 5000)}
 
 SECTION GUIDELINES:
 ${sectionGuidance}
@@ -263,7 +267,8 @@ Improve the draft by:
 
 Return ONLY the improved text, no explanations.`
 
-  return generateText(prompt, true)
+  const { text, usage } = await generateTextWithUsage(prompt, true)
+  return { result: text, usage }
 }
 
 /**
@@ -290,9 +295,9 @@ export async function generateGrantOutline(
 
   const prompt = `You are an expert grant writer. Create an outline for this grant application.
 
-GRANT: ${grantTitle}
-SPONSOR: ${grantSponsor}
-DESCRIPTION: ${grantDescription}
+GRANT: ${sanitizePromptInput(grantTitle, 500)}
+SPONSOR: ${sanitizePromptInput(grantSponsor, 500)}
+DESCRIPTION: ${sanitizePromptInput(grantDescription)}
 
 APPLICANT PROFILE:
 ${profileContext}
@@ -319,26 +324,28 @@ Include relevant sections based on typical grant requirements. Focus on sections
 /**
  * Get AI feedback on a draft
  */
-export async function getDraftFeedback(
-  draft: string,
-  section: SectionType,
-  grantContext: { title: string; sponsor: string }
-): Promise<{
+interface DraftFeedbackResult {
   score: number
   strengths: string[]
   weaknesses: string[]
   suggestions: string[]
-} | null> {
+}
+
+export async function getDraftFeedback(
+  draft: string,
+  section: SectionType,
+  grantContext: { title: string; sponsor: string }
+): Promise<{ result: DraftFeedbackResult | null; usage: GeminiUsage }> {
   if (!isGeminiConfigured()) {
-    return null
+    return { result: null, usage: ZERO_USAGE }
   }
 
   const prompt = `You are an expert grant reviewer. Evaluate this ${section.replace(/_/g, ' ')} section.
 
-GRANT: ${grantContext.title} from ${grantContext.sponsor}
+GRANT: ${sanitizePromptInput(grantContext.title, 500)} from ${sanitizePromptInput(grantContext.sponsor, 500)}
 
 DRAFT:
-${draft}
+${sanitizePromptInput(draft, 5000)}
 
 Evaluate the draft and provide feedback.
 
@@ -352,7 +359,8 @@ Return JSON:
 
 Score should be 0-100 based on how likely this section would impress grant reviewers.`
 
-  return generateJSON(prompt, false)
+  const { data, usage } = await generateJSONWithUsage<DraftFeedbackResult>(prompt, false)
+  return { result: data, usage }
 }
 
 /**
@@ -367,30 +375,31 @@ export async function chatWithWritingAssistant(
     previousMessages?: Array<{ role: 'user' | 'assistant'; content: string }>
   },
   profile: UserProfile
-): Promise<string | null> {
+): Promise<{ result: string | null; usage: GeminiUsage }> {
   if (!isGeminiConfigured()) {
-    return null
+    return { result: null, usage: ZERO_USAGE }
   }
 
   const model = getGeminiProModel()
-  if (!model) return null
+  if (!model) return { result: null, usage: ZERO_USAGE }
 
   const profileContext = buildProfileContext(profile)
 
-  // Build conversation history
-  const history = context.previousMessages?.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n\n') || ''
+  // Build conversation history (sanitize each message to prevent injection via chat history)
+  const history = context.previousMessages?.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${sanitizePromptInput(m.content, 1000)}`).join('\n\n') || ''
 
   const prompt = `You are a helpful grant writing assistant. You're helping a user write a grant application.
 
-GRANT: ${context.grantTitle} from ${context.grantSponsor}
+GRANT: ${sanitizePromptInput(context.grantTitle, 500)} from ${sanitizePromptInput(context.grantSponsor, 500)}
 ${context.currentSection ? `CURRENT SECTION: ${context.currentSection.replace(/_/g, ' ')}` : ''}
 
 APPLICANT:
 ${profileContext}
 
-${history ? `PREVIOUS CONVERSATION:\n${history}\n\n` : ''}USER'S MESSAGE: ${message}
+${history ? `PREVIOUS CONVERSATION:\n${history}\n\n` : ''}USER'S MESSAGE: ${sanitizePromptInput(message, 3000)}
 
 Provide helpful, specific advice. If they share a draft, offer constructive feedback. If they ask questions, answer them. Keep responses focused and actionable.`
 
-  return generateText(prompt, true)
+  const { text, usage } = await generateTextWithUsage(prompt, true)
+  return { result: text, usage }
 }

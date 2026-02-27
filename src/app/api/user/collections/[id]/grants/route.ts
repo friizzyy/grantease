@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
+import { z } from 'zod'
+
+const addGrantToCollectionSchema = z.object({
+  grantId: z.string().min(1, 'Grant ID is required').max(200),
+  notes: z.string().max(5000).nullable().optional(),
+})
+
+const moveGrantSchema = z.object({
+  grantId: z.string().min(1, 'Grant ID is required').max(200),
+  toCollectionId: z.string().min(1, 'Target collection ID is required').max(200),
+})
 
 /**
  * POST /api/user/collections/[id]/grants
@@ -34,14 +45,16 @@ export async function POST(
     }
 
     const body = await request.json()
-    const { grantId, notes } = body
+    const validated = addGrantToCollectionSchema.safeParse(body)
 
-    if (!grantId) {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Grant ID is required' },
+        { error: 'Invalid input', details: validated.error.flatten() },
         { status: 400 }
       )
     }
+
+    const { grantId, notes } = validated.data
 
     // Verify grant exists
     const grant = await prisma.grant.findUnique({
@@ -203,14 +216,16 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { grantId, toCollectionId } = body
+    const validated = moveGrantSchema.safeParse(body)
 
-    if (!grantId || !toCollectionId) {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Grant ID and target collection ID are required' },
+        { error: 'Invalid input', details: validated.error.flatten() },
         { status: 400 }
       )
     }
+
+    const { grantId, toCollectionId } = validated.data
 
     // Verify target collection ownership
     const toCollection = await prisma.grantCollection.findFirst({

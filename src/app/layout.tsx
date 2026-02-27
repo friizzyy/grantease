@@ -6,25 +6,26 @@ import { ToastProvider } from '@/components/ui/toast-provider'
 import { Agentation } from 'agentation'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://grantsby.ai'),
   title: {
-    default: 'Grants By AI - Intelligent Grant Discovery',
+    default: 'Grants By AI — Discover Agricultural Grants',
     template: '%s | Grants By AI',
   },
-  description: 'Find grants across every category. Federal, state, local, nonprofit, and private funding opportunities. Search, qualify, organize, and apply with confidence.',
-  keywords: ['grants', 'funding', 'nonprofit', 'small business', 'government grants', 'grant search', 'AI grants'],
+  description: 'AI-powered grant discovery platform for farmers and agricultural businesses. Find matching grants, track deadlines, and streamline applications.',
+  keywords: ['agricultural grants', 'farm grants', 'USDA grants', 'grant discovery', 'grant matching', 'farming funding'],
   authors: [{ name: 'Grants By AI' }],
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: 'https://grantsby.ai',
     siteName: 'Grants By AI',
-    title: 'Grants By AI - Intelligent Grant Discovery',
-    description: 'Find grants across every category. Federal, state, local, nonprofit, and private funding opportunities.',
+    title: 'Grants By AI — Discover Agricultural Grants',
+    description: 'AI-powered grant discovery platform for farmers and agricultural businesses.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Grants By AI - Intelligent Grant Discovery',
-    description: 'Find grants across every category.',
+    title: 'Grants By AI — Discover Agricultural Grants',
+    description: 'AI-powered grant discovery for farmers and agricultural businesses.',
   },
   robots: {
     index: true,

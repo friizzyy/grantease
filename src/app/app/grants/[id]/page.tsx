@@ -349,7 +349,7 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
     try {
       const cached = sessionStorage.getItem(`grant_${id}`)
       if (cached) {
-        cachedGrant = JSON.parse(cached)
+        cachedGrant = JSON.parse(cached) as (Grant & { aiMatch?: AIMatchData })
         if (cachedGrant?.aiMatch) {
           setAiMatch(cachedGrant.aiMatch)
         }
@@ -363,13 +363,13 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
       const response = await fetch(`/api/grants/${encodeURIComponent(id)}`)
 
       if (response.ok) {
-        const data = await response.json()
+        const data: Record<string, unknown> = await response.json()
         // Normalize the data structure
         const normalizedGrant = normalizeGrantData(data)
         setGrant(normalizedGrant)
       } else if (response.status === 404 && cachedGrant) {
         // Grant not in database, but we have cached data from discover page
-        const normalizedGrant = normalizeGrantData(cachedGrant)
+        const normalizedGrant = normalizeGrantData(cachedGrant as unknown as Record<string, unknown>)
         setGrant(normalizedGrant)
       } else {
         throw new Error(response.status === 404 ? 'Grant not found' : 'Failed to fetch grant')
@@ -399,8 +399,7 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
   }, [fetchGrant])
 
   // Normalize grant data from different sources (DB vs cached API data)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function normalizeGrantData(data: any): Grant {
+  function normalizeGrantData(data: Record<string, unknown>): Grant {
     // Handle eligibility - could be array of strings or object with tags
     let eligibility: string[] = []
     if (Array.isArray(data.eligibility)) {
@@ -434,26 +433,26 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
     }
 
     return {
-      id: data.id as string,
-      sourceId: (data.sourceId as string) || null,
-      sourceName: (data.sourceName as string) || null,
-      title: data.title as string,
-      sponsor: data.sponsor as string,
-      summary: (data.summary as string) || null,
-      description: (data.description as string) || null,
+      id: String(data.id ?? ''),
+      sourceId: typeof data.sourceId === 'string' ? data.sourceId : null,
+      sourceName: typeof data.sourceName === 'string' ? data.sourceName : null,
+      title: String(data.title ?? ''),
+      sponsor: String(data.sponsor ?? ''),
+      summary: typeof data.summary === 'string' ? data.summary : null,
+      description: typeof data.description === 'string' ? data.description : null,
       categories,
       eligibility,
       locations,
-      amountMin: (data.amountMin as number) || null,
-      amountMax: (data.amountMax as number) || null,
-      amountText: (data.amountText as string) || null,
-      deadlineType: (data.deadlineType as string) || null,
-      deadlineDate: (data.deadlineDate as string) || null,
-      postedDate: (data.postedDate as string) || null,
-      url: (data.url as string) || null,
+      amountMin: typeof data.amountMin === 'number' ? data.amountMin : null,
+      amountMax: typeof data.amountMax === 'number' ? data.amountMax : null,
+      amountText: typeof data.amountText === 'string' ? data.amountText : null,
+      deadlineType: typeof data.deadlineType === 'string' ? data.deadlineType : null,
+      deadlineDate: typeof data.deadlineDate === 'string' ? data.deadlineDate : null,
+      postedDate: typeof data.postedDate === 'string' ? data.postedDate : null,
+      url: typeof data.url === 'string' ? data.url : null,
       contact: (data.contact as Grant['contact']) || null,
       requirements,
-      status: (data.status as string) || 'open',
+      status: typeof data.status === 'string' ? data.status : 'open',
     }
   }
 
@@ -844,7 +843,7 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
         </div>
 
         {/* Right Column - Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-6 sticky top-6">
           {/* Match Score Card */}
           <MatchScoreCard aiMatch={aiMatch} />
 

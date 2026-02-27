@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import bcrypt from 'bcryptjs'
+import { z } from 'zod'
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1, 'Reset token is required'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+})
 
 /**
  * POST /api/auth/reset-password
@@ -10,21 +16,15 @@ import bcrypt from 'bcryptjs'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { token, password } = body
-
-    if (!token) {
+    const parsed = resetPasswordSchema.safeParse(body)
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Reset token is required' },
+        { success: false, error: 'Validation failed', details: parsed.error.flatten() },
         { status: 400 }
       )
     }
 
-    if (!password || password.length < 8) {
-      return NextResponse.json(
-        { error: 'Password must be at least 8 characters' },
-        { status: 400 }
-      )
-    }
+    const { token, password } = parsed.data
 
     // Find user with valid reset token
     const user = await prisma.user.findFirst({

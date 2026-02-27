@@ -7,6 +7,28 @@ import {
   calculateVaultCompleteness,
   initializeVaultFromProfile,
 } from '@/lib/services/vault-service'
+import { z } from 'zod'
+
+const updateVaultSchema = z.object({
+  organizationName: z.string().max(500).optional(),
+  primaryContactName: z.string().max(500).optional(),
+  primaryContactEmail: z.string().email().max(500).optional().or(z.literal('')),
+  primaryContactPhone: z.string().max(50).optional(),
+  primaryContactTitle: z.string().max(200).optional(),
+  missionStatement: z.string().max(10000).optional(),
+  organizationHistory: z.string().max(10000).optional(),
+  ein: z.string().max(50).optional(),
+  dunsNumber: z.string().max(50).optional(),
+  samUei: z.string().max(50).optional(),
+  yearFounded: z.number().int().min(1800).max(2100).nullable().optional(),
+  website: z.string().max(2000).optional(),
+  address: z.string().max(1000).optional(),
+  city: z.string().max(200).optional(),
+  state: z.string().max(10).optional(),
+  zipCode: z.string().max(20).optional(),
+  annualBudget: z.string().max(50).optional(),
+  numberOfEmployees: z.number().int().min(0).nullable().optional(),
+}).passthrough()
 
 /**
  * GET /api/vault
@@ -47,7 +69,16 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const vault = await updateVault(session.user.id, body)
+    const validated = updateVaultSchema.safeParse(body)
+
+    if (!validated.success) {
+      return NextResponse.json(
+        { success: false, error: 'Validation failed', details: validated.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const vault = await updateVault(session.user.id, validated.data)
     const completeness = await calculateVaultCompleteness(session.user.id)
 
     return NextResponse.json({ vault, completeness })

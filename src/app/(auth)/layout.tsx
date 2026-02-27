@@ -3,6 +3,7 @@ import { PulseGridBackground } from '@/components/pulse-grid/background'
 import { PageTransition } from '@/components/motion/page-transition'
 import { AnimatedLogo } from '@/components/ui/animated-logo'
 import { BrandLogo } from '@/components/ui/brand-logo'
+import { SkipLink } from '@/components/ui/skip-link'
 
 export default function AuthLayout({
   children,
@@ -11,6 +12,7 @@ export default function AuthLayout({
 }) {
   return (
     <div className="min-h-screen flex flex-col">
+      <SkipLink />
       <PulseGridBackground />
 
       {/* Simple Header */}
@@ -22,7 +24,7 @@ export default function AuthLayout({
       </header>
 
       {/* Content */}
-      <main className="relative z-10 flex-1 flex items-center justify-center p-6">
+      <main id="main-content" className="relative z-10 flex-1 flex items-center justify-center p-6">
         <PageTransition>
           {children}
         </PageTransition>

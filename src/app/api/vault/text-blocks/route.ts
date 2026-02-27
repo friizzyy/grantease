@@ -9,6 +9,26 @@ import {
   getOrCreateVault,
 } from '@/lib/services/vault-service'
 import type { TextBlockCategory } from '@/lib/types/vault'
+import { z } from 'zod'
+
+const addTextBlockSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(500),
+  category: z.string().min(1, 'Category is required').max(100),
+  content: z.string().min(1, 'Content is required').max(50000),
+  shortVersion: z.string().max(10000).optional(),
+  longVersion: z.string().max(100000).optional(),
+  aiGenerated: z.boolean().optional(),
+})
+
+const updateTextBlockSchema = z.object({
+  blockId: z.string().min(1, 'Block ID required').max(200),
+  title: z.string().max(500).optional(),
+  category: z.string().max(100).optional(),
+  content: z.string().max(50000).optional(),
+  shortVersion: z.string().max(10000).optional(),
+  longVersion: z.string().max(100000).optional(),
+  aiImproved: z.boolean().optional(),
+})
 
 /**
  * GET /api/vault/text-blocks
@@ -49,6 +69,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    const validated = addTextBlockSchema.safeParse(body)
+
+    if (!validated.success) {
+      return NextResponse.json(
+        { success: false, error: 'Validation failed', details: validated.error.flatten() },
+        { status: 400 }
+      )
+    }
+
     const {
       title,
       category,
@@ -56,14 +85,7 @@ export async function POST(request: NextRequest) {
       shortVersion,
       longVersion,
       aiGenerated,
-    } = body
-
-    if (!title || !category || !content) {
-      return NextResponse.json(
-        { error: 'Title, category, and content are required' },
-        { status: 400 }
-      )
-    }
+    } = validated.data
 
     const vault = await getOrCreateVault(session.user.id)
     const textBlock = await addVaultTextBlock(vault.id, {
@@ -97,14 +119,16 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { blockId, ...updateData } = body
+    const validated = updateTextBlockSchema.safeParse(body)
 
-    if (!blockId) {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Block ID required' },
+        { success: false, error: 'Validation failed', details: validated.error.flatten() },
         { status: 400 }
       )
     }
+
+    const { blockId, ...updateData } = validated.data
 
     // Verify ownership
     const vault = await getOrCreateVault(session.user.id)
@@ -119,7 +143,7 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const textBlock = await updateVaultTextBlock(blockId, updateData)
+    const textBlock = await updateVaultTextBlock(blockId, updateData as Parameters<typeof updateVaultTextBlock>[1])
     return NextResponse.json({ textBlock })
   } catch (error) {
     console.error('Error updating text block:', error)

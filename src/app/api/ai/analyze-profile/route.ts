@@ -9,6 +9,18 @@ import {
   type BusinessInfoInput,
 } from '@/lib/services/gemini-profile-analyzer'
 import { isGeminiConfigured } from '@/lib/services/gemini-client'
+import { z } from 'zod'
+
+const analyzeProfileSchema = z.object({
+  websiteUrl: z.string().url().max(2000).optional(),
+  companyName: z.string().max(500).optional(),
+  description: z.string().max(5000).optional(),
+  mode: z.enum(['full', 'quick', 'questions']).default('full'),
+  partialProfile: z.record(z.unknown()).optional(),
+}).refine(
+  (data) => data.websiteUrl || data.companyName || data.description,
+  { message: 'Please provide a website URL, company name, or description' }
+)
 
 /**
  * POST /api/ai/analyze-profile
@@ -42,15 +54,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { websiteUrl, companyName, description, mode = 'full', partialProfile } = body
+    const validated = analyzeProfileSchema.safeParse(body)
 
-    // Validate input
-    if (!websiteUrl && !companyName && !description) {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Please provide a website URL, company name, or description' },
+        { error: 'Invalid input', details: validated.error.flatten() },
         { status: 400 }
       )
     }
+
+    const { websiteUrl, companyName, description, mode, partialProfile } = validated.data
 
     // Handle different analysis modes
     if (mode === 'questions' && partialProfile) {

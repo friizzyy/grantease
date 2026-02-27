@@ -11,9 +11,10 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, error, icon, ...props }, ref) => {
+  ({ className, type, error, icon, name, id, ...props }, ref) => {
     const [isFocused, setIsFocused] = React.useState(false)
     const [hasError, setHasError] = React.useState(!!error)
+    const errorId = error ? `${name || id}-error` : undefined
 
     React.useEffect(() => {
       setHasError(!!error)
@@ -53,6 +54,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
         <input
           type={type}
+          name={name}
+          id={id}
+          aria-invalid={!!error}
+          aria-describedby={errorId}
           className={cn(
             'flex h-10 w-full rounded-lg bg-pulse-surface/50 border border-pulse-border px-4 py-2 text-sm text-pulse-text placeholder:text-pulse-text-tertiary',
             'transition-all duration-200',
@@ -79,6 +84,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         <AnimatePresence mode="wait">
           {error && (
             <motion.p
+              id={errorId}
+              role="alert"
               initial={{ opacity: 0, y: -5, height: 0 }}
               animate={{ opacity: 1, y: 0, height: 'auto' }}
               exit={{ opacity: 0, y: -5, height: 0 }}

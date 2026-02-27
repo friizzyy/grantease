@@ -9,6 +9,28 @@ import {
   getOrCreateVault,
 } from '@/lib/services/vault-service'
 import type { DocumentType } from '@/lib/types/vault'
+import { z } from 'zod'
+
+const addDocumentSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(500),
+  type: z.string().min(1, 'Type is required').max(100),
+  description: z.string().max(2000).optional(),
+  fileName: z.string().min(1, 'File name is required').max(500),
+  fileUrl: z.string().min(1, 'File URL is required').max(2000),
+  fileSize: z.number().min(1, 'File size is required').max(100_000_000),
+  mimeType: z.string().min(1, 'MIME type is required').max(200),
+  documentDate: z.string().optional(),
+  expiresAt: z.string().optional(),
+})
+
+const updateDocumentSchema = z.object({
+  documentId: z.string().min(1, 'Document ID required').max(200),
+  name: z.string().max(500).optional(),
+  description: z.string().max(2000).optional(),
+  documentDate: z.string().optional(),
+  expiresAt: z.string().optional(),
+  isPublic: z.boolean().optional(),
+})
 
 /**
  * GET /api/vault/documents
@@ -49,6 +71,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    const validated = addDocumentSchema.safeParse(body)
+
+    if (!validated.success) {
+      return NextResponse.json(
+        { success: false, error: 'Validation failed', details: validated.error.flatten() },
+        { status: 400 }
+      )
+    }
+
     const {
       name,
       type,
@@ -59,14 +90,7 @@ export async function POST(request: NextRequest) {
       mimeType,
       documentDate,
       expiresAt,
-    } = body
-
-    if (!name || !type || !fileName || !fileUrl || !fileSize || !mimeType) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      )
-    }
+    } = validated.data
 
     const vault = await getOrCreateVault(session.user.id)
     const document = await addVaultDocument(vault.id, {
@@ -103,14 +127,16 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { documentId, ...updateData } = body
+    const validated = updateDocumentSchema.safeParse(body)
 
-    if (!documentId) {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Document ID required' },
+        { success: false, error: 'Validation failed', details: validated.error.flatten() },
         { status: 400 }
       )
     }
+
+    const { documentId, documentDate, expiresAt, ...rest } = validated.data
 
     // Verify ownership
     const vault = await getOrCreateVault(session.user.id)
@@ -125,7 +151,12 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const document = await updateVaultDocument(documentId, updateData)
+    // Convert string dates to Date objects for the service layer
+    const serviceData: Record<string, unknown> = { ...rest }
+    if (documentDate !== undefined) serviceData.documentDate = new Date(documentDate)
+    if (expiresAt !== undefined) serviceData.expiresAt = new Date(expiresAt)
+
+    const document = await updateVaultDocument(documentId, serviceData as Parameters<typeof updateVaultDocument>[1])
     return NextResponse.json({ document })
   } catch (error) {
     console.error('Error updating document:', error)

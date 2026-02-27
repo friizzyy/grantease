@@ -11,6 +11,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { z } from 'zod';
 import {
   getIngestionHealth,
   getRecentRuns,
@@ -19,6 +20,15 @@ import {
   verifyGrantLinks,
 } from '@/lib/ingestion/pipeline';
 import { getEnabledSources, GRANT_SOURCES } from '@/lib/ingestion/sources';
+
+const ingestionPostSchema = z.object({
+  action: z.enum(['run_source', 'expire_old', 'verify_links', 'toggle_source'], {
+    errorMap: () => ({ message: 'Unknown action' }),
+  }),
+  sourceId: z.string().optional(),
+  limit: z.number().int().min(1).optional(),
+  enabled: z.boolean().optional(),
+});
 
 /**
  * Verify admin access
@@ -116,9 +126,13 @@ export async function GET(request: Request) {
         const entityTypeCounts: Record<string, number> = {};
         for (const grant of allGrants) {
           try {
-            const types = JSON.parse(grant.eligibleEntityTypes);
-            for (const type of types) {
-              entityTypeCounts[type] = (entityTypeCounts[type] || 0) + 1;
+            const types: unknown = JSON.parse(grant.eligibleEntityTypes);
+            if (Array.isArray(types)) {
+              for (const type of types) {
+                if (typeof type === 'string') {
+                  entityTypeCounts[type] = (entityTypeCounts[type] || 0) + 1;
+                }
+              }
             }
           } catch {
             // Invalid JSON
@@ -182,7 +196,15 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { action, sourceId } = body;
+    const parsed = ingestionPostSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: 'Validation failed', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const { action, sourceId } = parsed.data;
 
     switch (action) {
       case 'run_source': {
@@ -190,10 +212,8 @@ export async function POST(request: Request) {
           return NextResponse.json({ error: 'sourceId required' }, { status: 400 });
         }
 
-        console.log(`[Admin] Starting manual ingestion for source: ${sourceId}`);
-
-        const stats = await runSourceIngestion(sourceId, (progress) => {
-          console.log(`[Admin] ${sourceId}: ${progress.message}`);
+        const stats = await runSourceIngestion(sourceId, () => {
+          // Progress callback - no-op in production
         });
 
         return NextResponse.json({
@@ -222,7 +242,7 @@ export async function POST(request: Request) {
       }
 
       case 'verify_links': {
-        const limit = body.limit || 100;
+        const limit = parsed.data.limit || 100;
         const { verified, broken, errors } = await verifyGrantLinks(limit);
         return NextResponse.json({
           success: true,
@@ -237,7 +257,7 @@ export async function POST(request: Request) {
           return NextResponse.json({ error: 'sourceId required' }, { status: 400 });
         }
 
-        const enabled = Boolean(body.enabled);
+        const enabled = Boolean(parsed.data.enabled);
 
         await prisma.ingestionSource.upsert({
           where: { name: sourceId },

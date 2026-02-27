@@ -7,6 +7,11 @@ import {
   getUserApplicationStats,
 } from '@/lib/services/application-service'
 import type { ApplicationStatus } from '@/lib/types/application'
+import { z } from 'zod'
+
+const createApplicationSchema = z.object({
+  grantId: z.string().min(1, 'Grant ID required').max(200),
+})
 
 /**
  * GET /api/applications
@@ -70,14 +75,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { grantId } = body
+    const validated = createApplicationSchema.safeParse(body)
 
-    if (!grantId) {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Grant ID required' },
+        { success: false, error: 'Validation failed', details: validated.error.flatten() },
         { status: 400 }
       )
     }
+
+    const { grantId } = validated.data
 
     const application = await startApplication(session.user.id, grantId)
     return NextResponse.json({ application })

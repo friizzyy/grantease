@@ -140,10 +140,14 @@ export async function GET() {
 
     const categoryCount: Record<string, number> = {}
     savedGrantsWithCategories.forEach(sg => {
-      const categories = JSON.parse(sg.grant.categories || '[]')
-      categories.forEach((cat: string) => {
-        categoryCount[cat] = (categoryCount[cat] || 0) + 1
-      })
+      const categories: unknown = JSON.parse(sg.grant.categories || '[]')
+      if (Array.isArray(categories)) {
+        categories.forEach((cat: unknown) => {
+          if (typeof cat === 'string') {
+            categoryCount[cat] = (categoryCount[cat] || 0) + 1
+          }
+        })
+      }
     })
 
     const topCategories = Object.entries(categoryCount)

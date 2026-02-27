@@ -50,36 +50,23 @@ export async function GET(request: Request) {
   const startTime = Date.now();
 
   try {
-    console.log('[CRON] Starting daily grant ingestion...');
-
     // Step 1: Expire old grants
     const { expired, errors: expireErrors } = await expireOldGrants();
-    console.log(`[CRON] Expired ${expired} grants with passed deadlines`);
 
     // Step 2: Run ingestion for all sources
     const { totalNew, totalUpdated, totalFailed, sourceResults } = await runDailyIngestion(
-      (source, progress) => {
-        console.log(`[CRON] ${source}: ${progress.message}`);
+      () => {
+        // Progress callback - no-op in production
       }
     );
 
     // Step 3: Verify some links
     const { verified, broken } = await verifyGrantLinks(50);
-    console.log(`[CRON] Verified ${verified} links, found ${broken} broken`);
 
     // Step 4: Get health status
     const health = await getIngestionHealth();
 
     const durationMs = Date.now() - startTime;
-
-    console.log(
-      `[CRON] Ingestion complete: ${totalNew} new, ${totalUpdated} updated, ${totalFailed} failed in ${durationMs}ms`
-    );
-
-    // Log alerts
-    for (const alert of health.alerts) {
-      console.log(`[CRON] ALERT [${alert.level}]: ${alert.message}`);
-    }
 
     return NextResponse.json({
       success: true,

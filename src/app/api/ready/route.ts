@@ -13,7 +13,7 @@ export async function GET() {
     await prisma.$queryRaw`SELECT 1`
 
     // Check required environment variables
-    const requiredEnvVars = ['DATABASE_URL', 'NEXTAUTH_SECRET']
+    const requiredEnvVars = ['DATABASE_URL', 'NEXTAUTH_SECRET', 'GEMINI_API_KEY']
     const missingVars = requiredEnvVars.filter((v) => !process.env[v])
 
     if (missingVars.length > 0) {

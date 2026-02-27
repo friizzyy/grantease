@@ -11,6 +11,7 @@
  */
 
 import { generateText, isGeminiConfigured } from './gemini-client'
+import { sanitizePromptInput, sanitizePromptArray } from '@/lib/utils/prompt-sanitizer'
 import {
   GrantMatchResultSchema,
   GrantMatchResult,
@@ -63,40 +64,40 @@ export interface AIMatchingOptions {
 function buildProfileContext(profile: UserProfileForScoring): string {
   const parts: string[] = []
 
-  // Entity type
+  // Entity type (use label lookup for known types, sanitize fallback)
   if (profile.entityType) {
-    const label = ENTITY_TYPE_LABELS[profile.entityType as EntityType] || profile.entityType
+    const label = ENTITY_TYPE_LABELS[profile.entityType as EntityType] || sanitizePromptInput(profile.entityType, 100)
     parts.push(`Organization Type: ${label}`)
   }
 
   // Location
   if (profile.state) {
-    parts.push(`Location: ${profile.state}, USA`)
+    parts.push(`Location: ${sanitizePromptInput(profile.state, 100)}, USA`)
   }
 
-  // Focus areas
+  // Focus areas (use label lookup for known tags, sanitize fallback)
   if (profile.industryTags && profile.industryTags.length > 0) {
     const labels = profile.industryTags.map(tag =>
-      INDUSTRY_LABELS[tag as IndustryTag] || tag
+      INDUSTRY_LABELS[tag as IndustryTag] || sanitizePromptInput(tag, 100)
     ).join(', ')
     parts.push(`Focus Areas: ${labels}`)
   }
 
   // Size
   if (profile.sizeBand) {
-    const label = SIZE_BAND_LABELS[profile.sizeBand as keyof typeof SIZE_BAND_LABELS] || profile.sizeBand
+    const label = SIZE_BAND_LABELS[profile.sizeBand as keyof typeof SIZE_BAND_LABELS] || sanitizePromptInput(profile.sizeBand, 50)
     parts.push(`Team Size: ${label}`)
   }
 
   // Budget
   if (profile.annualBudget) {
-    const label = BUDGET_RANGE_LABELS[profile.annualBudget as BudgetRange] || profile.annualBudget
+    const label = BUDGET_RANGE_LABELS[profile.annualBudget as BudgetRange] || sanitizePromptInput(profile.annualBudget, 50)
     parts.push(`Annual Budget: ${label}`)
   }
 
   // Goals
   if (profile.goals && profile.goals.length > 0) {
-    parts.push(`Funding Goals: ${profile.goals.join(', ')}`)
+    parts.push(`Funding Goals: ${sanitizePromptArray(profile.goals)}`)
   }
 
   return parts.join('\n')
@@ -115,11 +116,11 @@ function formatGrantsForPrompt(grants: GrantForAIMatching[]): string {
     return `
 ### Grant ${i + 1}
 - ID: ${g.id}
-- Title: ${g.title}
-- Sponsor: ${g.sponsor}
-- Summary: ${g.summary || 'No summary available'}
-- Categories: ${g.categories.join(', ') || 'Uncategorized'}
-- Eligibility: ${g.eligibility.join(', ') || 'Not specified'}
+- Title: ${sanitizePromptInput(g.title, 500)}
+- Sponsor: ${sanitizePromptInput(g.sponsor, 500)}
+- Summary: ${sanitizePromptInput(g.summary, 1000) || 'No summary available'}
+- Categories: ${sanitizePromptArray(g.categories)}
+- Eligibility: ${sanitizePromptArray(g.eligibility)}
 - Funding: ${funding}
 - Deadline: ${deadline}`
   }).join('\n')
@@ -189,14 +190,14 @@ async function processBatch(
       const response = await generateText(prompt, true) // Use Pro model
 
       if (!response) {
-        throw new Error('Empty response from Gemini')
+        throw new Error(`Gemini returned empty response while matching ${grants.length} grant(s) on attempt ${attempt + 1}`)
       }
 
       // Parse and validate response
       const parsed = parseJSONResponse(response)
 
       if (!parsed) {
-        throw new Error('Failed to parse JSON from response')
+        throw new Error(`Failed to parse JSON from Gemini response while matching ${grants.length} grant(s) on attempt ${attempt + 1}. Response starts with: "${response.substring(0, 100)}"`)
       }
 
       // Validate against schema
@@ -208,7 +209,7 @@ async function processBatch(
       }
 
       if (strictMode) {
-        throw new Error('Response validation failed in strict mode')
+        throw new Error(`Gemini response validation failed in strict mode for ${grants.length} grant(s) on attempt ${attempt + 1}: parsed ${Array.isArray(parsed) ? parsed.length : 0} results but none passed schema validation`)
       }
 
       // Partial success - return what we can
@@ -266,8 +267,8 @@ For each grant, provide a match analysis. Focus on:
 
 ${getJSONSchemaInstruction()}
 
-User's primary focus: ${profile.industryTags?.slice(0, 2).join(', ') || 'Not specified'}
-Organization type: ${profile.entityType || 'Not specified'}
+User's primary focus: ${profile.industryTags?.slice(0, 2).map(t => INDUSTRY_LABELS[t as IndustryTag] || sanitizePromptInput(t, 100)).join(', ') || 'Not specified'}
+Organization type: ${profile.entityType ? (ENTITY_TYPE_LABELS[profile.entityType as EntityType] || sanitizePromptInput(profile.entityType, 100)) : 'Not specified'}
 
 Return the JSON array now:`
 }

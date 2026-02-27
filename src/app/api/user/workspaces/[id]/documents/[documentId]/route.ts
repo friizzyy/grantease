@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
+import { z } from 'zod'
+
+const updateDocumentSchema = z.object({
+  name: z.string().min(1).max(500).optional(),
+  type: z.string().min(1).max(100).optional(),
+  url: z.string().max(2000).nullable().optional(),
+  notes: z.string().max(5000).nullable().optional(),
+})
 
 /**
  * GET /api/user/workspaces/[id]/documents/[documentId]
@@ -97,7 +105,16 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { name, type, url, notes } = body
+    const validated = updateDocumentSchema.safeParse(body)
+
+    if (!validated.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: validated.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const { name, type, url, notes } = validated.data
 
     const document = await prisma.workspaceDocument.update({
       where: { id: documentId },

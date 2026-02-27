@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import crypto from 'crypto'
+import { z } from 'zod'
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email('Valid email address required'),
+})
 
 /**
  * POST /api/auth/forgot-password
@@ -11,14 +16,15 @@ import crypto from 'crypto'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email } = body
-
-    if (!email || !email.includes('@')) {
+    const parsed = forgotPasswordSchema.safeParse(body)
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Valid email address required' },
+        { success: false, error: 'Validation failed', details: parsed.error.flatten() },
         { status: 400 }
       )
     }
+
+    const { email } = parsed.data
 
     // Check if user exists (but don't reveal this to the client for security)
     const user = await prisma.user.findUnique({
@@ -41,12 +47,6 @@ export async function POST(request: NextRequest) {
       })
 
       // TODO: Send email when email service is configured
-      // For now, log the reset URL (only in development)
-      if (process.env.NODE_ENV === 'development') {
-        const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${resetToken}`
-        console.log('[Password Reset] Token generated for:', email)
-        console.log('[Password Reset] Reset URL:', resetUrl)
-      }
     }
 
     // Always return success to prevent email enumeration

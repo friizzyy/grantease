@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grant Detail - Option B: Split Layout with Sticky Sidebar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'pulse-bg': '#0a0a0f',
+            'pulse-surface': '#12121a',
+            'pulse-border': '#1e1e2e',
+            'pulse-accent': '#40ffaa',
+            'pulse-text': '#f4f4f5',
+            'pulse-text-secondary': '#a1a1aa',
+            'pulse-text-tertiary': '#71717a',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background: #0a0a0f; }
+
+    /* Animated Background */
+    .grid-background {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .grid-lines {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .glow-orb {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(64, 255, 170, 0.05) 0%, transparent 70%);
+      filter: blur(60px);
+      top: -200px;
+      right: -200px;
+    }
+    .glow-orb-2 {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(64, 255, 170, 0.03) 0%, transparent 70%);
+      filter: blur(60px);
+      bottom: 0;
+      left: 20%;
+    }
+
+    .glass-card {
+      background: rgba(18, 18, 26, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(30, 30, 46, 0.8);
+    }
+
+    .sidebar-card {
+      background: linear-gradient(180deg, rgba(18, 18, 26, 0.9) 0%, rgba(18, 18, 26, 0.7) 100%);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .score-ring {
+      background: conic-gradient(#40ffaa 0deg 331deg, rgba(64, 255, 170, 0.1) 331deg 360deg);
+    }
+
+    .content-layer { position: relative; z-index: 10; }
+
+    .section-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+    }
+  </style>
+</head>
+<body class="font-sans text-pulse-text min-h-screen">
+
+  <!-- Background -->
+  <div class="grid-background">
+    <div class="grid-lines"></div>
+    <div class="glow-orb"></div>
+    <div class="glow-orb-2"></div>
+  </div>
+
+  <div class="content-layer">
+    <!-- Back Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 px-8 py-4 bg-pulse-bg/80 backdrop-blur-xl border-b border-pulse-border">
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <a href="#" class="inline-flex items-center gap-2 text-pulse-text-tertiary hover:text-pulse-text transition-colors text-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Back to grants
+        </a>
+        <div class="flex items-center gap-4">
+          <button class="p-2 rounded-lg hover:bg-pulse-surface text-pulse-text-tertiary hover:text-pulse-text transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+            </svg>
+          </button>
+          <button class="p-2 rounded-lg hover:bg-pulse-surface text-pulse-text-tertiary hover:text-pulse-text transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="pt-20 px-8 pb-16">
+      <div class="max-w-7xl mx-auto flex gap-8">
+
+        <!-- Main Content -->
+        <main class="flex-1 max-w-3xl">
+          <!-- Header -->
+          <header class="mb-10">
+            <div class="flex items-center gap-3 text-pulse-text-tertiary text-sm mb-4">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+              </svg>
+              USDA SARE
+            </div>
+
+            <h1 class="text-4xl font-semibold text-pulse-text leading-tight mb-6">
+              Western SARE Farmer/Rancher Grant
+            </h1>
+
+            <p class="text-lg text-pulse-text-secondary leading-relaxed">
+              Research grants for farmers and ranchers in the Western region to test sustainable agriculture practices on their own operations.
+            </p>
+          </header>
+
+          <!-- Match Insights -->
+          <section class="mb-10">
+            <div class="glass-card rounded-2xl overflow-hidden">
+              <div class="px-6 py-4 border-b border-pulse-border bg-pulse-accent/5">
+                <h2 class="font-semibold text-pulse-text flex items-center gap-2">
+                  <svg class="w-5 h-5 text-pulse-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  Why This Matches Your Farm
+                </h2>
+              </div>
+              <div class="p-6 space-y-4">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                  </div>
+                  <div class="flex-1">
+                    <div class="text-pulse-text font-medium">California is in the eligible region</div>
+                    <div class="text-pulse-text-tertiary text-sm">Your state qualifies for Western SARE</div>
+                  </div>
+                  <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                  </div>
+                  <div class="flex-1">
+                    <div class="text-pulse-text font-medium">Designed for small farms</div>
+                    <div class="text-pulse-text-tertiary text-sm">Individual farmers can apply directly</div>
+                  </div>
+                  <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                    </svg>
+                  </div>
+                  <div class="flex-1">
+                    <div class="text-pulse-text font-medium">Funds conservation practices</div>
+                    <div class="text-pulse-text-tertiary text-sm">Aligns with your funding goals</div>
+                  </div>
+                  <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- About -->
+          <section class="mb-10">
+            <h2 class="text-xl font-semibold text-pulse-text mb-4">About This Grant</h2>
+            <div class="text-pulse-text-secondary leading-relaxed space-y-4">
+              <p>
+                Western SARE funds farmers and ranchers in the Western region to conduct on-farm research. Focus areas include water conservation, grazing management, soil health, and diversified cropping systems.
+              </p>
+              <p>
+                This program is specifically designed for working farmers who want to test sustainable practices on their own land. Projects should have clear, measurable outcomes that can be shared with other producers.
+              </p>
+            </div>
+          </section>
+
+          <!-- What You Can Fund -->
+          <section class="mb-10">
+            <h2 class="text-xl font-semibold text-pulse-text mb-4">What You Can Fund</h2>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="p-4 rounded-xl bg-pulse-surface/50 border border-pulse-border">
+                <div class="text-pulse-text font-medium">Conservation</div>
+                <div class="text-pulse-text-tertiary text-sm">Soil health, cover crops</div>
+              </div>
+              <div class="p-4 rounded-xl bg-pulse-surface/50 border border-pulse-border">
+                <div class="text-pulse-text font-medium">Water Management</div>
+                <div class="text-pulse-text-tertiary text-sm">Irrigation efficiency</div>
+              </div>
+              <div class="p-4 rounded-xl bg-pulse-surface/50 border border-pulse-border">
+                <div class="text-pulse-text font-medium">Livestock</div>
+                <div class="text-pulse-text-tertiary text-sm">Grazing practices</div>
+              </div>
+              <div class="p-4 rounded-xl bg-pulse-surface/50 border border-pulse-border">
+                <div class="text-pulse-text font-medium">Land Development</div>
+                <div class="text-pulse-text-tertiary text-sm">Sustainable systems</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Requirements -->
+          <section class="mb-10">
+            <h2 class="text-xl font-semibold text-pulse-text mb-4">Requirements</h2>
+            <div class="space-y-3">
+              <div class="flex items-start gap-3 p-4 rounded-xl bg-pulse-surface/30 border border-pulse-border/50">
+                <svg class="w-5 h-5 text-pulse-text-tertiary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                <span class="text-pulse-text-secondary">Must be in Western SARE region</span>
+              </div>
+              <div class="flex items-start gap-3 p-4 rounded-xl bg-pulse-surface/30 border border-pulse-border/50">
+                <svg class="w-5 h-5 text-pulse-text-tertiary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                <span class="text-pulse-text-secondary">Must be a producer or rancher</span>
+              </div>
+              <div class="flex items-start gap-3 p-4 rounded-xl bg-pulse-surface/30 border border-pulse-border/50">
+                <svg class="w-5 h-5 text-pulse-text-tertiary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                <span class="text-pulse-text-secondary">Focus on sustainable practices</span>
+              </div>
+              <div class="flex items-start gap-3 p-4 rounded-xl bg-pulse-surface/30 border border-pulse-border/50">
+                <svg class="w-5 h-5 text-pulse-text-tertiary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                <span class="text-pulse-text-secondary">Short application process</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Footer -->
+          <footer class="text-center pt-6 border-t border-pulse-border">
+            <p class="text-pulse-text-tertiary text-sm">Last verified January 2026</p>
+          </footer>
+        </main>
+
+        <!-- Sticky Sidebar -->
+        <aside class="w-80 flex-shrink-0">
+          <div class="sticky top-24">
+            <div class="sidebar-card rounded-2xl overflow-hidden">
+              <!-- Match Score -->
+              <div class="p-6 border-b border-pulse-border/50 text-center">
+                <div class="relative w-24 h-24 mx-auto mb-4">
+                  <div class="score-ring absolute inset-0 rounded-full"></div>
+                  <div class="absolute inset-1 rounded-full bg-pulse-bg flex items-center justify-center">
+                    <div>
+                      <div class="text-3xl font-bold text-pulse-accent">92</div>
+                      <div class="text-xs text-pulse-text-tertiary">/ 100</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="text-pulse-text font-medium">Excellent Match</div>
+                <div class="text-pulse-text-tertiary text-sm">For your farm profile</div>
+              </div>
+
+              <!-- Quick Stats -->
+              <div class="p-6 space-y-5">
+                <div>
+                  <div class="text-pulse-text-tertiary text-xs uppercase tracking-wider mb-1">Funding Amount</div>
+                  <div class="text-xl font-semibold text-pulse-text">$2,500 - $25,000</div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <div>
+                  <div class="text-pulse-text-tertiary text-xs uppercase tracking-wider mb-1">Deadline</div>
+                  <div class="text-xl font-semibold text-amber-400">November 2026</div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <div>
+                  <div class="text-pulse-text-tertiary text-xs uppercase tracking-wider mb-1">Your State</div>
+                  <div class="text-xl font-semibold text-pulse-accent">California</div>
+                  <button class="text-xs text-pulse-text-tertiary hover:text-pulse-accent mt-1 transition-colors flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    View all 11 eligible states
+                  </button>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <div>
+                  <div class="text-pulse-text-tertiary text-xs uppercase tracking-wider mb-1">Eligibility</div>
+                  <div class="flex items-center gap-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
+                    <span class="text-lg font-semibold text-emerald-400">Likely Eligible</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Apply Button -->
+              <div class="p-6 pt-0">
+                <button class="w-full py-4 rounded-xl bg-pulse-accent text-pulse-bg font-semibold hover:bg-pulse-accent/90 transition-colors flex items-center justify-center gap-2">
+                  Apply Now
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

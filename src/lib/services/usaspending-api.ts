@@ -217,7 +217,7 @@ export class USASpendingApiClient {
 
     if (!response.ok) {
       const errorText = await response.text()
-      throw new Error(`USAspending API error: ${response.status} - ${errorText}`)
+      throw new Error(`USAspending API searchAwards failed (HTTP ${response.status}): ${errorText}`)
     }
 
     return response.json()
@@ -236,7 +236,7 @@ export class USASpendingApiClient {
 
     if (!response.ok) {
       const errorText = await response.text()
-      throw new Error(`USAspending API error: ${response.status} - ${errorText}`)
+      throw new Error(`USAspending API getAwardDetails failed for award "${awardId}" (HTTP ${response.status}): ${errorText}`)
     }
 
     return response.json()
@@ -303,7 +303,7 @@ export class USASpendingApiClient {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch agencies: ${response.status}`)
+      throw new Error(`USAspending API getAgencies failed (HTTP ${response.status}): unable to retrieve toptier agencies list`)
     }
 
     const data = await response.json()

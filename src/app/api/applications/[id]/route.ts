@@ -10,6 +10,15 @@ import {
   prepopulateFromVault,
 } from '@/lib/services/application-service'
 import type { ApplicationStatus, ApplicationFormData } from '@/lib/types/application'
+import { z } from 'zod'
+
+const updateApplicationSchema = z.object({
+  action: z.enum(['update_form', 'update_status', 'update_notes', 'prepopulate']).optional(),
+  formData: z.record(z.unknown()).optional(),
+  status: z.enum(['draft', 'in_progress', 'review', 'submitted', 'awarded', 'rejected', 'withdrawn']).optional(),
+  metadata: z.record(z.unknown()).optional(),
+  notes: z.string().max(50000).optional(),
+})
 
 interface RouteContext {
   params: Promise<{ id: string }>
@@ -83,7 +92,16 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { action, ...data } = body
+    const validated = updateApplicationSchema.safeParse(body)
+
+    if (!validated.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: validated.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const { action, formData, status: newStatus, metadata, notes } = validated.data
 
     let application
 
@@ -91,20 +109,20 @@ export async function PATCH(
       case 'update_form':
         application = await updateApplicationFormData(
           id,
-          data.formData as Partial<ApplicationFormData>
+          formData as Partial<ApplicationFormData>
         )
         break
 
       case 'update_status':
         application = await updateApplicationStatus(
           id,
-          data.status as ApplicationStatus,
-          data.metadata
+          newStatus as ApplicationStatus,
+          metadata
         )
         break
 
       case 'update_notes':
-        application = await updateApplicationNotes(id, data.notes)
+        application = await updateApplicationNotes(id, notes || '')
         break
 
       case 'prepopulate':
@@ -113,8 +131,8 @@ export async function PATCH(
 
       default:
         // Default to updating form data
-        if (data.formData) {
-          application = await updateApplicationFormData(id, data.formData)
+        if (formData) {
+          application = await updateApplicationFormData(id, formData)
         } else {
           return NextResponse.json(
             { error: 'Invalid action or missing data' },

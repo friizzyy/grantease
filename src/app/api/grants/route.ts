@@ -3,6 +3,23 @@ import { prisma } from '@/lib/db'
 import { Prisma } from '@prisma/client'
 import { safeJsonParse } from '@/lib/api-utils'
 import { rateLimiters, rateLimitExceededResponse, getClientIdentifier } from '@/lib/rate-limit'
+import { z } from 'zod'
+
+const grantsQuerySchema = z.object({
+  q: z.string().max(500).default(''),
+  categories: z.string().max(1000).optional(),
+  eligibility: z.string().max(1000).optional(),
+  states: z.string().max(500).optional(),
+  minAmount: z.coerce.number().int().min(0).max(100_000_000_000).optional(),
+  maxAmount: z.coerce.number().int().min(0).max(100_000_000_000).optional(),
+  status: z.string().max(50).default('open'),
+  deadlineType: z.string().max(200).optional(),
+  sponsor: z.string().max(1000).optional(),
+  sourceName: z.string().max(500).optional(),
+  sortBy: z.enum(['deadline', 'amount', 'newest', 'relevance']).default('deadline'),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+})
 
 /**
  * Calculate relevance score for a grant based on query match
@@ -69,40 +86,36 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
 
-    // Parse query parameters
-    const query = searchParams.get('q') || ''
-    const categories = searchParams.get('categories')?.split(',').filter(Boolean) || []
-    const eligibility = searchParams.get('eligibility')?.split(',').filter(Boolean) || []
-    const states = searchParams.get('states')?.split(',').filter(Boolean) || []
-
-    // Parse and validate amount filters
-    const minAmountRaw = searchParams.get('minAmount')
-    const maxAmountRaw = searchParams.get('maxAmount')
-    let minAmount: number | undefined
-    let maxAmount: number | undefined
-
-    if (minAmountRaw) {
-      const parsed = parseInt(minAmountRaw)
-      if (isNaN(parsed) || parsed < 0) {
-        return NextResponse.json(
-          { error: 'minAmount must be a non-negative integer' },
-          { status: 400 }
-        )
-      }
-      // Cap at reasonable maximum (100 billion)
-      minAmount = Math.min(parsed, 100_000_000_000)
+    // Parse and validate query parameters with Zod
+    const rawParams: Record<string, string | undefined> = {}
+    for (const key of ['q', 'categories', 'eligibility', 'states', 'minAmount', 'maxAmount', 'status', 'deadlineType', 'sponsor', 'sourceName', 'sortBy', 'page', 'limit']) {
+      const val = searchParams.get(key)
+      if (val !== null) rawParams[key] = val
     }
 
-    if (maxAmountRaw) {
-      const parsed = parseInt(maxAmountRaw)
-      if (isNaN(parsed) || parsed < 0) {
-        return NextResponse.json(
-          { error: 'maxAmount must be a non-negative integer' },
-          { status: 400 }
-        )
-      }
-      maxAmount = Math.min(parsed, 100_000_000_000)
+    const validated = grantsQuerySchema.safeParse(rawParams)
+    if (!validated.success) {
+      return NextResponse.json(
+        { error: 'Invalid query parameters', details: validated.error.flatten() },
+        { status: 400 }
+      )
     }
+
+    const params = validated.data
+    const query = params.q
+    const categories = params.categories?.split(',').filter(Boolean) || []
+    const eligibility = params.eligibility?.split(',').filter(Boolean) || []
+    const states = params.states?.split(',').filter(Boolean) || []
+    const minAmount = params.minAmount
+    const maxAmount = params.maxAmount
+    const status = params.status
+    const deadlineTypes = params.deadlineType?.split(',').filter(Boolean) || []
+    const sponsors = params.sponsor?.split(',').filter(Boolean) || []
+    const sourceNames = params.sourceName?.split(',').filter(Boolean) || []
+    const sortBy = params.sortBy
+    const page = params.page
+    const limit = params.limit
+    const skip = (page - 1) * limit
 
     // Validate amount range
     if (minAmount !== undefined && maxAmount !== undefined && minAmount > maxAmount) {
@@ -111,15 +124,6 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       )
     }
-
-    const status = searchParams.get('status') || 'open'
-    const deadlineTypes = searchParams.get('deadlineType')?.split(',').filter(Boolean) || []
-    const sponsors = searchParams.get('sponsor')?.split(',').filter(Boolean) || []
-    const sourceNames = searchParams.get('sourceName')?.split(',').filter(Boolean) || []
-    const sortBy = searchParams.get('sortBy') || 'deadline'
-    const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
-    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '20')), 100)
-    const skip = (page - 1) * limit
 
     // Build where clause
     const where: Prisma.GrantWhereInput = {
@@ -145,7 +149,7 @@ export async function GET(request: NextRequest) {
         ...(where.AND as Prisma.GrantWhereInput[] || []),
         {
           OR: categories.map(cat => ({
-            categories: { contains: cat }
+            categories: { contains: `"${cat}"` }
           }))
         }
       ]
@@ -157,7 +161,7 @@ export async function GET(request: NextRequest) {
         ...(where.AND as Prisma.GrantWhereInput[] || []),
         {
           OR: eligibility.map(elig => ({
-            eligibility: { contains: elig }
+            eligibility: { contains: `"${elig}"` }
           }))
         }
       ]
@@ -170,10 +174,11 @@ export async function GET(request: NextRequest) {
         {
           OR: [
             ...states.map(state => ({
-              locations: { contains: state }
+              locations: { contains: `"${state}"` }
             })),
-            { locations: { contains: 'National' } },
-            { locations: { contains: 'Nationwide' } },
+            { locations: { contains: '"National"' } },
+            { locations: { contains: '"Nationwide"' } },
+            { isNational: true },
           ]
         }
       ]

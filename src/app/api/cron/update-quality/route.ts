@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
+export const runtime = 'nodejs'
+export const maxDuration = 60
+
 /**
  * GET /api/cron/update-quality
  *
@@ -37,7 +40,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log('[CRON:update-quality] Starting quality score update...')
 
     // Process grants in batches
     const batchSize = 200
@@ -113,10 +115,6 @@ export async function GET(request: NextRequest) {
 
     results.duration = Date.now() - startTime
 
-    console.log(
-      `[CRON:update-quality] Completed: ${results.updated} updated, ${results.closedDueToDeadline} closed`
-    )
-
     return NextResponse.json(results)
   } catch (error) {
     results.success = false
@@ -162,8 +160,8 @@ function calculateQualityScore(grant: {
   // Eligibility (0.1)
   if (grant.eligibility) {
     try {
-      const parsed = JSON.parse(grant.eligibility)
-      if (Array.isArray(parsed) ? parsed.length > 0 : Object.keys(parsed).length > 0) {
+      const parsed: unknown = JSON.parse(grant.eligibility)
+      if (Array.isArray(parsed) ? parsed.length > 0 : typeof parsed === 'object' && parsed !== null && Object.keys(parsed).length > 0) {
         score += 0.1
       }
     } catch {
@@ -180,7 +178,7 @@ function calculateQualityScore(grant: {
   // Requirements (0.1)
   if (grant.requirements) {
     try {
-      const parsed = JSON.parse(grant.requirements)
+      const parsed: unknown = JSON.parse(grant.requirements)
       if (Array.isArray(parsed) && parsed.length > 0) score += 0.1
     } catch {
       if (grant.requirements.length > 10) score += 0.1
@@ -196,7 +194,7 @@ function calculateQualityScore(grant: {
   // Purpose tags (0.1)
   if (grant.purposeTags) {
     try {
-      const tags = JSON.parse(grant.purposeTags)
+      const tags: unknown = JSON.parse(grant.purposeTags)
       if (Array.isArray(tags) && tags.length > 0) score += 0.1
     } catch {
       // Not valid JSON, skip

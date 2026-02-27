@@ -19,6 +19,9 @@ import {
   ComplexityPreference,
 } from '@/lib/types/onboarding'
 
+// Union of all possible grant preference values
+type GrantPreferenceValue = GrantSizePreference | TimelinePreference | ComplexityPreference | null
+
 // Actions
 type OnboardingAction =
   | { type: 'SET_STEP'; step: number }
@@ -30,7 +33,7 @@ type OnboardingAction =
   | { type: 'SET_STAGE'; stage: Stage }
   | { type: 'SET_BUDGET'; budget: BudgetRange }
   | { type: 'SET_INDUSTRY_ATTRIBUTE'; key: string; value: string | string[] | boolean }
-  | { type: 'SET_GRANT_PREFERENCE'; key: keyof OnboardingState['grantPreferences']; value: any }
+  | { type: 'SET_GRANT_PREFERENCE'; key: keyof OnboardingState['grantPreferences']; value: GrantPreferenceValue }
   | { type: 'LOAD_STATE'; state: OnboardingState }
   | { type: 'RESET' }
 
@@ -113,7 +116,7 @@ interface OnboardingContextType {
   // Step 4
   setIndustryAttribute: (key: string, value: string | string[] | boolean) => void
   // Step 5
-  setGrantPreference: (key: keyof OnboardingState['grantPreferences'], value: any) => void
+  setGrantPreference: (key: keyof OnboardingState['grantPreferences'], value: GrantPreferenceValue) => void
   // Utilities
   loadState: (state: OnboardingState) => void
   reset: () => void
@@ -177,7 +180,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // Step 5 setter
-  const setGrantPreference = useCallback((key: keyof OnboardingState['grantPreferences'], value: any) => {
+  const setGrantPreference = useCallback((key: keyof OnboardingState['grantPreferences'], value: GrantPreferenceValue) => {
     dispatch({ type: 'SET_GRANT_PREFERENCE', key, value })
   }, [])
 

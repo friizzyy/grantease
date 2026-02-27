@@ -3,12 +3,21 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { rateLimiters, rateLimitExceededResponse } from '@/lib/rate-limit'
-import { generateText, isGeminiConfigured } from '@/lib/services/gemini-client'
+import { generateTextWithUsage, isGeminiConfigured } from '@/lib/services/gemini-client'
+import { sanitizePromptInput } from '@/lib/utils/prompt-sanitizer'
+import { z } from 'zod'
 
-interface ChatMessage {
-  role: 'user' | 'assistant' | 'system'
-  content: string
-}
+const chatMessageSchema = z.object({
+  role: z.enum(['user', 'assistant', 'system']),
+  content: z.string().min(1).max(10000),
+})
+
+const chatRequestSchema = z.object({
+  message: z.string().min(1, 'Message is required').max(10000, 'Message too long'),
+  conversationHistory: z.array(chatMessageSchema).max(50).default([]),
+})
+
+type ChatMessage = z.infer<typeof chatMessageSchema>
 
 /**
  * POST /api/ai/chat
@@ -37,14 +46,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { message, conversationHistory = [] } = body
+    const validated = chatRequestSchema.safeParse(body)
 
-    if (!message) {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Message is required' },
+        { error: 'Invalid input', details: validated.error.flatten() },
         { status: 400 }
       )
     }
+
+    const { message, conversationHistory } = validated.data
 
     // Get user profile for context
     const profile = await prisma.userProfile.findUnique({
@@ -82,14 +93,14 @@ export async function POST(request: NextRequest) {
       }),
     ])
 
-    // Build context about the user
+    // Build context about the user (sanitize all user-controlled values)
     let userContext = 'User Profile:\n'
     if (profile) {
-      userContext += `- Entity Type: ${profile.entityType}\n`
-      userContext += `- Location: ${profile.state || 'Not specified'}, ${profile.country}\n`
-      userContext += `- Industries: ${profile.industryTags}\n`
-      userContext += `- Size: ${profile.sizeBand || 'Not specified'}\n`
-      userContext += `- Stage: ${profile.stage || 'Not specified'}\n`
+      userContext += `- Entity Type: ${sanitizePromptInput(profile.entityType, 100)}\n`
+      userContext += `- Location: ${sanitizePromptInput(profile.state, 100) || 'Not specified'}, ${sanitizePromptInput(profile.country, 100)}\n`
+      userContext += `- Industries: ${sanitizePromptInput(profile.industryTags, 500)}\n`
+      userContext += `- Size: ${sanitizePromptInput(profile.sizeBand, 50) || 'Not specified'}\n`
+      userContext += `- Stage: ${sanitizePromptInput(profile.stage, 50) || 'Not specified'}\n`
     } else {
       userContext += '- No profile set up yet\n'
     }
@@ -97,21 +108,21 @@ export async function POST(request: NextRequest) {
     if (savedGrants.length > 0) {
       userContext += '\nRecently saved grants:\n'
       savedGrants.forEach(sg => {
-        userContext += `- ${sg.grant.title} (${sg.grant.sponsor})\n`
+        userContext += `- ${sanitizePromptInput(sg.grant.title, 300)} (${sanitizePromptInput(sg.grant.sponsor, 300)})\n`
       })
     }
 
     if (workspaces.length > 0) {
       userContext += '\nActive applications:\n'
       workspaces.forEach(ws => {
-        userContext += `- ${ws.grant.title}: ${ws.status}\n`
+        userContext += `- ${sanitizePromptInput(ws.grant.title, 300)}: ${sanitizePromptInput(ws.status, 50)}\n`
       })
     }
 
-    // Build conversation history
+    // Build conversation history (sanitize each message to prevent injection via chat history)
     const historyText = conversationHistory
       .slice(-10)
-      .map((msg: ChatMessage) => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+      .map((msg: ChatMessage) => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${sanitizePromptInput(msg.content, 1000)}`)
       .join('\n\n')
 
     const prompt = `You are the GrantEase AI assistant, an expert grant advisor. Your role is to help users:
@@ -143,24 +154,24 @@ Available grant sources in the system:
 - Candid/Foundation Directory (Foundation grants)
 - Data.gov datasets
 
-${historyText ? `Previous conversation:\n${historyText}\n\n` : ''}User: ${message}
+${historyText ? `Previous conversation:\n${historyText}\n\n` : ''}User: ${sanitizePromptInput(message, 5000)}
 
 Respond helpfully and concisely.`
 
     const startTime = Date.now()
-    const response = await generateText(prompt, false)
+    const { text: response, usage } = await generateTextWithUsage(prompt, false)
     const responseTime = Date.now() - startTime
 
-    // Log AI usage
+    // Log AI usage with actual token counts from the API response
     try {
       await prisma.aIUsageLog.create({
         data: {
           userId,
           type: 'chat',
           model: 'gemini-1.5-flash',
-          promptTokens: 0,
-          completionTokens: 0,
-          totalTokens: 0,
+          promptTokens: usage.promptTokens,
+          completionTokens: usage.completionTokens,
+          totalTokens: usage.totalTokens,
           responseTime,
           success: !!response,
           errorMessage: response ? null : 'No response generated',

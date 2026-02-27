@@ -14,6 +14,28 @@ import {
   type GrantForApplication,
 } from '@/lib/services/gemini-application-helper'
 import { isGeminiConfigured } from '@/lib/services/gemini-client'
+import { z } from 'zod'
+
+const grantSchema = z.object({
+  id: z.string().min(1).max(200),
+  title: z.string().min(1).max(500),
+  sponsor: z.string().max(500).optional(),
+  description: z.string().max(10000).optional(),
+  requirements: z.string().max(10000).optional(),
+  eligibility: z.string().max(10000).optional(),
+  deadline: z.string().max(200).optional(),
+  url: z.string().max(2000).optional(),
+  amountMin: z.number().optional(),
+  amountMax: z.number().optional(),
+})
+
+const applicationHelperSchema = z.object({
+  action: z.enum(['plan', 'checklist', 'timeline', 'strategy', 'review']),
+  grant: grantSchema.optional(),
+  availableHoursPerWeek: z.number().int().min(1).max(168).optional(),
+  sectionName: z.string().max(200).optional(),
+  content: z.string().max(50000).optional(),
+})
 
 /**
  * POST /api/ai/application-helper
@@ -47,11 +69,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { action, grant, availableHoursPerWeek, sectionName, content } = body
+    const validated = applicationHelperSchema.safeParse(body)
 
-    if (!action) {
-      return NextResponse.json({ error: 'Action is required' }, { status: 400 })
+    if (!validated.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: validated.error.flatten() },
+        { status: 400 }
+      )
     }
+
+    const { action, grant, availableHoursPerWeek, sectionName, content } = validated.data
 
     if (!grant && action !== 'review') {
       return NextResponse.json({ error: 'Grant details are required' }, { status: 400 })
@@ -89,6 +116,7 @@ export async function POST(request: NextRequest) {
 
     const startTime = Date.now()
     let result = null
+    let usage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
 
     switch (action) {
       case 'plan':
@@ -98,18 +126,30 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           )
         }
-        result = await generateApplicationPlan(grant as GrantForApplication, profile)
+        {
+          const response = await generateApplicationPlan(grant as GrantForApplication, profile)
+          result = response.result
+          usage = response.usage
+        }
         break
 
       case 'checklist':
-        result = await generateChecklist(grant as GrantForApplication)
+        {
+          const response = await generateChecklist(grant as GrantForApplication)
+          result = response.result
+          usage = response.usage
+        }
         break
 
       case 'timeline':
-        result = await generateTimeline(
-          grant as GrantForApplication,
-          availableHoursPerWeek || 10
-        )
+        {
+          const response = await generateTimeline(
+            grant as GrantForApplication,
+            availableHoursPerWeek || 10
+          )
+          result = response.result
+          usage = response.usage
+        }
         break
 
       case 'strategy':
@@ -119,7 +159,11 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           )
         }
-        result = await getStrategyAdvice(grant as GrantForApplication, profile)
+        {
+          const response = await getStrategyAdvice(grant as GrantForApplication, profile)
+          result = response.result
+          usage = response.usage
+        }
         break
 
       case 'review':
@@ -129,11 +173,15 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           )
         }
-        result = await reviewApplicationSection(sectionName, content, {
-          title: grant?.title || 'Grant Application',
-          sponsor: grant?.sponsor || 'Unknown',
-          requirements: grant?.requirements,
-        })
+        {
+          const response = await reviewApplicationSection(sectionName, content, {
+            title: grant?.title || 'Grant Application',
+            sponsor: grant?.sponsor || 'Unknown',
+            requirements: grant?.requirements,
+          })
+          result = response.result
+          usage = response.usage
+        }
         break
 
       default:
@@ -152,16 +200,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Log usage
+    // Log usage with actual token counts from the API response
     try {
       await prisma.aIUsageLog.create({
         data: {
           userId: session.user.id,
           type: `application_helper_${action}`,
           model: 'gemini-1.5-pro',
-          promptTokens: 0,
-          completionTokens: 0,
-          totalTokens: 0,
+          promptTokens: usage.promptTokens,
+          completionTokens: usage.completionTokens,
+          totalTokens: usage.totalTokens,
           responseTime: processingTime,
           grantId: grant?.id || null,
           success: true,

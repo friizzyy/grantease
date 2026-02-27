@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '25'), 50)
 
     // Use Gemini to search for contracts
-    const grants = await searchGrantsByKeyword(
+    const { grants } = await searchGrantsByKeyword(
       `${keyword} government contracts RFP solicitations`,
       { state }
     )

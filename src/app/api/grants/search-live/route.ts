@@ -41,7 +41,8 @@ export async function GET(request: NextRequest) {
       if (userProfile) {
         let industryTags: string[] = []
         try {
-          industryTags = JSON.parse(userProfile.industryTags || '[]')
+          const parsed: unknown = JSON.parse(userProfile.industryTags || '[]')
+          industryTags = Array.isArray(parsed) ? (parsed as string[]) : []
         } catch {
           industryTags = []
         }

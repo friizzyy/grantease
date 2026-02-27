@@ -11,6 +11,14 @@ import {
   findGrantsForNeed,
 } from '@/lib/services/gemini-grant-discovery'
 import { isGeminiConfigured } from '@/lib/services/gemini-client'
+import { z } from 'zod'
+
+const discoverGrantsSchema = z.object({
+  mode: z.enum(['discover', 'search', 'need']).default('discover'),
+  keyword: z.string().max(500).optional(),
+  need: z.string().max(2000).optional(),
+  searchFocus: z.enum(['new_grants', 'local_grants', 'foundation_grants', 'all']).optional(),
+})
 
 /**
  * POST /api/ai/discover-grants
@@ -44,7 +52,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { mode = 'discover', keyword, need, searchFocus } = body
+    const validated = discoverGrantsSchema.safeParse(body)
+
+    if (!validated.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: validated.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const { mode, keyword, need, searchFocus } = validated.data
 
     // Load user profile
     const dbProfile = await prisma.userProfile.findUnique({
@@ -88,7 +105,8 @@ export async function POST(request: NextRequest) {
     }
 
     const startTime = Date.now()
-    let grants = []
+    let grants: Awaited<ReturnType<typeof discoverGrants>>['grants'] = []
+    let usage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
 
     switch (mode) {
       case 'search':
@@ -98,7 +116,11 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           )
         }
-        grants = await searchGrantsByKeyword(keyword, profile)
+        {
+          const result = await searchGrantsByKeyword(keyword, profile)
+          grants = result.grants
+          usage = result.usage
+        }
         break
 
       case 'need':
@@ -108,27 +130,35 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           )
         }
-        grants = await findGrantsForNeed(need, profile)
+        {
+          const result = await findGrantsForNeed(need, profile)
+          grants = result.grants
+          usage = result.usage
+        }
         break
 
       case 'discover':
       default:
-        grants = await discoverGrants(profile, { searchFocus })
+        {
+          const result = await discoverGrants(profile, { searchFocus })
+          grants = result.grants
+          usage = result.usage
+        }
         break
     }
 
     const searchTime = Date.now() - startTime
 
-    // Log the discovery
+    // Log the discovery with actual token counts from the API response
     try {
       await prisma.aIUsageLog.create({
         data: {
           userId: session.user.id,
           type: 'grant_discovery',
           model: 'gemini-1.5-pro',
-          promptTokens: 0,
-          completionTokens: 0,
-          totalTokens: 0,
+          promptTokens: usage.promptTokens,
+          completionTokens: usage.completionTokens,
+          totalTokens: usage.totalTokens,
           responseTime: searchTime,
           success: grants.length > 0,
           metadata: JSON.stringify({ mode, keyword, need, searchFocus, resultsCount: grants.length }),

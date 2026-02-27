@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discover Page - Card Layout Options</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pulse: {
+              bg: '#0a0a0b',
+              surface: '#111113',
+              elevated: '#1a1a1d',
+              border: 'rgba(255, 255, 255, 0.06)',
+              accent: '#40ffaa',
+              text: '#fafafa',
+              'text-secondary': '#a1a1aa',
+              'text-tertiary': '#71717a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; background: #0a0a0b; }
+    .preview-frame { border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; }
+    .preview-frame:hover { border-color: #40ffaa; }
+  </style>
+</head>
+<body class="min-h-screen text-pulse-text p-8">
+
+  <header class="max-w-7xl mx-auto mb-12 text-center">
+    <h1 class="text-4xl font-bold mb-3">Discover Page Options</h1>
+    <p class="text-pulse-text-secondary text-lg">Click any preview to view full screen</p>
+  </header>
+
+  <div class="max-w-7xl mx-auto space-y-12">
+
+    <!-- Option A -->
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-2xl font-bold text-pulse-text">Option A: Compact Horizontal Rows</h2>
+          <p class="text-pulse-text-tertiary">Scannable list layout, fits more grants on screen</p>
+        </div>
+        <a href="discover-cards-option-a.html" target="_blank" class="px-4 py-2 rounded-lg bg-pulse-accent text-pulse-bg font-medium hover:opacity-90 transition-opacity">
+          Open Full Screen →
+        </a>
+      </div>
+      <a href="discover-cards-option-a.html" target="_blank" class="block preview-frame transition-all">
+        <iframe src="discover-cards-option-a.html" class="w-full h-[600px] pointer-events-none" scrolling="no"></iframe>
+      </a>
+    </section>
+
+    <!-- Option B -->
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-2xl font-bold text-pulse-text">Option B: Featured Hero + Grid</h2>
+          <p class="text-pulse-text-tertiary">Top match highlighted, rest in compact grid</p>
+        </div>
+        <a href="discover-cards-option-b.html" target="_blank" class="px-4 py-2 rounded-lg bg-pulse-accent text-pulse-bg font-medium hover:opacity-90 transition-opacity">
+          Open Full Screen →
+        </a>
+      </div>
+      <a href="discover-cards-option-b.html" target="_blank" class="block preview-frame transition-all">
+        <iframe src="discover-cards-option-b.html" class="w-full h-[600px] pointer-events-none" scrolling="no"></iframe>
+      </a>
+    </section>
+
+    <!-- Option C -->
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-2xl font-bold text-pulse-text">Option C: Clean Cards with Score Strip</h2>
+          <p class="text-pulse-text-tertiary">Minimal cards with colored left border indicator</p>
+        </div>
+        <a href="discover-cards-option-c.html" target="_blank" class="px-4 py-2 rounded-lg bg-pulse-accent text-pulse-bg font-medium hover:opacity-90 transition-opacity">
+          Open Full Screen →
+        </a>
+      </div>
+      <a href="discover-cards-option-c.html" target="_blank" class="block preview-frame transition-all">
+        <iframe src="discover-cards-option-c.html" class="w-full h-[600px] pointer-events-none" scrolling="no"></iframe>
+      </a>
+    </section>
+
+  </div>
+
+  <footer class="max-w-7xl mx-auto mt-16 pt-8 border-t border-white/10 text-center text-pulse-text-tertiary">
+    <p>All options use the existing website theme and sidebar</p>
+  </footer>
+
+</body>
+</html>

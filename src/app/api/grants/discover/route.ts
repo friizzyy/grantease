@@ -17,6 +17,8 @@ import {
 // Import grant search for live discovery
 import { searchGrants } from '@/lib/services/grant-sources'
 import { safeJsonParse } from '@/lib/api-utils'
+import type { EntityType } from '@/lib/constants/taxonomy'
+import type { EntityType as OnboardingEntityType } from '@/lib/types/onboarding'
 
 const DISCOVER_LIMIT = 20
 const MAX_CANDIDATES = 100
@@ -71,7 +73,7 @@ export async function GET(request: NextRequest) {
         profile = {
           id: partialProfile.id,
           userId: partialProfile.userId,
-          entityType: partialProfile.entityType as any,
+          entityType: partialProfile.entityType as EntityType,
           state: partialProfile.state,
           industryTags: safeJsonParse(partialProfile.industryTags, []),
           sizeBand: partialProfile.sizeBand,
@@ -108,8 +110,8 @@ export async function GET(request: NextRequest) {
             limit: MAX_CANDIDATES,
           },
           {
-            // Cast entityType - both EntityType definitions have same values
-            entityType: profile.entityType as any,
+            // Cast entityType - pipeline EntityType to onboarding EntityType (subset of same values)
+            entityType: profile.entityType as unknown as OnboardingEntityType,
             industryTags: profile.industryTags,
             state: profile.state || undefined,
           }
@@ -175,7 +177,6 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    console.log(`[Discover] Found ${grants.length} raw grants for user ${session.user.id}`)
 
     // Run the discovery pipeline
     const pipelineResult = await runDiscoveryPipeline(grants, profile, {
@@ -187,7 +188,6 @@ export async function GET(request: NextRequest) {
       includeDebug: debug,
     })
 
-    console.log(`[Discover] Pipeline returned ${pipelineResult.grants.length} grants (${pipelineResult.stats.fromCache} cached, ${pipelineResult.stats.fromAI} from AI)`)
 
     // Handle no eligible/matching grants
     if (pipelineResult.grants.length === 0) {

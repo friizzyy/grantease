@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
+export const runtime = 'nodejs'
+export const maxDuration = 60
+
 /**
  * GET /api/cron/cleanup-cache
  *
@@ -37,7 +40,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log('[CRON:cleanup-cache] Starting cache cleanup...')
 
     // Delete expired cache entries
     const expiredResult = await prisma.grantMatchCache.deleteMany({
@@ -82,10 +84,6 @@ export async function GET(request: NextRequest) {
     results.totalCacheEntries = await prisma.grantMatchCache.count()
 
     results.duration = Date.now() - startTime
-
-    console.log(
-      `[CRON:cleanup-cache] Completed: ${results.expiredDeleted} expired, ${results.orphanedDeleted} orphaned deleted. ${results.totalCacheEntries} remaining.`
-    )
 
     return NextResponse.json(results)
   } catch (error) {

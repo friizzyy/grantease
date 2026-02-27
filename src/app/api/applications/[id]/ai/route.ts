@@ -15,6 +15,12 @@ import {
 import { addTimelineEntry } from '@/lib/services/application-service'
 
 import type { ApplicationFormData, ApplicationSection } from '@/lib/types/application'
+import { z } from 'zod'
+
+const applicationAiSchema = z.object({
+  action: z.enum(['draft_section', 'draft_all', 'suggestions', 'budget', 'readiness']),
+  section: z.string().max(100).optional(),
+})
 
 /**
  * POST /api/applications/:id/ai
@@ -40,7 +46,16 @@ export async function POST(
 
     const { id } = await params
     const body = await request.json()
-    const { action, section } = body
+    const validated = applicationAiSchema.safeParse(body)
+
+    if (!validated.success) {
+      return NextResponse.json(
+        { success: false, error: 'Validation failed', details: validated.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const { action, section } = validated.data
 
     // Get the application
     const application = await prisma.grantApplication.findUnique({

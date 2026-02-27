@@ -160,6 +160,7 @@ export default function RegisterPage() {
             <AnimatePresence>
               {error && (
                 <motion.div
+                  role="alert"
                   initial={{ opacity: 0, height: 0, y: -10 }}
                   animate={{ opacity: 1, height: 'auto', y: 0 }}
                   exit={{ opacity: 0, height: 0, y: -10 }}
@@ -250,6 +251,7 @@ export default function RegisterPage() {
                 />
                 <motion.button
                   type="button"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-pulse-text-tertiary hover:text-pulse-text"
                   whileHover={{ scale: 1.1 }}
@@ -342,6 +344,9 @@ export default function RegisterPage() {
             >
               <motion.button
                 type="button"
+                role="checkbox"
+                aria-checked={agreedToTerms}
+                aria-label="I agree to the Terms of Service and Privacy Policy"
                 onClick={() => setAgreedToTerms(!agreedToTerms)}
                 className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
                   agreedToTerms

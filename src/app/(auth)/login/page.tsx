@@ -96,6 +96,7 @@ function LoginForm() {
             <AnimatePresence>
               {error && (
                 <motion.div
+                  role="alert"
                   initial={{ opacity: 0, height: 0, y: -10 }}
                   animate={{ opacity: 1, height: 'auto', y: 0 }}
                   exit={{ opacity: 0, height: 0, y: -10 }}
@@ -157,6 +158,7 @@ function LoginForm() {
                 />
                 <motion.button
                   type="button"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-pulse-text-tertiary hover:text-pulse-text"
                   whileHover={{ scale: 1.1 }}

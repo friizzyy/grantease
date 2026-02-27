@@ -50,5 +50,10 @@ next-env.d.ts
 .claude/
 .codex/
 
+# Logs
+*.log
+server.log
+api-server.log
+
 # Misc
 nul

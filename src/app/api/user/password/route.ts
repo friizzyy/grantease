@@ -4,6 +4,16 @@ import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
 import { rateLimiters, rateLimitExceededResponse } from '@/lib/rate-limit'
+import { z } from 'zod'
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z.string()
+    .min(8, 'New password must be at least 8 characters')
+    .regex(/[A-Z]/, 'New password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'New password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'New password must contain at least one number'),
+})
 
 /**
  * POST /api/user/password
@@ -25,43 +35,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { currentPassword, newPassword } = body
+    const validated = changePasswordSchema.safeParse(body)
 
-    if (!currentPassword || !newPassword) {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Current password and new password are required' },
+        { error: validated.error.errors[0].message },
         { status: 400 }
       )
     }
 
-    // Validate new password strength
-    if (newPassword.length < 8) {
-      return NextResponse.json(
-        { error: 'New password must be at least 8 characters' },
-        { status: 400 }
-      )
-    }
-
-    if (!/[A-Z]/.test(newPassword)) {
-      return NextResponse.json(
-        { error: 'New password must contain at least one uppercase letter' },
-        { status: 400 }
-      )
-    }
-
-    if (!/[a-z]/.test(newPassword)) {
-      return NextResponse.json(
-        { error: 'New password must contain at least one lowercase letter' },
-        { status: 400 }
-      )
-    }
-
-    if (!/[0-9]/.test(newPassword)) {
-      return NextResponse.json(
-        { error: 'New password must contain at least one number' },
-        { status: 400 }
-      )
-    }
+    const { currentPassword, newPassword } = validated.data
 
     // Get user with password hash
     const user = await prisma.user.findUnique({

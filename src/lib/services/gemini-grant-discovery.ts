@@ -10,8 +10,20 @@
  * - Recently announced grants
  */
 
-import { getGeminiProModel, isGeminiConfigured } from './gemini-client'
+import { getGeminiProModel, extractUsageFromResult, isGeminiConfigured, type GeminiUsage } from './gemini-client'
 import type { UserProfile } from '@/lib/types/onboarding'
+import { sanitizePromptInput, sanitizePromptArray } from '@/lib/utils/prompt-sanitizer'
+
+/** Zero usage constant for null/error returns */
+const ZERO_USAGE: GeminiUsage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
+
+/**
+ * Result from grant discovery including token usage
+ */
+export interface GrantDiscoveryResult {
+  grants: DiscoveredGrant[]
+  usage: GeminiUsage
+}
 
 /**
  * Discovered grant from web search
@@ -167,15 +179,15 @@ function buildSearchQueries(params: GrantDiscoveryParams): string[] {
 export async function discoverGrants(
   profile: UserProfile,
   options?: Partial<GrantDiscoveryParams>
-): Promise<DiscoveredGrant[]> {
+): Promise<GrantDiscoveryResult> {
   if (!isGeminiConfigured()) {
     console.warn('Gemini not configured for grant discovery')
-    return []
+    return { grants: [], usage: ZERO_USAGE }
   }
 
   const model = getGeminiProModel()
   if (!model) {
-    return []
+    return { grants: [], usage: ZERO_USAGE }
   }
 
   const params: GrantDiscoveryParams = {
@@ -193,10 +205,10 @@ export async function discoverGrants(
   const prompt = `You are a grant research assistant helping find real funding opportunities.
 
 ## USER PROFILE
-- Organization Type: ${params.entityType}
-- Location: ${params.state ? `${params.state}, USA` : 'United States'}
-- Focus Areas: ${params.industryTags.join(', ')}
-${params.specificNeeds ? `- Funding Needs: ${params.specificNeeds.join(', ')}` : ''}
+- Organization Type: ${sanitizePromptInput(params.entityType, 100)}
+- Location: ${params.state ? `${sanitizePromptInput(params.state, 100)}, USA` : 'United States'}
+- Focus Areas: ${sanitizePromptArray(params.industryTags)}
+${params.specificNeeds ? `- Funding Needs: ${sanitizePromptArray(params.specificNeeds)}` : ''}
 
 ## YOUR TASK
 Search for REAL, CURRENTLY OPEN grants that match this profile. Focus on:
@@ -250,6 +262,7 @@ Quality over quantity - only include grants you're confident are real and curren
       // This may need adjustment based on your Gemini API access level
     })
 
+    const usage = extractUsageFromResult(result)
     const response = result.response.text()
 
     // Extract JSON from response
@@ -257,22 +270,22 @@ Quality over quantity - only include grants you're confident are real and curren
     if (!jsonMatch) {
       // Try to parse the whole response as JSON
       try {
-        const grants = JSON.parse(response)
+        const grants: unknown = JSON.parse(response)
         if (Array.isArray(grants)) {
-          return validateAndCleanGrants(grants, params)
+          return { grants: validateAndCleanGrants(grants as DiscoveredGrant[], params), usage }
         }
       } catch {
         console.warn('Could not parse grant discovery response')
-        return []
+        return { grants: [], usage }
       }
-      return []
+      return { grants: [], usage }
     }
 
-    const grants = JSON.parse(jsonMatch[1])
-    return validateAndCleanGrants(grants, params)
+    const grants: unknown = JSON.parse(jsonMatch[1])
+    return { grants: validateAndCleanGrants(grants as DiscoveredGrant[], params), usage }
   } catch (error) {
     console.error('Grant discovery error:', error)
-    return []
+    return { grants: [], usage: ZERO_USAGE }
   }
 }
 
@@ -327,19 +340,19 @@ function validateAndCleanGrants(
 export async function searchGrantsByKeyword(
   keyword: string,
   profile?: Partial<UserProfile>
-): Promise<DiscoveredGrant[]> {
+): Promise<GrantDiscoveryResult> {
   if (!isGeminiConfigured()) {
-    return []
+    return { grants: [], usage: ZERO_USAGE }
   }
 
   const model = getGeminiProModel()
   if (!model) {
-    return []
+    return { grants: [], usage: ZERO_USAGE }
   }
 
-  const prompt = `Search for real, currently open grants related to: "${keyword}"
-${profile?.state ? `Location focus: ${profile.state}, USA` : ''}
-${profile?.entityType ? `For: ${profile.entityType}` : ''}
+  const prompt = `Search for real, currently open grants related to: "${sanitizePromptInput(keyword, 500)}"
+${profile?.state ? `Location focus: ${sanitizePromptInput(profile.state, 100)}, USA` : ''}
+${profile?.entityType ? `For: ${sanitizePromptInput(profile.entityType, 100)}` : ''}
 
 Find 5-10 real grant programs with verifiable URLs.
 Return JSON array with: title, sponsor, description, url, amountRange, deadline, confidence, relevanceScore.
@@ -347,22 +360,26 @@ Only include grants you're confident are real and currently accepting applicatio
 
   try {
     const result = await model.generateContent(prompt)
+    const usage = extractUsageFromResult(result)
     const response = result.response.text()
 
     const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/)
     if (jsonMatch) {
-      const grants = JSON.parse(jsonMatch[1])
-      return validateAndCleanGrants(grants, {
-        industryTags: [],
-        entityType: profile?.entityType || 'small_business',
-        state: profile?.state || undefined,
-      })
+      const grants: unknown = JSON.parse(jsonMatch[1])
+      return {
+        grants: validateAndCleanGrants(grants as DiscoveredGrant[], {
+          industryTags: [],
+          entityType: profile?.entityType || 'small_business',
+          state: profile?.state || undefined,
+        }),
+        usage,
+      }
     }
 
-    return []
+    return { grants: [], usage }
   } catch (error) {
     console.error('Keyword search error:', error)
-    return []
+    return { grants: [], usage: ZERO_USAGE }
   }
 }
 
@@ -372,7 +389,7 @@ Only include grants you're confident are real and currently accepting applicatio
 export async function findGrantsForNeed(
   need: string,
   profile: UserProfile
-): Promise<DiscoveredGrant[]> {
+): Promise<GrantDiscoveryResult> {
   return discoverGrants(profile, {
     specificNeeds: [need],
     searchFocus: 'all',
@@ -395,12 +412,12 @@ export async function checkForNewGrants(
     return []
   }
 
-  const prompt = `Find grants announced or opened AFTER ${lastCheckDate} that match:
-- Organization: ${profile.entityType}
-- Location: ${profile.state || 'USA'}
-- Industries: ${profile.industryTags?.join(', ')}
+  const prompt = `Find grants announced or opened AFTER ${sanitizePromptInput(lastCheckDate, 50)} that match:
+- Organization: ${sanitizePromptInput(profile.entityType, 100)}
+- Location: ${sanitizePromptInput(profile.state, 100) || 'USA'}
+- Industries: ${sanitizePromptArray(profile.industryTags)}
 
-Only include NEW grants announced since ${lastCheckDate}.
+Only include NEW grants announced since ${sanitizePromptInput(lastCheckDate, 50)}.
 Return JSON array with: title, sponsor, description, url, amountRange, deadline, confidence.
 If no new grants found, return empty array [].`
 
@@ -410,8 +427,8 @@ If no new grants found, return empty array [].`
 
     const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/)
     if (jsonMatch) {
-      const grants = JSON.parse(jsonMatch[1])
-      return validateAndCleanGrants(grants, {
+      const grants: unknown = JSON.parse(jsonMatch[1])
+      return validateAndCleanGrants(grants as DiscoveredGrant[], {
         industryTags: profile.industryTags || [],
         entityType: profile.entityType,
         state: profile.state || undefined,

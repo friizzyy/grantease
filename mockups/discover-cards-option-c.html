@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option C: Clean Minimal Cards with Score Strip</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pulse: {
+              bg: '#0a0a0b',
+              surface: '#111113',
+              elevated: '#1a1a1d',
+              border: 'rgba(255, 255, 255, 0.06)',
+              accent: '#40ffaa',
+              text: '#fafafa',
+              'text-secondary': '#a1a1aa',
+              'text-tertiary': '#71717a',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; background: #0a0a0b; }
+    .glass { background: rgba(17, 17, 19, 0.8); backdrop-filter: blur(12px); }
+    .card-lift:hover { transform: translateY(-4px); }
+  </style>
+</head>
+<body class="min-h-screen text-pulse-text">
+
+  <!-- OPTION C: Clean Minimal Cards with Left Score Strip -->
+  <!-- Very clean, minimal design with colored left border indicating score tier -->
+
+  <!-- Sidebar (existing style) -->
+  <aside class="fixed left-0 top-0 bottom-0 w-52 bg-pulse-surface/50 border-r border-white/[0.06] backdrop-blur-sm z-40">
+    <div class="flex flex-col h-full">
+      <div class="p-6 border-b border-white/[0.06]">
+        <a href="#" class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-pulse-accent to-emerald-500 flex items-center justify-center">
+            <svg class="w-4 h-4 text-pulse-bg" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <span class="font-semibold text-lg tracking-tight">GrantEase</span>
+        </a>
+      </div>
+      <nav class="flex-1 p-4 space-y-1">
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-pulse-text-secondary hover:text-pulse-text hover:bg-white/5 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-pulse-accent bg-pulse-accent/10 border border-pulse-accent/20">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          Discover Grants
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-pulse-text-secondary hover:text-pulse-text hover:bg-white/5 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+          Saved Grants
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-pulse-text-secondary hover:text-pulse-text hover:bg-white/5 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+          Workspaces
+        </a>
+      </nav>
+      <div class="p-4 border-t border-white/[0.06]">
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-pulse-text-secondary hover:text-pulse-text hover:bg-white/5 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Settings
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="ml-52 p-6 min-h-screen">
+    <!-- Header -->
+    <header class="mb-8">
+      <div class="flex items-start justify-between mb-6">
+        <div>
+          <h1 class="text-4xl font-bold tracking-tight mb-2">Discover Grants</h1>
+          <p class="text-lg text-pulse-text-secondary">
+            <span class="text-pulse-accent font-semibold">24 grants</span> matched for your cattle farm in California
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-pulse-surface border border-white/[0.06]">
+            <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+            <span class="text-sm font-medium">8</span>
+          </div>
+          <div class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-pulse-surface border border-white/[0.06]">
+            <div class="w-2 h-2 rounded-full bg-amber-400"></div>
+            <span class="text-sm font-medium">10</span>
+          </div>
+          <div class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-pulse-surface border border-white/[0.06]">
+            <div class="w-2 h-2 rounded-full bg-zinc-400"></div>
+            <span class="text-sm font-medium">6</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="relative max-w-xl">
+        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-pulse-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input type="text" placeholder="Search grants..." class="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-pulse-surface border border-white/[0.06] focus:border-pulse-accent/50 focus:outline-none text-sm">
+      </div>
+    </header>
+
+    <!-- Clean Card Grid with Left Strip -->
+    <div class="grid grid-cols-2 xl:grid-cols-3 gap-5">
+
+      <!-- Card 1 - Excellent (Green Strip) -->
+      <a href="#" class="group">
+        <div class="glass rounded-2xl border border-white/[0.06] hover:border-emerald-500/30 overflow-hidden card-lift transition-all duration-300">
+          <div class="flex">
+            <!-- Score Strip -->
+            <div class="w-1.5 bg-gradient-to-b from-emerald-400 to-emerald-600"></div>
+
+            <!-- Content -->
+            <div class="flex-1 p-5">
+              <!-- Top Row -->
+              <div class="flex items-start justify-between mb-3">
+                <div>
+                  <span class="text-xs text-pulse-text-tertiary">SARE</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-2xl font-bold text-emerald-400">94</span>
+                </div>
+              </div>
+
+              <!-- Title -->
+              <h3 class="text-lg font-semibold text-pulse-text group-hover:text-pulse-accent transition-colors mb-2 line-clamp-2">
+                Western SARE Farmer/Rancher Grant
+              </h3>
+
+              <!-- Description -->
+              <p class="text-sm text-pulse-text-secondary mb-4 line-clamp-2">
+                Grants for farmers to explore sustainable practices and innovative agricultural approaches.
+              </p>
+
+              <!-- Tags -->
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="px-2.5 py-1 rounded-full bg-pulse-accent/10 text-xs text-pulse-accent font-medium">Irrigation</span>
+                <span class="px-2.5 py-1 rounded-full bg-pulse-accent/10 text-xs text-pulse-accent font-medium">Cattle</span>
+              </div>
+
+              <!-- Footer -->
+              <div class="flex items-end justify-between pt-4 border-t border-white/[0.06]">
+                <div>
+                  <div class="text-xl font-bold text-pulse-text">$2.5K - $25K</div>
+                  <div class="text-xs text-pulse-text-tertiary">November deadline</div>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-white/5 group-hover:bg-pulse-accent flex items-center justify-center transition-all">
+                  <svg class="w-5 h-5 text-pulse-text-tertiary group-hover:text-pulse-bg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Card 2 - Excellent -->
+      <a href="#" class="group">
+        <div class="glass rounded-2xl border border-white/[0.06] hover:border-emerald-500/30 overflow-hidden card-lift transition-all duration-300">
+          <div class="flex">
+            <div class="w-1.5 bg-gradient-to-b from-emerald-400 to-emerald-600"></div>
+            <div class="flex-1 p-5">
+              <div class="flex items-start justify-between mb-3">
+                <div>
+                  <span class="text-xs text-pulse-text-tertiary">USDA</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-2xl font-bold text-emerald-400">90</span>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-pulse-text group-hover:text-pulse-accent transition-colors mb-2 line-clamp-2">
+                Environmental Quality Incentives Program (EQIP)
+              </h3>
+              <p class="text-sm text-pulse-text-secondary mb-4 line-clamp-2">
+                Cost-share for conservation practices: irrigation efficiency, fencing, livestock facilities.
+              </p>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="px-2.5 py-1 rounded-full bg-pulse-accent/10 text-xs text-pulse-accent font-medium">Livestock</span>
+                <span class="px-2.5 py-1 rounded-full bg-pulse-accent/10 text-xs text-pulse-accent font-medium">Conservation</span>
+              </div>
+              <div class="flex items-end justify-between pt-4 border-t border-white/[0.06]">
+                <div>
+                  <div class="text-xl font-bold text-pulse-text">Up to $450K</div>
+                  <div class="text-xs text-pulse-text-tertiary">Rolling deadline</div>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-white/5 group-hover:bg-pulse-accent flex items-center justify-center transition-all">
+                  <svg class="w-5 h-5 text-pulse-text-tertiary group-hover:text-pulse-bg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Card 3 - Excellent -->
+      <a href="#" class="group">
+        <div class="glass rounded-2xl border border-white/[0.06] hover:border-emerald-500/30 overflow-hidden card-lift transition-all duration-300">
+          <div class="flex">
+            <div class="w-1.5 bg-gradient-to-b from-emerald-400 to-emerald-600"></div>
+            <div class="flex-1 p-5">
+              <div class="flex items-start justify-between mb-3">
+                <div>
+                  <span class="text-xs text-pulse-text-tertiary">SARE</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-2xl font-bold text-emerald-400">89</span>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-pulse-text group-hover:text-pulse-accent transition-colors mb-2 line-clamp-2">
+                SARE Farmer/Rancher Grant
+              </h3>
+              <p class="text-sm text-pulse-text-secondary mb-4 line-clamp-2">
+                Small grants for farmers to test sustainable practices on their own land.
+              </p>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="px-2.5 py-1 rounded-full bg-pulse-accent/10 text-xs text-pulse-accent font-medium">Equipment</span>
+              </div>
+              <div class="flex items-end justify-between pt-4 border-t border-white/[0.06]">
+                <div>
+                  <div class="text-xl font-bold text-pulse-text">$1K - $30K</div>
+                  <div class="text-xs text-pulse-text-tertiary">Varies by region</div>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-white/5 group-hover:bg-pulse-accent flex items-center justify-center transition-all">
+                  <svg class="w-5 h-5 text-pulse-text-tertiary group-hover:text-pulse-bg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Card 4 - Strong (Amber Strip) -->
+      <a href="#" class="group">
+        <div class="glass rounded-2xl border border-white/[0.06] hover:border-amber-500/30 overflow-hidden card-lift transition-all duration-300">
+          <div class="flex">
+            <div class="w-1.5 bg-gradient-to-b from-amber-400 to-amber-600"></div>
+            <div class="flex-1 p-5">
+              <div class="flex items-start justify-between mb-3">
+                <div>
+                  <span class="text-xs text-pulse-text-tertiary">CDFA</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-2xl font-bold text-amber-400">68</span>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-pulse-text group-hover:text-pulse-accent transition-colors mb-2 line-clamp-2">
+                Healthy Soils Program Incentives
+              </h3>
+              <p class="text-sm text-pulse-text-secondary mb-4 line-clamp-2">
+                Financial assistance for conservation management practices that improve soil health.
+              </p>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="px-2.5 py-1 rounded-full bg-amber-500/10 text-xs text-amber-400 font-medium">California</span>
+                <span class="px-2.5 py-1 rounded-full bg-amber-500/10 text-xs text-amber-400 font-medium">Soil</span>
+              </div>
+              <div class="flex items-end justify-between pt-4 border-t border-white/[0.06]">
+                <div>
+                  <div class="text-xl font-bold text-pulse-text">Up to $100K</div>
+                  <div class="text-xs text-pulse-text-tertiary">March 2025</div>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-white/5 group-hover:bg-amber-500 flex items-center justify-center transition-all">
+                  <svg class="w-5 h-5 text-pulse-text-tertiary group-hover:text-pulse-bg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Card 5 - Strong -->
+      <a href="#" class="group">
+        <div class="glass rounded-2xl border border-white/[0.06] hover:border-amber-500/30 overflow-hidden card-lift transition-all duration-300">
+          <div class="flex">
+            <div class="w-1.5 bg-gradient-to-b from-amber-400 to-amber-600"></div>
+            <div class="flex-1 p-5">
+              <div class="flex items-start justify-between mb-3">
+                <div>
+                  <span class="text-xs text-pulse-text-tertiary">FSA</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-2xl font-bold text-amber-400">55</span>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-pulse-text group-hover:text-pulse-accent transition-colors mb-2 line-clamp-2">
+                Emergency Livestock Relief Program
+              </h3>
+              <p class="text-sm text-pulse-text-secondary mb-4 line-clamp-2">
+                Emergency assistance for livestock producers affected by drought and natural disasters.
+              </p>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="px-2.5 py-1 rounded-full bg-amber-500/10 text-xs text-amber-400 font-medium">Emergency</span>
+                <span class="px-2.5 py-1 rounded-full bg-amber-500/10 text-xs text-amber-400 font-medium">Cattle</span>
+              </div>
+              <div class="flex items-end justify-between pt-4 border-t border-white/[0.06]">
+                <div>
+                  <div class="text-xl font-bold text-pulse-text">Varies</div>
+                  <div class="text-xs text-pulse-text-tertiary">As needed</div>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-white/5 group-hover:bg-amber-500 flex items-center justify-center transition-all">
+                  <svg class="w-5 h-5 text-pulse-text-tertiary group-hover:text-pulse-bg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Card 6 - Good (Gray Strip) -->
+      <a href="#" class="group">
+        <div class="glass rounded-2xl border border-white/[0.06] hover:border-zinc-500/30 overflow-hidden card-lift transition-all duration-300">
+          <div class="flex">
+            <div class="w-1.5 bg-gradient-to-b from-zinc-400 to-zinc-600"></div>
+            <div class="flex-1 p-5">
+              <div class="flex items-start justify-between mb-3">
+                <div>
+                  <span class="text-xs text-pulse-text-tertiary">NRCS</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-2xl font-bold text-zinc-400">42</span>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-pulse-text group-hover:text-pulse-accent transition-colors mb-2 line-clamp-2">
+                Conservation Stewardship Program
+              </h3>
+              <p class="text-sm text-pulse-text-secondary mb-4 line-clamp-2">
+                Annual payments for maintaining and improving existing conservation systems.
+              </p>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="px-2.5 py-1 rounded-full bg-zinc-500/10 text-xs text-zinc-400 font-medium">Conservation</span>
+              </div>
+              <div class="flex items-end justify-between pt-4 border-t border-white/[0.06]">
+                <div>
+                  <div class="text-xl font-bold text-pulse-text">Annual</div>
+                  <div class="text-xs text-pulse-text-tertiary">Rolling deadline</div>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-white/5 group-hover:bg-zinc-500 flex items-center justify-center transition-all">
+                  <svg class="w-5 h-5 text-pulse-text-tertiary group-hover:text-pulse-bg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </a>
+
+    </div>
+  </main>
+
+</body>
+</html>

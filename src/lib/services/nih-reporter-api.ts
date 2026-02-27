@@ -266,7 +266,7 @@ export class NIHReporterApiClient {
 
     if (!response.ok) {
       const errorText = await response.text()
-      throw new Error(`NIH RePORTER API error: ${response.status} - ${errorText}`)
+      throw new Error(`NIH RePORTER API searchProjects failed (HTTP ${response.status}): ${errorText}`)
     }
 
     return response.json()

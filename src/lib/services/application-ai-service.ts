@@ -5,12 +5,13 @@
  * Uses user vault data and grant context to generate section drafts.
  */
 
-import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai'
+import { getGeminiJsonModel } from './gemini-client'
 import { z } from 'zod'
 
 import { safeJsonParse } from '@/lib/api-utils'
 import { getVaultWithData } from './vault-service'
 import { prisma } from '@/lib/db'
+import { sanitizePromptInput, sanitizePromptArray } from '@/lib/utils/prompt-sanitizer'
 
 import type {
   ApplicationSection,
@@ -50,29 +51,6 @@ const BudgetSuggestionSchema = z.object({
   notes: z.string(),
 })
 
-// ============= CLIENT SETUP =============
-
-let genAI: GoogleGenerativeAI | null = null
-let model: GenerativeModel | null = null
-
-function getModel(): GenerativeModel | null {
-  if (!process.env.GEMINI_API_KEY) return null
-
-  if (!genAI) {
-    genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-    model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 4096,
-        responseMimeType: 'application/json',
-      },
-    })
-  }
-
-  return model
-}
-
 // ============= CONTEXT BUILDERS =============
 
 interface ApplicationContext {
@@ -111,7 +89,7 @@ async function buildApplicationContext(
   })
 
   if (!grant) {
-    throw new Error('Grant not found')
+    throw new Error(`Grant not found (grantId: ${grantId}) while building application context for user ${userId}`)
   }
 
   // Get user vault data and profile separately
@@ -168,7 +146,7 @@ export async function generateSectionDraft(
   confidence: number
   sources: string[]
 } | null> {
-  const model = getModel()
+  const model = getGeminiJsonModel()
   if (!model) return null
 
   const context = await buildApplicationContext(userId, grantId, formData)
@@ -179,13 +157,13 @@ export async function generateSectionDraft(
     project_summary: `
 Write a compelling 150-200 word project summary for this grant application.
 
-GRANT: ${context.grant.title}
-FUNDER: ${context.grant.sponsor}
-GRANT PURPOSE: ${context.grant.summary || context.grant.description || 'General funding'}
+GRANT: ${sanitizePromptInput(context.grant.title, 500)}
+FUNDER: ${sanitizePromptInput(context.grant.sponsor, 500)}
+GRANT PURPOSE: ${sanitizePromptInput(context.grant.summary || context.grant.description || 'General funding')}
 
-ORGANIZATION: ${context.user.organizationName}
-ORGANIZATION MISSION: ${context.user.missionStatement || 'Not provided'}
-PROJECT TITLE: ${formData.projectTitle || 'Not specified'}
+ORGANIZATION: ${sanitizePromptInput(context.user.organizationName, 500)}
+ORGANIZATION MISSION: ${sanitizePromptInput(context.user.missionStatement)}
+PROJECT TITLE: ${sanitizePromptInput(formData.projectTitle, 500)}
 
 Requirements:
 - Start with the problem being addressed
@@ -198,15 +176,15 @@ Requirements:
     project_narrative: `
 Write a detailed project narrative (400-600 words) for this grant application.
 
-GRANT: ${context.grant.title}
-FUNDER: ${context.grant.sponsor}
-GRANT CATEGORIES: ${context.grant.categories.join(', ')}
+GRANT: ${sanitizePromptInput(context.grant.title, 500)}
+FUNDER: ${sanitizePromptInput(context.grant.sponsor, 500)}
+GRANT CATEGORIES: ${sanitizePromptArray(context.grant.categories)}
 
-ORGANIZATION: ${context.user.organizationName}
-MISSION: ${context.user.missionStatement || 'Not provided'}
-NEED: ${context.user.needStatement || formData.needStatement || 'Not provided'}
-PROJECT TITLE: ${formData.projectTitle || 'Not specified'}
-PROJECT SUMMARY: ${formData.projectSummary || 'Not specified'}
+ORGANIZATION: ${sanitizePromptInput(context.user.organizationName, 500)}
+MISSION: ${sanitizePromptInput(context.user.missionStatement)}
+NEED: ${sanitizePromptInput(context.user.needStatement || formData.needStatement)}
+PROJECT TITLE: ${sanitizePromptInput(formData.projectTitle, 500)}
+PROJECT SUMMARY: ${sanitizePromptInput(formData.projectSummary)}
 
 Structure the narrative as follows:
 1. Problem Statement (why this project is needed)
@@ -224,8 +202,8 @@ Requirements:
     goals_objectives: `
 Write clear, measurable goals and objectives for this grant application.
 
-PROJECT: ${formData.projectTitle || context.grant.title}
-PROJECT SUMMARY: ${formData.projectSummary || 'Not provided'}
+PROJECT: ${sanitizePromptInput(formData.projectTitle || context.grant.title, 500)}
+PROJECT SUMMARY: ${sanitizePromptInput(formData.projectSummary)}
 FUNDING AMOUNT: ${context.grant.amountMin ? `$${context.grant.amountMin.toLocaleString()} - $${context.grant.amountMax?.toLocaleString()}` : 'Variable'}
 
 Create 2-3 goals with 2-4 SMART objectives each.
@@ -243,10 +221,10 @@ Requirements:
     timeline: `
 Create a project timeline with key milestones.
 
-PROJECT: ${formData.projectTitle || 'Project'}
-PROJECT DURATION: ${formData.projectStartDate || 'TBD'} to ${formData.projectEndDate || 'TBD'}
-PROJECT SUMMARY: ${formData.projectSummary || 'Not provided'}
-GOALS: ${formData.goalsAndObjectives || 'See goals section'}
+PROJECT: ${sanitizePromptInput(formData.projectTitle, 500)}
+PROJECT DURATION: ${sanitizePromptInput(formData.projectStartDate, 100)} to ${sanitizePromptInput(formData.projectEndDate, 100)}
+PROJECT SUMMARY: ${sanitizePromptInput(formData.projectSummary)}
+GOALS: ${sanitizePromptInput(formData.goalsAndObjectives)}
 
 Create 4-8 milestones in JSON format:
 {
@@ -264,9 +242,9 @@ Create 4-8 milestones in JSON format:
     budget_narrative: `
 Write a budget justification narrative for this grant application.
 
-PROJECT: ${formData.projectTitle || 'Project'}
+PROJECT: ${sanitizePromptInput(formData.projectTitle, 500)}
 AMOUNT REQUESTED: ${formData.amountRequested ? `$${formData.amountRequested.toLocaleString()}` : 'Not specified'}
-BUDGET ITEMS: ${formData.budgetItems ? formData.budgetItems.map(i => `${i.category}: $${i.amount} - ${i.description}`).join('\n') : 'Not provided'}
+BUDGET ITEMS: ${formData.budgetItems ? sanitizePromptInput(formData.budgetItems.map(i => `${i.category}: $${i.amount} - ${i.description}`).join('\n'), 3000) : 'Not provided'}
 
 Write a 200-300 word budget narrative that:
 1. Explains the overall budget approach
@@ -283,9 +261,9 @@ Requirements:
     evaluation: `
 Write an evaluation plan for this grant application.
 
-PROJECT: ${formData.projectTitle || 'Project'}
-GOALS: ${formData.goalsAndObjectives || 'Not provided'}
-PROJECT SUMMARY: ${formData.projectSummary || 'Not provided'}
+PROJECT: ${sanitizePromptInput(formData.projectTitle, 500)}
+GOALS: ${sanitizePromptInput(formData.goalsAndObjectives)}
+PROJECT SUMMARY: ${sanitizePromptInput(formData.projectSummary)}
 
 Write a 200-300 word evaluation plan that includes:
 1. Evaluation approach (formative and summative)
@@ -302,10 +280,10 @@ Requirements:
     sustainability: `
 Write a sustainability plan for this grant application.
 
-PROJECT: ${formData.projectTitle || 'Project'}
-ORGANIZATION: ${context.user.organizationName}
-ORGANIZATION CAPACITY: ${context.user.capacity || 'Not provided'}
-PREVIOUS GRANTS: ${context.user.previousGrants || 'Not provided'}
+PROJECT: ${sanitizePromptInput(formData.projectTitle, 500)}
+ORGANIZATION: ${sanitizePromptInput(context.user.organizationName, 500)}
+ORGANIZATION CAPACITY: ${sanitizePromptInput(context.user.capacity)}
+PREVIOUS GRANTS: ${sanitizePromptInput(context.user.previousGrants)}
 
 Write a 150-250 word sustainability plan that addresses:
 1. How the project will continue after grant funding ends
@@ -340,7 +318,7 @@ Respond in JSON format:
 `)
 
     const text = result.response.text()
-    const parsed = JSON.parse(text)
+    const parsed: unknown = JSON.parse(text)
     const validated = SectionDraftSchema.parse(parsed)
 
     return {
@@ -399,7 +377,7 @@ export async function generateSuggestions(
   grantId: string,
   formData: ApplicationFormData
 ): Promise<AISuggestion[]> {
-  const model = getModel()
+  const model = getGeminiJsonModel()
   if (!model) return []
 
   const context = await buildApplicationContext(userId, grantId, formData)
@@ -408,18 +386,18 @@ export async function generateSuggestions(
     const result = await model.generateContent(`
 You are a grant writing expert reviewing a draft application.
 
-GRANT: ${context.grant.title}
-FUNDER: ${context.grant.sponsor}
-REQUIREMENTS: ${context.grant.requirements.join(', ') || 'Not specified'}
+GRANT: ${sanitizePromptInput(context.grant.title, 500)}
+FUNDER: ${sanitizePromptInput(context.grant.sponsor, 500)}
+REQUIREMENTS: ${sanitizePromptArray(context.grant.requirements)}
 
 APPLICATION CONTENT:
-- Project Title: ${formData.projectTitle || 'MISSING'}
-- Project Summary: ${formData.projectSummary || 'MISSING'}
-- Need Statement: ${formData.needStatement || 'MISSING'}
-- Goals: ${formData.goalsAndObjectives || 'MISSING'}
-- Budget Narrative: ${formData.budgetNarrative || 'MISSING'}
-- Evaluation Plan: ${formData.evaluationPlan || 'MISSING'}
-- Sustainability: ${formData.sustainabilityPlan || 'MISSING'}
+- Project Title: ${sanitizePromptInput(formData.projectTitle, 500) || 'MISSING'}
+- Project Summary: ${sanitizePromptInput(formData.projectSummary) || 'MISSING'}
+- Need Statement: ${sanitizePromptInput(formData.needStatement) || 'MISSING'}
+- Goals: ${sanitizePromptInput(formData.goalsAndObjectives) || 'MISSING'}
+- Budget Narrative: ${sanitizePromptInput(formData.budgetNarrative) || 'MISSING'}
+- Evaluation Plan: ${sanitizePromptInput(formData.evaluationPlan) || 'MISSING'}
+- Sustainability: ${sanitizePromptInput(formData.sustainabilityPlan) || 'MISSING'}
 
 Analyze this application and provide suggestions for improvement.
 Focus on:
@@ -446,7 +424,7 @@ Limit to 5-8 most important suggestions.
 `)
 
     const text = result.response.text()
-    const parsed = JSON.parse(text)
+    const parsed: unknown = JSON.parse(text)
     const validated = ApplicationSuggestionsSchema.parse(parsed)
 
     return validated.suggestions.map((s, i) => ({
@@ -479,7 +457,7 @@ export async function generateBudgetSuggestions(
   totalBudget: number
   notes: string
 } | null> {
-  const model = getModel()
+  const model = getGeminiJsonModel()
   if (!model) return null
 
   const context = await buildApplicationContext(userId, grantId, formData)
@@ -488,15 +466,15 @@ export async function generateBudgetSuggestions(
     const result = await model.generateContent(`
 You are a grant budget expert helping create a realistic project budget.
 
-GRANT: ${context.grant.title}
-FUNDER: ${context.grant.sponsor}
+GRANT: ${sanitizePromptInput(context.grant.title, 500)}
+FUNDER: ${sanitizePromptInput(context.grant.sponsor, 500)}
 FUNDING RANGE: ${context.grant.amountMin ? `$${context.grant.amountMin.toLocaleString()} - $${context.grant.amountMax?.toLocaleString()}` : 'Not specified'}
 
-PROJECT: ${formData.projectTitle || 'Project'}
-PROJECT SUMMARY: ${formData.projectSummary || 'Not provided'}
-PROJECT DURATION: ${formData.projectStartDate || 'TBD'} to ${formData.projectEndDate || 'TBD'}
+PROJECT: ${sanitizePromptInput(formData.projectTitle, 500)}
+PROJECT SUMMARY: ${sanitizePromptInput(formData.projectSummary)}
+PROJECT DURATION: ${sanitizePromptInput(formData.projectStartDate, 100)} to ${sanitizePromptInput(formData.projectEndDate, 100)}
 
-ORGANIZATION TYPE: ${context.user.entityType || 'Not specified'}
+ORGANIZATION TYPE: ${sanitizePromptInput(context.user.entityType, 200)}
 
 Create a realistic budget with typical categories for this type of project.
 Common categories include: Personnel, Fringe Benefits, Travel, Equipment, Supplies, Contractual, Other, Indirect Costs
@@ -519,7 +497,7 @@ Target the budget to fit within the funder's range if specified.
 `)
 
     const text = result.response.text()
-    const parsed = JSON.parse(text)
+    const parsed: unknown = JSON.parse(text)
     const validated = BudgetSuggestionSchema.parse(parsed)
 
     return {

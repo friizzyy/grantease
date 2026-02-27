@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
+export const runtime = 'nodejs'
+export const maxDuration = 60
+
 /**
  * GET /api/cron/verify-links
  *
@@ -37,7 +40,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log('[CRON:verify-links] Starting link verification...')
+    // Link verification started
 
     // Get grants that haven't been verified in the last 7 days
     const sevenDaysAgo = new Date()
@@ -56,7 +59,6 @@ export async function GET(request: NextRequest) {
       take: 100, // Limit per run to avoid timeouts
     })
 
-    console.log(`[CRON:verify-links] Checking ${grants.length} grants`)
 
     for (const grant of grants) {
       if (!grant.url) continue
@@ -91,7 +93,6 @@ export async function GET(request: NextRequest) {
           results.active++
         } else {
           results.broken++
-          console.log(`[CRON:verify-links] Broken link: ${grant.title} (${response.status})`)
         }
       } catch (error) {
         // Network error or timeout - mark as broken
@@ -110,10 +111,6 @@ export async function GET(request: NextRequest) {
     }
 
     results.duration = Date.now() - startTime
-
-    console.log(
-      `[CRON:verify-links] Completed: ${results.active} active, ${results.broken} broken`
-    )
 
     return NextResponse.json(results)
   } catch (error) {

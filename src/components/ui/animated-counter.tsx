@@ -41,6 +41,7 @@ export function AnimatedCounter({
       }, delay * 1000)
       return () => clearTimeout(timeout)
     }
+    return undefined
   }, [isInView, value, springValue, delay])
 
   const displayValue = useTransform(springValue, (latest) => {

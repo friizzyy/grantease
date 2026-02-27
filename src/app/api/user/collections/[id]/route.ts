@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
+import { z } from 'zod'
+
+const updateCollectionSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  description: z.string().max(1000).nullable().optional(),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color format').optional(),
+  icon: z.string().max(50).optional(),
+})
 
 /**
  * GET /api/user/collections/[id]
@@ -97,7 +105,16 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { name, description, color, icon } = body
+    const validated = updateCollectionSchema.safeParse(body)
+
+    if (!validated.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: validated.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const { name, description, color, icon } = validated.data
 
     // Check for duplicate names (if changing name)
     if (name && name !== existing.name) {

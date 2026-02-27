@@ -3,6 +3,12 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
 import { safeJsonParse } from '@/lib/api-utils'
+import { z } from 'zod'
+
+const createWorkspaceSchema = z.object({
+  grantId: z.string().min(1, 'Grant ID is required').max(200),
+  name: z.string().max(500).optional(),
+})
 
 /**
  * GET /api/user/workspaces
@@ -99,14 +105,16 @@ export async function POST(request: NextRequest) {
     const userId = session.user.id
 
     const body = await request.json()
-    const { grantId, name } = body
+    const validated = createWorkspaceSchema.safeParse(body)
 
-    if (!grantId) {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Grant ID is required' },
+        { success: false, error: 'Validation failed', details: validated.error.flatten() },
         { status: 400 }
       )
     }
+
+    const { grantId, name } = validated.data
 
     // Check if grant exists
     const grant = await prisma.grant.findUnique({

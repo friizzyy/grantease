@@ -13,22 +13,32 @@ import {
   isGeminiConfigured,
   type SectionType,
 } from '@/lib/services/gemini-writing-assistant'
+import { z } from 'zod'
 
-interface WritingRequest {
-  action: 'improve' | 'expand' | 'summarize' | 'proofread' | 'tone' | 'generate' | 'feedback' | 'chat'
-  text?: string
-  context?: {
-    grantId?: string
-    grantTitle?: string
-    grantSponsor?: string
-    workspaceId?: string
-    sectionType?: SectionType
-    targetTone?: 'formal' | 'conversational' | 'technical'
-    maxLength?: number
-  }
-  prompt?: string
-  previousMessages?: Array<{ role: 'user' | 'assistant'; content: string }>
-}
+const writingContextSchema = z.object({
+  grantId: z.string().max(200).optional(),
+  grantTitle: z.string().max(500).optional(),
+  grantSponsor: z.string().max(500).optional(),
+  workspaceId: z.string().max(200).optional(),
+  sectionType: z.enum([
+    'executive_summary', 'statement_of_need', 'project_description',
+    'goals_objectives', 'methods_approach', 'evaluation_plan',
+    'budget_narrative', 'organizational_capacity', 'sustainability_plan', 'timeline',
+  ]).optional(),
+  targetTone: z.enum(['formal', 'conversational', 'technical']).optional(),
+  maxLength: z.number().int().min(1).max(10000).optional(),
+}).optional()
+
+const writingRequestSchema = z.object({
+  action: z.enum(['improve', 'expand', 'summarize', 'proofread', 'tone', 'generate', 'feedback', 'chat']),
+  text: z.string().max(50000).optional(),
+  context: writingContextSchema,
+  prompt: z.string().max(10000).optional(),
+  previousMessages: z.array(z.object({
+    role: z.enum(['user', 'assistant']),
+    content: z.string().max(10000),
+  })).max(50).optional(),
+})
 
 /**
  * POST /api/ai/writing-assistant
@@ -56,15 +66,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body: WritingRequest = await request.json()
-    const { action, text, context, prompt, previousMessages } = body
+    const body = await request.json()
+    const validated = writingRequestSchema.safeParse(body)
 
-    if (!action) {
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Action is required' },
+        { error: 'Invalid input', details: validated.error.flatten() },
         { status: 400 }
       )
     }
+
+    const { action, text, context, prompt, previousMessages } = validated.data
 
     // Get user profile
     const dbProfile = await prisma.userProfile.findUnique({
@@ -115,6 +127,7 @@ export async function POST(request: NextRequest) {
     const startTime = Date.now()
     let result: string | null = null
     let additionalData: Record<string, unknown> = {}
+    let usage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
 
     switch (action) {
       case 'generate': {
@@ -130,12 +143,13 @@ export async function POST(request: NextRequest) {
           },
           profile
         )
-        if (response) {
-          result = response.content
+        usage = response.usage
+        if (response.result) {
+          result = response.result.content
           additionalData = {
-            wordCount: response.wordCount,
-            suggestions: response.suggestions,
-            strengthenTips: response.strengthenTips,
+            wordCount: response.result.wordCount,
+            suggestions: response.result.suggestions,
+            strengthenTips: response.result.strengthenTips,
           }
         }
         break
@@ -152,12 +166,14 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           )
         }
-        result = await improveDraft(
+        const improveResponse = await improveDraft(
           text,
           context?.sectionType || 'project_description',
           { title: grantTitle, sponsor: grantSponsor },
           profile
         )
+        result = improveResponse.result
+        usage = improveResponse.usage
         break
       }
 
@@ -168,14 +184,16 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           )
         }
-        const feedback = await getDraftFeedback(
+        const feedbackResponse = await getDraftFeedback(
           text,
           context?.sectionType || 'project_description',
           { title: grantTitle, sponsor: grantSponsor }
         )
+        usage = feedbackResponse.usage
+        const feedback = feedbackResponse.result
         if (feedback) {
           result = `Score: ${feedback.score}/100\n\nStrengths:\n${feedback.strengths.map(s => `• ${s}`).join('\n')}\n\nAreas to Improve:\n${feedback.weaknesses.map(w => `• ${w}`).join('\n')}\n\nSuggestions:\n${feedback.suggestions.map(s => `• ${s}`).join('\n')}`
-          additionalData = feedback
+          additionalData = { ...feedback }
         }
         break
       }
@@ -187,7 +205,7 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           )
         }
-        result = await chatWithWritingAssistant(
+        const chatResponse = await chatWithWritingAssistant(
           prompt,
           {
             grantTitle,
@@ -197,6 +215,8 @@ export async function POST(request: NextRequest) {
           },
           profile
         )
+        result = chatResponse.result
+        usage = chatResponse.usage
         break
       }
 
@@ -209,16 +229,16 @@ export async function POST(request: NextRequest) {
 
     const responseTime = Date.now() - startTime
 
-    // Log AI usage
+    // Log AI usage with actual token counts from the API response
     try {
       await prisma.aIUsageLog.create({
         data: {
           userId: session.user.id,
           type: 'writing_assistant',
           model: 'gemini-1.5-pro',
-          promptTokens: 0, // Gemini doesn't provide token counts easily
-          completionTokens: 0,
-          totalTokens: 0,
+          promptTokens: usage.promptTokens,
+          completionTokens: usage.completionTokens,
+          totalTokens: usage.totalTokens,
           responseTime,
           grantId: context?.grantId || null,
           workspaceId: context?.workspaceId || null,

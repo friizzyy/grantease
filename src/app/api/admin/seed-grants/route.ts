@@ -78,7 +78,6 @@ export async function POST() {
   }
 
   try {
-    console.log('[Seed Grants] Starting seed process...');
 
     // Count before
     const beforeCount = await prisma.grant.count({ where: { status: 'open' } });

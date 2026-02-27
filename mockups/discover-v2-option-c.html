@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>V2 Discover - Option C: Featured + Grid with Tabs</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'pulse-bg': '#0a0a0f',
+            'pulse-surface': '#12121a',
+            'pulse-border': '#1e1e2e',
+            'pulse-accent': '#40ffaa',
+            'pulse-text': '#f4f4f5',
+            'pulse-text-secondary': '#a1a1aa',
+            'pulse-text-tertiary': '#71717a',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            serif: ['Fraunces', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background: #0a0a0f; }
+    .glass-card {
+      background: rgba(18, 18, 26, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(30, 30, 46, 0.8);
+    }
+    .gradient-border {
+      background: linear-gradient(135deg, rgba(64, 255, 170, 0.2), rgba(16, 185, 129, 0.1));
+      border: 1px solid rgba(64, 255, 170, 0.3);
+    }
+  </style>
+</head>
+<body class="font-sans text-pulse-text min-h-screen p-8">
+
+  <!-- OPTION C: Featured Hero + Tab Navigation + Compact Grid -->
+  <div class="max-w-7xl mx-auto">
+
+    <!-- Hero Section -->
+    <div class="gradient-border rounded-3xl p-8 mb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-14 h-14 rounded-2xl bg-pulse-accent/20 flex items-center justify-center">
+              <svg class="w-7 h-7 text-pulse-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+              </svg>
+            </div>
+            <div>
+              <h1 class="text-3xl font-serif text-pulse-text">Welcome back, Farmer</h1>
+              <p class="text-pulse-text-secondary">Mixed Operation • California</p>
+            </div>
+          </div>
+          <p class="text-lg text-pulse-text-secondary max-w-xl">
+            We found <span class="text-pulse-accent font-bold">24 grants</span> that match your farm's profile and funding goals.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-6">
+          <!-- Quick Stats -->
+          <div class="text-center px-6 border-r border-pulse-border">
+            <div class="text-4xl font-bold text-emerald-400">8</div>
+            <div class="text-xs text-pulse-text-tertiary">Excellent Matches</div>
+          </div>
+          <div class="text-center px-6 border-r border-pulse-border">
+            <div class="text-4xl font-bold text-pulse-accent">$2.4M</div>
+            <div class="text-xs text-pulse-text-tertiary">Available Funding</div>
+          </div>
+          <div class="text-center px-6">
+            <div class="text-4xl font-bold text-amber-400">3</div>
+            <div class="text-xs text-pulse-text-tertiary">Closing Soon</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-1 p-1 bg-pulse-surface rounded-xl">
+        <button class="px-5 py-2.5 rounded-lg bg-pulse-accent text-pulse-bg text-sm font-medium">
+          All Matches (24)
+        </button>
+        <button class="px-5 py-2.5 rounded-lg text-pulse-text-secondary text-sm hover:text-pulse-text transition-colors">
+          Equipment (12)
+        </button>
+        <button class="px-5 py-2.5 rounded-lg text-pulse-text-secondary text-sm hover:text-pulse-text transition-colors">
+          Conservation (8)
+        </button>
+        <button class="px-5 py-2.5 rounded-lg text-pulse-text-secondary text-sm hover:text-pulse-text transition-colors">
+          Irrigation (6)
+        </button>
+        <button class="px-5 py-2.5 rounded-lg text-pulse-text-secondary text-sm hover:text-pulse-text transition-colors">
+          Livestock (5)
+        </button>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="relative">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-pulse-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" placeholder="Search..." class="pl-10 pr-4 py-2 rounded-lg bg-pulse-surface border border-pulse-border focus:border-pulse-accent focus:outline-none text-sm text-pulse-text placeholder:text-pulse-text-tertiary w-48">
+        </div>
+        <button class="p-2 rounded-lg bg-pulse-surface border border-pulse-border text-pulse-text-tertiary hover:text-pulse-text hover:border-pulse-accent/30 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </button>
+        <button class="px-4 py-2 rounded-lg bg-pulse-surface border border-pulse-border text-sm text-pulse-text-secondary hover:text-pulse-text hover:border-pulse-accent/30 transition-colors flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+          Edit Profile
+        </button>
+      </div>
+    </div>
+
+    <!-- Featured Grant (Top Match) -->
+    <div class="glass-card rounded-2xl p-6 mb-6 border-l-4 border-l-emerald-400 hover:border-pulse-accent/40 transition-all cursor-pointer group">
+      <div class="flex items-start gap-6">
+
+        <!-- Score Badge -->
+        <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30 flex flex-col items-center justify-center flex-shrink-0">
+          <div class="text-2xl font-bold text-emerald-400">92</div>
+          <div class="text-[10px] text-emerald-400/80 uppercase font-medium">Top Match</div>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="px-2.5 py-1 rounded-lg bg-pulse-surface text-pulse-text-tertiary text-xs">USDA NRCS</span>
+            <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-medium border border-emerald-500/20">Small Farm Friendly</span>
+            <span class="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-400 text-xs font-medium border border-blue-500/20">Nationwide</span>
+          </div>
+
+          <h2 class="text-xl font-semibold text-pulse-text mb-2 group-hover:text-pulse-accent transition-colors">
+            Environmental Quality Incentives Program (EQIP)
+          </h2>
+
+          <p class="text-pulse-text-secondary mb-4">
+            EQIP is one of the most popular USDA programs for small farms. Provides financial and technical assistance for conservation practices including irrigation systems, livestock facilities, fencing, and cover crops. Beginning farmers can receive up to 90% cost-share.
+          </p>
+
+          <div class="flex items-center gap-6">
+            <div class="flex items-center gap-2 text-sm">
+              <svg class="w-4 h-4 text-pulse-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-pulse-text font-medium">Up to $450,000</span>
+              <span class="text-pulse-text-tertiary">(typically $5K-$50K for small farms)</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm text-pulse-text-tertiary">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Rolling deadline - Contact local NRCS office</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="flex flex-col items-end gap-3 flex-shrink-0">
+          <button class="px-5 py-2.5 rounded-xl bg-pulse-accent text-pulse-bg text-sm font-medium hover:bg-pulse-accent/90 transition-colors flex items-center gap-2">
+            View Details
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </button>
+          <button class="p-2 rounded-lg hover:bg-white/5 text-pulse-text-tertiary hover:text-pulse-accent transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section Label -->
+    <div class="flex items-center gap-3 mb-4">
+      <h3 class="text-sm font-medium text-pulse-text-tertiary uppercase tracking-wider">More Matches</h3>
+      <div class="flex-1 h-px bg-pulse-border"></div>
+    </div>
+
+    <!-- Compact Card Grid -->
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+      <!-- Card 1 -->
+      <div class="glass-card rounded-xl p-5 hover:border-pulse-accent/40 transition-all cursor-pointer group">
+        <div class="flex items-center justify-between mb-3">
+          <span class="px-2 py-1 rounded-md bg-amber-500/10 text-amber-400 text-xs font-medium border border-amber-500/20">78 Strong</span>
+          <button class="p-1.5 rounded-lg hover:bg-white/5 text-pulse-text-tertiary hover:text-pulse-accent transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+            </svg>
+          </button>
+        </div>
+        <h4 class="font-semibold text-pulse-text mb-1 group-hover:text-pulse-accent transition-colors line-clamp-1">
+          FSA Farm Operating Microloans
+        </h4>
+        <p class="text-xs text-pulse-text-tertiary mb-3">USDA FSA</p>
+        <p class="text-sm text-pulse-text-secondary mb-4 line-clamp-2">
+          Low-interest loans up to $50,000 for small and beginning farmers.
+        </p>
+        <div class="flex items-center justify-between pt-3 border-t border-pulse-border/50">
+          <span class="text-sm font-medium text-pulse-text">Up to $50K</span>
+          <span class="text-xs text-pulse-text-tertiary">Rolling</span>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="glass-card rounded-xl p-5 hover:border-pulse-accent/40 transition-all cursor-pointer group">
+        <div class="flex items-center justify-between mb-3">
+          <span class="px-2 py-1 rounded-md bg-amber-500/10 text-amber-400 text-xs font-medium border border-amber-500/20">72 Strong</span>
+          <button class="p-1.5 rounded-lg hover:bg-white/5 text-pulse-text-tertiary hover:text-pulse-accent transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+            </svg>
+          </button>
+        </div>
+        <h4 class="font-semibold text-pulse-text mb-1 group-hover:text-pulse-accent transition-colors line-clamp-1">
+          California SWEEP - Water Efficiency
+        </h4>
+        <p class="text-xs text-pulse-text-tertiary mb-3">CDFA • <span class="text-blue-400">Your State</span></p>
+        <p class="text-sm text-pulse-text-secondary mb-4 line-clamp-2">
+          Up to $200,000 for California farmers to upgrade irrigation systems.
+        </p>
+        <div class="flex items-center justify-between pt-3 border-t border-pulse-border/50">
+          <span class="text-sm font-medium text-pulse-text">Up to $200K</span>
+          <span class="text-xs text-pulse-text-tertiary">CA only</span>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="glass-card rounded-xl p-5 hover:border-pulse-accent/40 transition-all cursor-pointer group">
+        <div class="flex items-center justify-between mb-3">
+          <span class="px-2 py-1 rounded-md bg-amber-500/10 text-amber-400 text-xs font-medium border border-amber-500/20">68 Strong</span>
+          <button class="p-1.5 rounded-lg hover:bg-white/5 text-pulse-text-tertiary hover:text-pulse-accent transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+            </svg>
+          </button>
+        </div>
+        <h4 class="font-semibold text-pulse-text mb-1 group-hover:text-pulse-accent transition-colors line-clamp-1">
+          Conservation Stewardship Program (CSP)
+        </h4>
+        <p class="text-xs text-pulse-text-tertiary mb-3">USDA NRCS</p>
+        <p class="text-sm text-pulse-text-secondary mb-4 line-clamp-2">
+          Annual payments for maintaining and improving conservation practices.
+        </p>
+        <div class="flex items-center justify-between pt-3 border-t border-pulse-border/50">
+          <span class="text-sm font-medium text-pulse-text">Annual payments</span>
+          <span class="text-xs text-pulse-text-tertiary">Rolling</span>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="glass-card rounded-xl p-5 hover:border-pulse-accent/40 transition-all cursor-pointer group border-t-2 border-t-amber-500">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-1 rounded-md bg-orange-500/10 text-orange-400 text-xs font-medium border border-orange-500/20">58 Good</span>
+            <span class="px-2 py-1 rounded-md bg-amber-500/10 text-amber-400 text-[10px] font-medium border border-amber-500/20">Closing Soon</span>
+          </div>
+          <button class="p-1.5 rounded-lg hover:bg-white/5 text-pulse-text-tertiary hover:text-pulse-accent transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+            </svg>
+          </button>
+        </div>
+        <h4 class="font-semibold text-pulse-text mb-1 group-hover:text-pulse-accent transition-colors line-clamp-1">
+          Western SARE Farmer/Rancher Grant
+        </h4>
+        <p class="text-xs text-pulse-text-tertiary mb-3">Western SARE</p>
+        <p class="text-sm text-pulse-text-secondary mb-4 line-clamp-2">
+          Grants for Western US farmers to explore sustainable practices.
+        </p>
+        <div class="flex items-center justify-between pt-3 border-t border-pulse-border/50">
+          <span class="text-sm font-medium text-pulse-text">$2.5K - $25K</span>
+          <span class="text-xs text-amber-400 font-medium">Nov 2026</span>
+        </div>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="glass-card rounded-xl p-5 hover:border-pulse-accent/40 transition-all cursor-pointer group">
+        <div class="flex items-center justify-between mb-3">
+          <span class="px-2 py-1 rounded-md bg-orange-500/10 text-orange-400 text-xs font-medium border border-orange-500/20">52 Good</span>
+          <button class="p-1.5 rounded-lg hover:bg-white/5 text-pulse-text-tertiary hover:text-pulse-accent transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+            </svg>
+          </button>
+        </div>
+        <h4 class="font-semibold text-pulse-text mb-1 group-hover:text-pulse-accent transition-colors line-clamp-1">
+          Rural Energy for America Program
+        </h4>
+        <p class="text-xs text-pulse-text-tertiary mb-3">USDA Rural Development</p>
+        <p class="text-sm text-pulse-text-secondary mb-4 line-clamp-2">
+          Grants up to 50% for solar panels and energy-efficient equipment.
+        </p>
+        <div class="flex items-center justify-between pt-3 border-t border-pulse-border/50">
+          <span class="text-sm font-medium text-pulse-text">$2.5K - $1M</span>
+          <span class="text-xs text-pulse-text-tertiary">Quarterly</span>
+        </div>
+      </div>
+
+      <!-- Card 6 -->
+      <div class="glass-card rounded-xl p-5 hover:border-pulse-accent/40 transition-all cursor-pointer group">
+        <div class="flex items-center justify-between mb-3">
+          <span class="px-2 py-1 rounded-md bg-orange-500/10 text-orange-400 text-xs font-medium border border-orange-500/20">48 Good</span>
+          <button class="p-1.5 rounded-lg hover:bg-white/5 text-pulse-text-tertiary hover:text-pulse-accent transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+            </svg>
+          </button>
+        </div>
+        <h4 class="font-semibold text-pulse-text mb-1 group-hover:text-pulse-accent transition-colors line-clamp-1">
+          Value-Added Producer Grants
+        </h4>
+        <p class="text-xs text-pulse-text-tertiary mb-3">USDA Rural Development</p>
+        <p class="text-sm text-pulse-text-secondary mb-4 line-clamp-2">
+          Up to $250,000 for farmers to process, market, or brand products.
+        </p>
+        <div class="flex items-center justify-between pt-3 border-t border-pulse-border/50">
+          <span class="text-sm font-medium text-pulse-text">Up to $250K</span>
+          <span class="text-xs text-pulse-text-tertiary">April 2026</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- View All -->
+    <div class="text-center mt-8">
+      <button class="px-8 py-3 rounded-xl bg-pulse-surface border border-pulse-border text-sm text-pulse-text-secondary hover:text-pulse-text hover:border-pulse-accent/30 transition-colors">
+        View All 24 Matches
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center mt-12 text-sm text-pulse-text-tertiary">
+      <p>Grants matched based on your farm profile, location, and funding goals.</p>
+      <a href="#" class="text-pulse-accent hover:underline">Update your profile →</a>
+    </div>
+
+  </div>
+
+</body>
+</html>

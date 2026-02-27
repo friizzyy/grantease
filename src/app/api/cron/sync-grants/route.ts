@@ -3,6 +3,9 @@ import { prisma } from '@/lib/db'
 import { discoverGrants } from '@/lib/services/gemini-grant-discovery'
 import type { EntityType } from '@/lib/types/onboarding'
 
+export const runtime = 'nodejs'
+export const maxDuration = 60
+
 /**
  * GET /api/cron/sync-grants
  *
@@ -40,7 +43,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log('[CRON] Starting Gemini grant discovery...')
 
     // Get users with completed profiles
     const profiles = await prisma.userProfile.findMany({
@@ -61,7 +63,8 @@ export async function GET(request: NextRequest) {
         // Parse industry tags (stored as JSON string)
         let industryTags: string[] = []
         try {
-          industryTags = JSON.parse(profile.industryTags || '[]')
+          const parsed: unknown = JSON.parse(profile.industryTags || '[]')
+          industryTags = Array.isArray(parsed) ? (parsed as string[]) : []
         } catch {
           industryTags = []
         }
@@ -72,7 +75,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Discover grants for this user
-        const grants = await discoverGrants({
+        const { grants } = await discoverGrants({
           entityType: profile.entityType as EntityType,
           industryTags,
           state: profile.state,
@@ -81,7 +84,6 @@ export async function GET(request: NextRequest) {
         results.grantsFound += grants.length
         results.usersProcessed++
 
-        console.log(`[CRON] Found ${grants.length} grants for user ${profile.userId}`)
       } catch (error) {
         const msg = error instanceof Error ? error.message : 'Unknown'
         results.errors.push(`User ${profile.userId}: ${msg}`)
@@ -89,8 +91,6 @@ export async function GET(request: NextRequest) {
     }
 
     results.duration = Date.now() - startTime
-
-    console.log(`[CRON] Completed: ${results.usersProcessed} users, ${results.grantsFound} grants discovered`)
 
     return NextResponse.json(results)
   } catch (error) {
