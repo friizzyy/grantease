@@ -3,6 +3,9 @@
  *
  * Defines all known grant sources to crawl.
  * Each source has configuration for how to scrape, extract, and validate grants.
+ *
+ * Coverage: 7 federal sources, 10 state portals, 4 foundations,
+ * 1 utility/rebate database, and 1 aggregator (Candid Foundation Directory).
  */
 
 import { IngestionSourceConfig } from './types';
@@ -287,6 +290,197 @@ const washingtonGrants: IngestionSourceConfig = {
   requiresAttribution: false,
 };
 
+const floridaGrants: IngestionSourceConfig = {
+  id: 'florida_grants',
+  name: 'florida_grants',
+  displayName: 'Florida Department of Economic Opportunity',
+  type: 'scrape',
+  enabled: true,
+  priority: 7,
+  baseUrl: 'https://www.floridajobs.org',
+  listingUrls: [
+    'https://www.floridajobs.org/community-planning-and-development/assistance-for-governments-and-organizations/grant-programs',
+    'https://www.floridajobs.org/community-planning-and-development/assistance-for-businesses/grant-programs',
+  ],
+  paginationPattern: '?page={page}',
+  maxPages: 10,
+  requestDelayMs: 2000,
+  maxConcurrent: 1,
+  scheduleIntervalHours: 48,
+  respectsRobotsTxt: true,
+  requiresAttribution: false,
+
+  selectors: {
+    grantList: '.content-area .listing-item, .grant-item, article',
+    grantLink: 'h3 a, h2 a, .title a',
+    title: 'h3, h2, .title',
+    sponsor: '.agency, .department',
+    description: '.description, .summary, p',
+    deadline: '.deadline, .date',
+    amount: '.amount, .funding',
+    eligibility: '.eligibility, .requirements',
+    nextPage: '.pagination .next a, a[rel="next"]',
+  },
+};
+
+const illinoisGrants: IngestionSourceConfig = {
+  id: 'illinois_grants',
+  name: 'illinois_grants',
+  displayName: 'Illinois DCEO Grants',
+  type: 'scrape',
+  enabled: true,
+  priority: 7,
+  baseUrl: 'https://dceo.illinois.gov',
+  listingUrls: [
+    'https://dceo.illinois.gov/aboutdceo/grantopportunities.html',
+  ],
+  paginationPattern: '?page={page}',
+  maxPages: 10,
+  requestDelayMs: 2000,
+  maxConcurrent: 1,
+  scheduleIntervalHours: 48,
+  respectsRobotsTxt: true,
+  requiresAttribution: false,
+
+  selectors: {
+    grantList: '.grant-listing .item, .listing-item, article',
+    grantLink: 'h3 a, h2 a, .title a',
+    title: 'h3, h2, .title',
+    sponsor: '.agency, .department',
+    description: '.description, .summary, p',
+    deadline: '.deadline, .date',
+    amount: '.amount, .funding',
+    eligibility: '.eligibility, .requirements',
+    nextPage: '.pagination .next a, a[rel="next"]',
+  },
+};
+
+const pennsylvaniaGrants: IngestionSourceConfig = {
+  id: 'pennsylvania_grants',
+  name: 'pennsylvania_grants',
+  displayName: 'Pennsylvania DCED Grants',
+  type: 'scrape',
+  enabled: true,
+  priority: 7,
+  baseUrl: 'https://dced.pa.gov',
+  listingUrls: [
+    'https://dced.pa.gov/programs-funding/',
+  ],
+  paginationPattern: '?page={page}',
+  maxPages: 15,
+  requestDelayMs: 2000,
+  maxConcurrent: 1,
+  scheduleIntervalHours: 48,
+  respectsRobotsTxt: true,
+  requiresAttribution: false,
+
+  selectors: {
+    grantList: '.program-listing .item, .views-row, article',
+    grantLink: 'h3 a, h2 a, .title a',
+    title: 'h3, h2, .title',
+    sponsor: '.agency, .department',
+    description: '.description, .summary, .field-content, p',
+    deadline: '.deadline, .date',
+    amount: '.amount, .funding',
+    eligibility: '.eligibility, .requirements',
+    nextPage: '.pagination .next a, a[rel="next"]',
+  },
+};
+
+const ohioGrants: IngestionSourceConfig = {
+  id: 'ohio_grants',
+  name: 'ohio_grants',
+  displayName: 'Ohio Development Services Agency',
+  type: 'scrape',
+  enabled: true,
+  priority: 7,
+  baseUrl: 'https://development.ohio.gov',
+  listingUrls: [
+    'https://development.ohio.gov/business/state-incentives',
+  ],
+  paginationPattern: '?page={page}',
+  maxPages: 10,
+  requestDelayMs: 2000,
+  maxConcurrent: 1,
+  scheduleIntervalHours: 48,
+  respectsRobotsTxt: true,
+  requiresAttribution: false,
+
+  selectors: {
+    grantList: '.incentive-listing .item, .listing-item, article',
+    grantLink: 'h3 a, h2 a, .title a',
+    title: 'h3, h2, .title',
+    sponsor: '.agency, .department',
+    description: '.description, .summary, p',
+    deadline: '.deadline, .date',
+    amount: '.amount, .funding',
+    eligibility: '.eligibility, .requirements',
+    nextPage: '.pagination .next a, a[rel="next"]',
+  },
+};
+
+const georgiaGrants: IngestionSourceConfig = {
+  id: 'georgia_grants',
+  name: 'georgia_grants',
+  displayName: 'Georgia Department of Community Affairs',
+  type: 'scrape',
+  enabled: true,
+  priority: 7,
+  baseUrl: 'https://www.dca.ga.gov',
+  listingUrls: [
+    'https://www.dca.ga.gov/community-economic-development/funding-programs',
+  ],
+  paginationPattern: '?page={page}',
+  maxPages: 10,
+  requestDelayMs: 2000,
+  maxConcurrent: 1,
+  scheduleIntervalHours: 48,
+  respectsRobotsTxt: true,
+  requiresAttribution: false,
+
+  selectors: {
+    grantList: '.program-listing .item, .views-row, article',
+    grantLink: 'h3 a, h2 a, .title a',
+    title: 'h3, h2, .title',
+    sponsor: '.agency, .department',
+    description: '.description, .summary, p',
+    deadline: '.deadline, .date',
+    amount: '.amount, .funding',
+    eligibility: '.eligibility, .requirements',
+    nextPage: '.pagination .next a, a[rel="next"]',
+  },
+};
+
+const massachusettsGrants: IngestionSourceConfig = {
+  id: 'massachusetts_grants',
+  name: 'massachusetts_grants',
+  displayName: 'Massachusetts Grants Portal',
+  type: 'scrape',
+  enabled: true,
+  priority: 7,
+  baseUrl: 'https://www.mass.gov',
+  listingUrls: ['https://www.mass.gov/lists/grants-available-from-the-commonwealth-of-massachusetts'],
+  paginationPattern: '?page={page}',
+  maxPages: 15,
+  requestDelayMs: 2000,
+  maxConcurrent: 1,
+  scheduleIntervalHours: 48,
+  respectsRobotsTxt: true,
+  requiresAttribution: false,
+
+  selectors: {
+    grantList: '.ma__content-item, .views-row, article',
+    grantLink: 'h3 a, h2 a, .title a',
+    title: 'h3, h2, .ma__content-item__title',
+    sponsor: '.agency, .department, .ma__content-item__org',
+    description: '.description, .summary, .ma__content-item__description, p',
+    deadline: '.deadline, .date',
+    amount: '.amount, .funding',
+    eligibility: '.eligibility, .requirements',
+    nextPage: '.pagination .next a, a[rel="next"]',
+  },
+};
+
 // ==================== FOUNDATION SOURCES ====================
 
 const fordFoundation: IngestionSourceConfig = {
@@ -381,19 +575,57 @@ const dsireRebates: IngestionSourceConfig = {
 
 // ==================== AGGREGATOR SOURCES ====================
 
+// Candid (formerly Foundation Center + GuideStar) Foundation Directory
+// Requires CANDID_API_KEY environment variable to be set
 const foundationDirectory: IngestionSourceConfig = {
   id: 'foundation_directory',
   name: 'foundation_directory',
-  displayName: 'Foundation Directory Online',
+  displayName: 'Candid Foundation Directory',
   type: 'api',
-  enabled: false, // Requires subscription
-  priority: 5,
-  baseUrl: 'https://fconline.foundationcenter.org',
-  requestDelayMs: 2000,
-  maxConcurrent: 1,
-  scheduleIntervalHours: 168,
+  enabled: !!process.env.CANDID_API_KEY,
+  priority: 8,
+  baseUrl: 'https://api.candid.org',
+  requestDelayMs: 1500,
+  maxConcurrent: 2,
+  scheduleIntervalHours: 168, // Weekly
   respectsRobotsTxt: true,
   requiresAttribution: true,
+  attributionText: 'Data provided by Candid',
+
+  apiConfig: {
+    endpoint: 'https://api.candid.org/grants/v1/search',
+    method: 'GET',
+    headers: {
+      'Subscription-Key': process.env.CANDID_API_KEY || '',
+    },
+    authType: 'api_key',
+    apiKeyParam: 'Subscription-Key',
+    responseFormat: 'json',
+    grantsPath: 'grants',
+    paginationParam: 'page',
+    pageSizeParam: 'per_page',
+    pageSize: 50,
+  },
+
+  extractionHints: {
+    entityTypeMapping: {
+      'Public charity': 'nonprofit',
+      'Private foundation': 'nonprofit',
+      'Community foundation': 'nonprofit',
+      'Corporate giving program': 'for_profit',
+      'Government agency': 'government',
+    },
+    categoryMapping: {
+      'Arts and culture': 'arts_culture',
+      'Education': 'education',
+      'Environment': 'environment',
+      'Health': 'health',
+      'Human services': 'community_development',
+      'International affairs': 'community_development',
+      'Public affairs': 'community_development',
+      'Science and technology': 'research',
+    },
+  },
 };
 
 // ==================== EXPORTED CONFIGURATION ====================
@@ -407,11 +639,17 @@ export const GRANT_SOURCES: IngestionSourceConfig[] = [
   usda,
   doe,
 
-  // State portals
+  // State portals (10 states)
   californiaGrants,
   newYorkGrants,
   texasGrants,
   washingtonGrants,
+  floridaGrants,
+  illinoisGrants,
+  pennsylvaniaGrants,
+  ohioGrants,
+  georgiaGrants,
+  massachusettsGrants,
 
   // Foundations
   fordFoundation,
@@ -422,7 +660,7 @@ export const GRANT_SOURCES: IngestionSourceConfig[] = [
   // Utility/Rebates
   dsireRebates,
 
-  // Aggregators (disabled by default)
+  // Aggregators (Candid: enabled when CANDID_API_KEY is set)
   foundationDirectory,
 ];
 

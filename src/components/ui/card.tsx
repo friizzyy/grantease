@@ -11,9 +11,9 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant = 'default', interactive = false, children, ...props }, ref) => {
     const variantStyles = {
-      default: 'bg-pulse-surface/80 border border-pulse-border',
-      elevated: 'bg-pulse-elevated/80 border border-pulse-border shadow-lg',
-      outline: 'bg-transparent border border-pulse-border',
+      default: 'bg-pulse-surface border border-pulse-border/40',
+      elevated: 'bg-pulse-elevated border border-pulse-border/40 shadow-lg',
+      outline: 'bg-transparent border border-pulse-border/40',
     }
 
     return (
@@ -22,7 +22,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         className={cn(
           'rounded-xl backdrop-blur-sm transition-all duration-200',
           variantStyles[variant],
-          interactive && 'hover:border-pulse-accent/20 hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:-translate-y-0.5',
+          interactive && 'hover:border-pulse-border hover:shadow-lg hover:shadow-pulse-accent/5 hover:-translate-y-0.5',
           className
         )}
         {...props}

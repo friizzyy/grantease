@@ -289,6 +289,7 @@ The prompts in `prompts/` directory are **intentionally modular**. When working 
 | `10-SECURITY-COMPLIANCE.md` | Data protection, encryption, audit logging, GDPR | When handling sensitive data or user privacy features |
 | `11-GRANT-DISCOVERY-DEEP-DIVE.md` | Grant search, filtering, semantic matching, recommendation engine | When building discovery features |
 | `12-CODE-ARCHITECTURE.md` | File structure, naming conventions, folder organization, shared utilities | When organizing new code or refactoring existing modules |
+| `13-PREMIUM-UI-UPGRADE.md` | Full-app visual refinement: typography, spacing, micro-interactions, premium polish | When upgrading UI quality, cleaning up pages, or making the app feel more modern/premium |
 
 **When in doubt, start with `00-MASTER-FULL-AUDIT.md` to get oriented.**
 
@@ -345,6 +346,10 @@ Full Audit / Lost on Scope
 
 Code Organization
   → prompts/12-CODE-ARCHITECTURE.md
+
+UI Premium Upgrade / Visual Polish
+  → prompts/13-PREMIUM-UI-UPGRADE.md
+  → prompts/01-DESIGN-SYSTEM.md
 ```
 
 ---

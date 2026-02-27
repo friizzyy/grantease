@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Plus, Minus, Search, Bell, FolderOpen, CreditCard, HelpCircle, MessageCircle } from 'lucide-react'
 
 const faqs = [
@@ -77,7 +78,7 @@ const faqs = [
       },
       {
         q: 'Does Grants By AI submit applications?',
-        a: 'No, we\'re a discovery and organization tool. You submit applications through the official grant portal directly.',
+        a: "No, we're a discovery and organization tool. You submit applications through the official grant portal directly.",
       },
     ],
   },
@@ -95,22 +96,42 @@ const faqs = [
       },
       {
         q: 'Do you offer refunds?',
-        a: 'We offer a 14-day money-back guarantee on all paid plans. Contact support if you\'re not satisfied.',
+        a: "We offer a 14-day money-back guarantee on all paid plans. Contact support if you're not satisfied.",
       },
     ],
   },
 ]
+
+// Animation variants
+const fadeInUp = {
+  initial: { opacity: 0, y: 24 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-60px' },
+  transition: { duration: 0.6, ease: 'easeOut' },
+}
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
+}
+
+const staggerItem = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+}
 
 function FAQItem({
   question,
   answer,
   isOpen,
   onToggle,
+  prefersReducedMotion,
 }: {
   question: string
   answer: string
   isOpen: boolean
   onToggle: () => void
+  prefersReducedMotion: boolean
 }) {
   return (
     <div
@@ -123,6 +144,7 @@ function FAQItem({
       <button
         onClick={onToggle}
         className="w-full p-5 flex items-center justify-between gap-4 text-left"
+        aria-expanded={isOpen}
       >
         <span className={`font-medium transition-colors ${
           isOpen ? 'text-pulse-accent' : 'text-pulse-text'
@@ -138,15 +160,21 @@ function FAQItem({
         </div>
       </button>
 
-      <div className={`grid transition-all duration-200 ${
-        isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-      }`}>
-        <div className="overflow-hidden">
-          <div className="px-5 pb-5 text-pulse-text-secondary leading-relaxed">
-            {answer}
-          </div>
-        </div>
-      </div>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={prefersReducedMotion ? { height: 'auto', opacity: 1 } : { height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={prefersReducedMotion ? { height: 0, opacity: 0 } : { height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="overflow-hidden"
+          >
+            <div className="px-5 pb-5 text-pulse-text-secondary leading-relaxed">
+              {answer}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -154,6 +182,18 @@ function FAQItem({
 export default function FAQPage() {
   const [activeCategory, setActiveCategory] = useState('General')
   const [openQuestion, setOpenQuestion] = useState<string | null>(null)
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setPrefersReducedMotion(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
+  const motionProps = (props: Record<string, unknown>) =>
+    prefersReducedMotion ? {} : props
 
   const handleToggle = (question: string) => {
     setOpenQuestion(openQuestion === question ? null : question)
@@ -164,7 +204,10 @@ export default function FAQPage() {
   return (
     <main className="pt-20">
       {/* Hero */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <motion.section
+        className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden"
+        {...motionProps(fadeInUp)}
+      >
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/3 w-[600px] h-[600px] rounded-full bg-pulse-accent/[0.05] blur-[120px]" />
         </div>
@@ -184,7 +227,7 @@ export default function FAQPage() {
             <Link href="/contact" className="text-pulse-accent hover:underline">Contact us</Link> if you need more help.
           </p>
         </div>
-      </section>
+      </motion.section>
 
       {/* Category tabs */}
       <section className="py-6 px-4 sm:px-6 lg:px-8 border-y border-white/[0.04]">
@@ -218,24 +261,44 @@ export default function FAQPage() {
       {/* FAQ Content */}
       <section className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
-          {activeSection && (
-            <div className="space-y-3">
-              {activeSection.questions.map((faq) => (
-                <FAQItem
-                  key={faq.q}
-                  question={faq.q}
-                  answer={faq.a}
-                  isOpen={openQuestion === faq.q}
-                  onToggle={() => handleToggle(faq.q)}
-                />
-              ))}
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            {activeSection && (
+              <motion.div
+                key={activeSection.category}
+                initial={prefersReducedMotion ? undefined : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={prefersReducedMotion ? undefined : { opacity: 0, y: -8 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+              >
+                <motion.div
+                  className="space-y-3"
+                  variants={staggerContainer}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {activeSection.questions.map((faq) => (
+                    <motion.div key={faq.q} variants={staggerItem}>
+                      <FAQItem
+                        question={faq.q}
+                        answer={faq.a}
+                        isOpen={openQuestion === faq.q}
+                        onToggle={() => handleToggle(faq.q)}
+                        prefersReducedMotion={prefersReducedMotion}
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-white/[0.04]">
+      <motion.section
+        className="py-20 px-4 sm:px-6 lg:px-8 border-t border-white/[0.04]"
+        {...motionProps(fadeInUp)}
+      >
         <div className="max-w-4xl mx-auto">
           <div className="grid md:grid-cols-2 gap-6">
             <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
@@ -260,7 +323,7 @@ export default function FAQPage() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
     </main>
   )
 }

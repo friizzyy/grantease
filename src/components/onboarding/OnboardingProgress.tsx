@@ -4,8 +4,8 @@
  * ONBOARDING PROGRESS - PREMIUM REDESIGN
  * --------------------------------------
  * Clean, minimal progress indicator:
- * - Simple step counter
- * - Subtle progress bar
+ * - Smooth animated mint progress bar
+ * - Step counter with labels
  * - No distracting animations
  */
 
@@ -35,26 +35,26 @@ export function OnboardingProgress({ currentStep, totalSteps = 5 }: OnboardingPr
           <span className="text-pulse-text-tertiary font-mono text-xs uppercase tracking-wider">
             Step {currentStep} of {totalSteps}
           </span>
-          <h2 className="text-lg font-semibold text-pulse-text mt-1">
+          <h2 className="text-heading-sm font-semibold text-pulse-text mt-1">
             {STEP_LABELS[currentStep - 1]}
           </h2>
         </div>
-        <span className="text-2xl font-bold text-pulse-accent">
+        <span className="text-heading font-bold text-pulse-accent">
           {Math.round((currentStep / totalSteps) * 100)}%
         </span>
       </div>
 
-      {/* Progress bar */}
-      <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+      {/* Smooth mint progress bar */}
+      <div className="h-1 bg-pulse-surface rounded-full overflow-hidden">
         <motion.div
-          className="h-full bg-gradient-to-r from-pulse-accent to-emerald-400 rounded-full"
+          className="h-full bg-pulse-accent rounded-full"
           initial={{ width: '0%' }}
           animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
         />
       </div>
 
-      {/* Step dots - desktop only */}
+      {/* Step dots — desktop only */}
       <div className="hidden md:flex items-center justify-between mt-4">
         {STEP_LABELS.map((label, index) => {
           const stepNum = index + 1
@@ -64,7 +64,7 @@ export function OnboardingProgress({ currentStep, totalSteps = 5 }: OnboardingPr
           return (
             <div key={label} className="flex items-center gap-2">
               <div
-                className={`w-2 h-2 rounded-full transition-all ${
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
                   isCompleted ? 'bg-pulse-accent' :
                   isCurrent ? 'bg-pulse-accent' :
                   'bg-white/[0.1]'

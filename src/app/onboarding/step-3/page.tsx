@@ -65,10 +65,10 @@ export default function OnboardingStep3() {
           <Building2 className="w-5 h-5" />
           <span className="text-sm font-medium uppercase tracking-wider">Organization Profile</span>
         </div>
-        <h1 className="font-serif text-3xl sm:text-4xl text-pulse-text mb-3">
+        <h1 className="text-heading-lg font-bold tracking-tight text-pulse-text mb-3">
           {isIndividual ? 'Tell us about your work' : 'Tell us about your organization'}
         </h1>
-        <p className="text-lg text-pulse-text-secondary">
+        <p className="text-body text-pulse-text-secondary">
           This helps match you with appropriately sized grants.
         </p>
       </motion.div>

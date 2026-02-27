@@ -66,32 +66,32 @@ export default function TermsPage() {
             <span className="text-sm text-pulse-text-secondary">Legal Agreement</span>
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold text-pulse-text mb-6 tracking-tight">
+          <h1 className="text-display-lg font-bold text-pulse-text mb-6 tracking-tight">
             Terms of <span className="text-pulse-accent">Service</span>
           </h1>
 
-          <p className="text-lg text-pulse-text-secondary leading-relaxed mb-4">
+          <p className="text-body-lg text-pulse-text-secondary leading-relaxed mb-4 max-w-2xl">
             These terms govern your use of Grants By AI. By accessing our platform, you agree to be bound by
             these terms. Please read them carefully.
           </p>
 
-          <p className="text-sm text-pulse-text-tertiary">
-            Last updated: January 2025
+          <p className="text-caption text-pulse-text-tertiary">
+            Last updated: February 2026
           </p>
         </div>
       </section>
 
       {/* What You Get */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 border-y border-white/[0.04]">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 border-y border-pulse-border/30">
         <div className="max-w-4xl mx-auto">
           <div className="mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
               <span className="text-sm text-pulse-accent">Our Services</span>
             </div>
-            <h2 className="text-3xl font-bold text-pulse-text mb-4">
+            <h2 className="text-heading-lg font-bold text-pulse-text mb-4 tracking-tight">
               What we provide
             </h2>
-            <p className="text-pulse-text-secondary">
+            <p className="text-body text-pulse-text-secondary leading-relaxed">
               Grants By AI offers a comprehensive platform for discovering and managing grant opportunities.
             </p>
           </div>
@@ -102,15 +102,15 @@ export default function TermsPage() {
               return (
                 <div
                   key={term.title}
-                  className="group p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all"
+                  className="group p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all duration-200"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-pulse-accent/10 flex items-center justify-center mb-4 group-hover:bg-pulse-accent/20 transition-colors">
+                  <div className="w-12 h-12 rounded-xl bg-pulse-accent/10 flex items-center justify-center mb-4 group-hover:bg-pulse-accent/20 transition-colors duration-200">
                     <Icon className="w-6 h-6 text-pulse-accent" />
                   </div>
-                  <h3 className="text-lg font-semibold text-pulse-text mb-2 group-hover:text-pulse-accent transition-colors">
+                  <h3 className="text-heading-sm font-semibold text-pulse-text mb-2 group-hover:text-pulse-accent transition-colors duration-200">
                     {term.title}
                   </h3>
-                  <p className="text-sm text-pulse-text-secondary leading-relaxed">
+                  <p className="text-body-sm text-pulse-text-secondary leading-relaxed">
                     {term.description}
                   </p>
                 </div>
@@ -127,7 +127,7 @@ export default function TermsPage() {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
               <span className="text-sm text-pulse-accent">Your Responsibilities</span>
             </div>
-            <h2 className="text-3xl font-bold text-pulse-text mb-4">
+            <h2 className="text-heading-lg font-bold text-pulse-text mb-4 tracking-tight">
               What we expect from you
             </h2>
           </div>
@@ -136,10 +136,10 @@ export default function TermsPage() {
             {userResponsibilities.map((responsibility, i) => (
               <div
                 key={i}
-                className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all"
+                className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all duration-200"
               >
                 <CheckCircle2 className="w-5 h-5 text-pulse-accent shrink-0 mt-0.5" />
-                <span className="text-pulse-text-secondary">{responsibility}</span>
+                <span className="text-body-sm text-pulse-text-secondary leading-relaxed">{responsibility}</span>
               </div>
             ))}
           </div>
@@ -147,17 +147,17 @@ export default function TermsPage() {
       </section>
 
       {/* Restrictions */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 border-y border-white/[0.04]">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 border-y border-pulse-border/30">
         <div className="max-w-4xl mx-auto">
           <div className="mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
               <AlertTriangle className="w-4 h-4 text-amber-400" />
               <span className="text-sm text-amber-400">Restrictions</span>
             </div>
-            <h2 className="text-3xl font-bold text-pulse-text mb-4">
+            <h2 className="text-heading-lg font-bold text-pulse-text mb-4 tracking-tight">
               Prohibited activities
             </h2>
-            <p className="text-pulse-text-secondary">
+            <p className="text-body text-pulse-text-secondary leading-relaxed">
               To maintain a fair and secure platform for everyone, certain activities are not permitted.
             </p>
           </div>
@@ -166,12 +166,12 @@ export default function TermsPage() {
             {restrictions.map((restriction) => (
               <div
                 key={restriction.title}
-                className="group p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-amber-400/20 transition-all"
+                className="group p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-amber-400/20 transition-all duration-200"
               >
-                <h3 className="font-semibold text-pulse-text mb-1 group-hover:text-amber-400 transition-colors">
+                <h3 className="font-semibold text-pulse-text mb-1 group-hover:text-amber-400 transition-colors duration-200">
                   {restriction.title}
                 </h3>
-                <p className="text-sm text-pulse-text-tertiary">
+                <p className="text-body-sm text-pulse-text-tertiary leading-relaxed">
                   {restriction.description}
                 </p>
               </div>
@@ -187,7 +187,7 @@ export default function TermsPage() {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
               <span className="text-sm text-pulse-accent">Disclaimers</span>
             </div>
-            <h2 className="text-3xl font-bold text-pulse-text mb-4">
+            <h2 className="text-heading-lg font-bold text-pulse-text mb-4 tracking-tight">
               Important notices
             </h2>
           </div>
@@ -213,14 +213,14 @@ export default function TermsPage() {
             ].map((item) => (
               <div
                 key={item.title}
-                className="flex items-start gap-4 p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all"
+                className="flex items-start gap-4 p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all duration-200"
               >
                 <div className="w-8 h-8 rounded-lg bg-pulse-accent/10 flex items-center justify-center shrink-0">
                   <FileText className="w-4 h-4 text-pulse-accent" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-pulse-text mb-1">{item.title}</h3>
-                  <p className="text-sm text-pulse-text-secondary leading-relaxed">{item.description}</p>
+                  <p className="text-body-sm text-pulse-text-secondary leading-relaxed">{item.description}</p>
                 </div>
               </div>
             ))}
@@ -229,17 +229,17 @@ export default function TermsPage() {
       </section>
 
       {/* Intellectual Property */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 border-y border-white/[0.04]">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 border-y border-pulse-border/30">
         <div className="max-w-4xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
                 <span className="text-sm text-pulse-accent">Intellectual Property</span>
               </div>
-              <h2 className="text-3xl font-bold text-pulse-text mb-4">
+              <h2 className="text-heading-lg font-bold text-pulse-text mb-4 tracking-tight">
                 Ownership & licensing
               </h2>
-              <p className="text-pulse-text-secondary leading-relaxed">
+              <p className="text-body text-pulse-text-secondary leading-relaxed">
                 The Grants By AI platform, including its design, features, code, and content, is protected
                 by intellectual property laws. You retain ownership of any data you submit, but grant
                 us a license to use it to provide our services.
@@ -256,7 +256,7 @@ export default function TermsPage() {
                   key={item.label}
                   className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]"
                 >
-                  <div className="text-sm text-pulse-text-tertiary mb-1">{item.label}</div>
+                  <div className="text-caption text-pulse-text-tertiary mb-1">{item.label}</div>
                   <div className="font-semibold text-pulse-text">{item.value}</div>
                 </div>
               ))}
@@ -276,25 +276,25 @@ export default function TermsPage() {
             <Users className="w-8 h-8 text-pulse-accent" />
           </div>
 
-          <h2 className="text-3xl font-bold text-pulse-text mb-4">
+          <h2 className="text-heading-lg font-bold text-pulse-text mb-4 tracking-tight">
             Questions about our terms?
           </h2>
 
-          <p className="text-lg text-pulse-text-secondary mb-8">
+          <p className="text-body-lg text-pulse-text-secondary mb-8">
             Our legal team is happy to clarify any part of this agreement.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4">
             <a
               href="mailto:legal@grantsby.ai"
-              className="group inline-flex items-center gap-2 px-8 py-4 bg-pulse-accent text-pulse-bg font-semibold rounded-xl hover:bg-pulse-accent/90 transition-all"
+              className="group inline-flex items-center gap-2 px-8 py-4 bg-pulse-accent text-pulse-bg font-semibold rounded-xl hover:bg-pulse-accent/90 transition-all duration-200"
             >
               Contact Legal Team
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
             </a>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white/[0.03] border border-white/[0.08] text-pulse-text font-semibold rounded-xl hover:border-pulse-accent/30 transition-all"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white/[0.03] border border-white/[0.08] text-pulse-text font-semibold rounded-xl hover:border-pulse-accent/30 transition-all duration-200"
             >
               Return Home
             </Link>

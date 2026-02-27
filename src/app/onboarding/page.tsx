@@ -19,7 +19,6 @@ import {
   CheckCircle2,
 } from 'lucide-react'
 import { OnboardingLayout } from '@/components/onboarding'
-import { Button } from '@/components/ui/button'
 
 export default function OnboardingIndexPage() {
   const router = useRouter()
@@ -40,10 +39,10 @@ export default function OnboardingIndexPage() {
           <Sparkles className="w-5 h-5" />
           <span className="text-sm font-medium uppercase tracking-wider">Welcome</span>
         </div>
-        <h1 className="font-serif text-3xl sm:text-4xl text-pulse-text mb-3">
+        <h1 className="text-heading-lg font-bold tracking-tight text-pulse-text mb-3">
           Let&apos;s find your perfect grants
         </h1>
-        <p className="text-lg text-pulse-text-secondary">
+        <p className="text-body text-pulse-text-secondary">
           Choose how you&apos;d like to set up your profile. The more we know, the better we can match you with funding opportunities.
         </p>
       </motion.div>
@@ -159,20 +158,19 @@ export default function OnboardingIndexPage() {
         </motion.div>
       </div>
 
-      {/* Skip link */}
+      {/* Skip as text link, not button */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}
         className="mt-8 text-center"
       >
-        <Button
-          variant="ghost"
+        <button
           onClick={() => router.push('/app')}
-          className="text-pulse-text-tertiary hover:text-pulse-text-secondary"
+          className="text-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors duration-150"
         >
           Skip for now and browse all grants
-        </Button>
+        </button>
       </motion.div>
     </OnboardingLayout>
   )

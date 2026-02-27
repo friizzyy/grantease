@@ -1,10 +1,18 @@
 /**
  * GEMINI AI CLIENT
  * ----------------
- * Centralized Gemini AI configuration and client setup
+ * Centralized Gemini AI configuration using the new @google/genai SDK.
+ * Uses gemini-2.0-flash for all tasks with retry logic and proper JSON mode.
  */
 
-import { GoogleGenerativeAI, GenerativeModel, GenerateContentResult } from '@google/generative-ai'
+import { GoogleGenAI, type GenerateContentResponse } from '@google/genai'
+
+/** Default model for all AI tasks */
+export const GEMINI_MODEL = 'gemini-2.0-flash'
+
+/** Max retries for transient failures */
+const MAX_RETRIES = 2
+const BASE_DELAY_MS = 1000
 
 /**
  * Token usage metadata from a Gemini API response
@@ -31,24 +39,10 @@ export interface GeminiJSONResponse<T> {
   usage: GeminiUsage
 }
 
-/**
- * Extract token usage from a Gemini GenerateContentResult.
- * Falls back to zeros if usageMetadata is not available.
- */
-function extractUsage(result: GenerateContentResult): GeminiUsage {
-  const meta = result.response.usageMetadata
-  return {
-    promptTokens: meta?.promptTokenCount ?? 0,
-    completionTokens: meta?.candidatesTokenCount ?? 0,
-    totalTokens: meta?.totalTokenCount ?? 0,
-  }
-}
-
 /** Default zero usage for error/null cases */
 const ZERO_USAGE: GeminiUsage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
 
-let geminiInstance: GoogleGenerativeAI | null = null
-let modelInstance: GenerativeModel | null = null
+let aiInstance: GoogleGenAI | null = null
 
 /**
  * Check if Gemini is configured
@@ -58,155 +52,215 @@ export function isGeminiConfigured(): boolean {
 }
 
 /**
- * Get or create the Gemini client instance
+ * Get or create the GoogleGenAI client instance.
+ * Returns the client for services that need direct access (e.g., grounding).
  */
-export function getGeminiClient(): GoogleGenerativeAI | null {
+export function getAIClient(): GoogleGenAI | null {
   if (!process.env.GEMINI_API_KEY) {
     console.warn('GEMINI_API_KEY not configured')
     return null
   }
 
-  if (!geminiInstance) {
-    geminiInstance = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+  if (!aiInstance) {
+    aiInstance = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
   }
 
-  return geminiInstance
+  return aiInstance
 }
 
 /**
- * Get the Gemini Pro model for text generation
+ * Extract token usage from a GenerateContentResponse
  */
-export function getGeminiModel(): GenerativeModel | null {
-  const client = getGeminiClient()
-  if (!client) return null
+export function extractUsageFromResponse(response: GenerateContentResponse): GeminiUsage {
+  const meta = response.usageMetadata
+  return {
+    promptTokens: meta?.promptTokenCount ?? 0,
+    completionTokens: meta?.candidatesTokenCount ?? 0,
+    totalTokens: meta?.totalTokenCount ?? 0,
+  }
+}
 
-  if (!modelInstance) {
-    // Use gemini-1.5-flash for faster responses, or gemini-1.5-pro for complex tasks
-    modelInstance = client.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      generationConfig: {
-        temperature: 0.3, // Lower for more consistent/factual responses
-        topP: 0.8,
-        topK: 40,
-        maxOutputTokens: 2048,
-      },
-    })
+/**
+ * Sleep utility for retry backoff
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+/**
+ * Retry wrapper with exponential backoff for transient API failures
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  retries: number = MAX_RETRIES
+): Promise<T> {
+  let lastError: Error | null = null
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn()
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error))
+      const msg = lastError.message.toLowerCase()
+
+      // Don't retry on non-transient errors
+      if (msg.includes('api key') || msg.includes('permission') || msg.includes('invalid')) {
+        throw lastError
+      }
+
+      if (attempt < retries) {
+        const delay = BASE_DELAY_MS * Math.pow(2, attempt)
+        console.warn(`[Gemini] Attempt ${attempt + 1} failed, retrying in ${delay}ms:`, lastError.message)
+        await sleep(delay)
+      }
+    }
   }
 
-  return modelInstance
+  throw lastError!
 }
 
 /**
- * Get the Gemini Pro model for complex reasoning tasks
+ * Text generation with usage metadata and retry logic.
+ * @param prompt - The prompt to send
+ * @param _useProModel - Deprecated, kept for backward compatibility (ignored)
  */
-export function getGeminiProModel(): GenerativeModel | null {
-  const client = getGeminiClient()
-  if (!client) return null
-
-  return client.getGenerativeModel({
-    model: 'gemini-1.5-pro',
-    generationConfig: {
-      temperature: 0.2, // Even lower for analytical tasks
-      topP: 0.9,
-      topK: 40,
-      maxOutputTokens: 4096,
-    },
-  })
-}
-
-/**
- * Get a Gemini model configured for JSON responses (application AI service)
- */
-export function getGeminiJsonModel(): GenerativeModel | null {
-  const client = getGeminiClient()
-  if (!client) return null
-
-  return client.getGenerativeModel({
-    model: 'gemini-1.5-flash',
-    generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 4096,
-      responseMimeType: 'application/json',
-    },
-  })
-}
-
-/**
- * Get a Gemini model for data extraction (extractor + enrich routes)
- */
-export function getGeminiExtractionModel(): GenerativeModel | null {
-  const client = getGeminiClient()
-  if (!client) return null
-
-  return client.getGenerativeModel({
-    model: 'gemini-1.5-flash',
-  })
-}
-
-/**
- * Text generation with usage metadata.
- * Returns both the generated text and token counts from the API response.
- */
-export async function generateTextWithUsage(prompt: string, useProModel = false): Promise<GeminiTextResponse> {
-  const model = useProModel ? getGeminiProModel() : getGeminiModel()
-  if (!model) return { text: null, usage: ZERO_USAGE }
+export async function generateTextWithUsage(prompt: string, _useProModel = false): Promise<GeminiTextResponse> {
+  const ai = getAIClient()
+  if (!ai) return { text: null, usage: ZERO_USAGE }
 
   try {
-    const result = await model.generateContent(prompt)
-    const usage = extractUsage(result)
-    const text = result.response.text()
+    const response = await withRetry(() =>
+      ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: prompt,
+        config: {
+          temperature: 0.3,
+          topP: 0.8,
+          topK: 40,
+          maxOutputTokens: 4096,
+        },
+      })
+    )
+
+    const usage = extractUsageFromResponse(response)
+    const text = response.text ?? null
     return { text, usage }
   } catch (error) {
-    console.error('Gemini generation error:', error)
+    console.error('[Gemini] Text generation error:', error)
     return { text: null, usage: ZERO_USAGE }
   }
 }
 
 /**
  * Simple wrapper for text generation (backward-compatible).
- * Use generateTextWithUsage() when you need token counts.
  */
-export async function generateText(prompt: string, useProModel = false): Promise<string | null> {
-  const response = await generateTextWithUsage(prompt, useProModel)
+export async function generateText(prompt: string, _useProModel = false): Promise<string | null> {
+  const response = await generateTextWithUsage(prompt)
   return response.text
 }
 
 /**
- * JSON generation with usage metadata.
- * Returns both the parsed JSON data and token counts from the API response.
+ * JSON generation using native JSON response mode with retry logic.
+ * Uses responseMimeType: 'application/json' for reliable structured output.
+ * @param prompt - The prompt (should instruct the model to return JSON)
+ * @param _useProModel - Deprecated, kept for backward compatibility (ignored)
  */
-export async function generateJSONWithUsage<T>(prompt: string, useProModel = false): Promise<GeminiJSONResponse<T>> {
-  const { text, usage } = await generateTextWithUsage(prompt, useProModel)
-  if (!text) return { data: null, usage }
+export async function generateJSONWithUsage<T>(prompt: string, _useProModel = false): Promise<GeminiJSONResponse<T>> {
+  const ai = getAIClient()
+  if (!ai) return { data: null, usage: ZERO_USAGE }
 
   try {
-    // Extract JSON from the response (handle markdown code blocks)
-    let jsonStr = text
-    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/)
-    if (jsonMatch) {
-      jsonStr = jsonMatch[1].trim()
-    }
+    const response = await withRetry(() =>
+      ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: prompt,
+        config: {
+          temperature: 0.3,
+          topP: 0.9,
+          maxOutputTokens: 4096,
+          responseMimeType: 'application/json',
+        },
+      })
+    )
 
-    return { data: JSON.parse(jsonStr) as T, usage }
+    const usage = extractUsageFromResponse(response)
+    const text = response.text
+
+    if (!text) return { data: null, usage }
+
+    try {
+      return { data: JSON.parse(text) as T, usage }
+    } catch (parseError) {
+      // Fallback: try extracting JSON from markdown code blocks
+      const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/)
+      if (jsonMatch) {
+        return { data: JSON.parse(jsonMatch[1].trim()) as T, usage }
+      }
+      console.error('[Gemini] Failed to parse JSON response:', parseError)
+      return { data: null, usage }
+    }
   } catch (error) {
-    console.error('Failed to parse Gemini JSON response:', error)
-    return { data: null, usage }
+    console.error('[Gemini] JSON generation error:', error)
+    return { data: null, usage: ZERO_USAGE }
   }
 }
 
 /**
  * Generate JSON response from Gemini (backward-compatible).
- * Use generateJSONWithUsage() when you need token counts.
  */
-export async function generateJSON<T>(prompt: string, useProModel = false): Promise<T | null> {
-  const response = await generateJSONWithUsage<T>(prompt, useProModel)
+export async function generateJSON<T>(prompt: string, _useProModel = false): Promise<T | null> {
+  const response = await generateJSONWithUsage<T>(prompt)
   return response.data
 }
 
+// ============= BACKWARD COMPATIBILITY =============
+// These functions exist for services that previously called model.generateContent() directly.
+// They are thin wrappers that map old patterns to the new SDK.
+
 /**
- * Extract token usage from a raw GenerateContentResult.
- * Useful for services that call model.generateContent() directly.
+ * @deprecated Use getAIClient() + ai.models.generateContent() directly.
+ * Kept for backward compatibility during migration.
  */
-export function extractUsageFromResult(result: GenerateContentResult): GeminiUsage {
-  return extractUsage(result)
+export function getGeminiClient(): GoogleGenAI | null {
+  return getAIClient()
+}
+
+/**
+ * @deprecated Use generateTextWithUsage() or getAIClient() directly.
+ */
+export function getGeminiModel(): null {
+  console.warn('[Gemini] getGeminiModel() is deprecated. Use getAIClient() or generateText() instead.')
+  return null
+}
+
+/**
+ * @deprecated Use generateTextWithUsage() or getAIClient() directly.
+ */
+export function getGeminiProModel(): null {
+  console.warn('[Gemini] getGeminiProModel() is deprecated. Use getAIClient() or generateText() instead.')
+  return null
+}
+
+/**
+ * @deprecated Use generateJSONWithUsage() or getAIClient() directly.
+ */
+export function getGeminiJsonModel(): null {
+  console.warn('[Gemini] getGeminiJsonModel() is deprecated. Use getAIClient() or generateJSON() instead.')
+  return null
+}
+
+/**
+ * @deprecated Use getAIClient() directly.
+ */
+export function getGeminiExtractionModel(): null {
+  console.warn('[Gemini] getGeminiExtractionModel() is deprecated. Use getAIClient() directly.')
+  return null
+}
+
+/**
+ * @deprecated Use extractUsageFromResponse() with new SDK response type.
+ */
+export function extractUsageFromResult(_result: unknown): GeminiUsage {
+  console.warn('[Gemini] extractUsageFromResult() is deprecated. Use extractUsageFromResponse() instead.')
+  return ZERO_USAGE
 }

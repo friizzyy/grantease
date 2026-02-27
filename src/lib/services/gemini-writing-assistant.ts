@@ -4,7 +4,7 @@
  * Uses Gemini AI to help users write grant applications
  */
 
-import { generateText, generateTextWithUsage, generateJSON, generateJSONWithUsage, isGeminiConfigured, getGeminiProModel, extractUsageFromResult, type GeminiUsage } from './gemini-client'
+import { generateText, generateTextWithUsage, generateJSON, generateJSONWithUsage, isGeminiConfigured, type GeminiUsage } from './gemini-client'
 import { UserProfile } from '@/lib/types/onboarding'
 import { sanitizePromptInput, sanitizePromptArray } from '@/lib/utils/prompt-sanitizer'
 
@@ -380,9 +380,6 @@ export async function chatWithWritingAssistant(
     return { result: null, usage: ZERO_USAGE }
   }
 
-  const model = getGeminiProModel()
-  if (!model) return { result: null, usage: ZERO_USAGE }
-
   const profileContext = buildProfileContext(profile)
 
   // Build conversation history (sanitize each message to prevent injection via chat history)
@@ -400,6 +397,6 @@ ${history ? `PREVIOUS CONVERSATION:\n${history}\n\n` : ''}USER'S MESSAGE: ${sani
 
 Provide helpful, specific advice. If they share a draft, offer constructive feedback. If they ask questions, answer them. Keep responses focused and actionable.`
 
-  const { text, usage } = await generateTextWithUsage(prompt, true)
+  const { text, usage } = await generateTextWithUsage(prompt)
   return { result: text, usage }
 }

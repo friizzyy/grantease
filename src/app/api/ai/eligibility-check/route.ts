@@ -10,7 +10,7 @@ import {
   quickEligibilityCheck,
   type GrantForEligibility,
 } from '@/lib/services/gemini-eligibility-checker'
-import { isGeminiConfigured } from '@/lib/services/gemini-client'
+import { isGeminiConfigured, GEMINI_MODEL } from '@/lib/services/gemini-client'
 import { z } from 'zod'
 
 const eligibilityCheckSchema = z.object({
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
         data: {
           userId: session.user.id,
           type: 'eligibility_check',
-          model: 'gemini-1.5-pro',
+          model: GEMINI_MODEL,
           promptTokens: usage.promptTokens,
           completionTokens: usage.completionTokens,
           totalTokens: usage.totalTokens,

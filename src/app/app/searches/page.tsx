@@ -112,25 +112,25 @@ function SearchStats() {
       className="mb-6"
     >
       <GlassCard variant="accent" className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4 sm:gap-6 flex-wrap">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-pulse-accent/20 border border-pulse-accent/30 flex items-center justify-center">
                 <Search className="w-5 h-5 text-pulse-accent" />
               </div>
               <div>
-                <p className="text-2xl font-semibold text-pulse-text">{totalSearches}</p>
+                <p className="text-3xl font-bold tabular-nums text-pulse-text">{totalSearches}</p>
                 <p className="text-xs text-pulse-text-tertiary">Saved searches</p>
               </div>
             </div>
-            <div className="w-px h-10 bg-pulse-border" />
+            <div className="w-px h-10 bg-pulse-border hidden sm:block" />
             <div>
-              <p className="text-2xl font-semibold text-pulse-accent">{totalAlerts}</p>
+              <p className="text-3xl font-bold tabular-nums text-pulse-accent">{totalAlerts}</p>
               <p className="text-xs text-pulse-text-tertiary">Active alerts</p>
             </div>
-            <div className="w-px h-10 bg-pulse-border" />
+            <div className="w-px h-10 bg-pulse-border hidden sm:block" />
             <div>
-              <p className="text-2xl font-semibold text-pulse-warning">{totalNewMatches}</p>
+              <p className="text-3xl font-bold tabular-nums text-pulse-warning">{totalNewMatches}</p>
               <p className="text-xs text-pulse-text-tertiary">New matches</p>
             </div>
           </div>
@@ -235,7 +235,8 @@ function SearchCard({
             <div className="flex items-center gap-2 pr-3 border-r border-pulse-border">
               <button
                 onClick={() => onToggleAlert(search.id)}
-                className={`p-2 rounded-lg transition-all ${
+                aria-label={search.alertEnabled ? 'Disable alert for this search' : 'Enable alert for this search'}
+                className={`p-2 rounded-lg transition-all min-h-[44px] min-w-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none ${
                   search.alertEnabled
                     ? 'bg-pulse-accent/20 text-pulse-accent'
                     : 'bg-pulse-surface text-pulse-text-tertiary hover:text-pulse-text'
@@ -274,12 +275,16 @@ function SearchCard({
 
             {/* More Actions */}
             <div className="flex items-center">
-              <button className="p-2 rounded-lg text-pulse-text-tertiary hover:text-pulse-text hover:bg-pulse-surface transition-all">
+              <button
+                aria-label="Edit search"
+                className="p-2 rounded-lg text-pulse-text-tertiary hover:text-pulse-text hover:bg-pulse-surface transition-all min-h-[44px] min-w-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none"
+              >
                 <Edit3 className="w-4 h-4" />
               </button>
               <button
                 onClick={() => onDelete(search.id)}
-                className="p-2 rounded-lg text-pulse-text-tertiary hover:text-pulse-error hover:bg-pulse-error/10 transition-all"
+                aria-label="Delete search"
+                className="p-2 rounded-lg text-pulse-text-tertiary hover:text-pulse-error hover:bg-pulse-error/10 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -350,7 +355,7 @@ export default function SavedSearchesPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="px-4 md:px-6 lg:px-8 py-8">
       {/* Header */}
       <motion.div
         className="mb-8"
@@ -365,7 +370,7 @@ export default function SavedSearchesPage() {
                 Search Management
               </span>
             </div>
-            <h1 className="font-serif text-display text-pulse-text">
+            <h1 className="text-heading-lg md:text-display font-bold tracking-tight text-pulse-text">
               Saved Searches
             </h1>
             <p className="text-pulse-text-secondary mt-2">

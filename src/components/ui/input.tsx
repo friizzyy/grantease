@@ -59,10 +59,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           aria-invalid={!!error}
           aria-describedby={errorId}
           className={cn(
-            'flex h-10 w-full rounded-lg bg-pulse-surface/50 border border-pulse-border px-4 py-2 text-sm text-pulse-text placeholder:text-pulse-text-tertiary',
-            'transition-all duration-200',
-            'hover:border-pulse-border-hover hover:bg-pulse-surface/70',
-            'focus:outline-none focus:border-pulse-accent/40',
+            'flex h-10 w-full rounded-lg bg-pulse-surface border border-pulse-border px-4 py-2.5 text-sm text-pulse-text-primary placeholder:text-pulse-text-tertiary',
+            'transition-all duration-150',
+            'hover:border-pulse-border-hover hover:bg-pulse-surface',
+            'focus:outline-none focus:ring-2 focus:ring-pulse-accent/30 focus:border-pulse-accent',
             'disabled:cursor-not-allowed disabled:opacity-50',
             icon && 'pl-10',
             error && 'border-pulse-error focus:border-pulse-error',
@@ -129,10 +129,10 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 
         <textarea
           className={cn(
-            'flex min-h-[80px] w-full rounded-lg bg-pulse-surface/50 border border-pulse-border px-4 py-3 text-sm text-pulse-text placeholder:text-pulse-text-tertiary',
-            'transition-all duration-200',
-            'hover:border-pulse-border-hover hover:bg-pulse-surface/70',
-            'focus:outline-none focus:border-pulse-accent/40',
+            'flex min-h-[80px] w-full rounded-lg bg-pulse-surface border border-pulse-border px-4 py-2.5 text-sm text-pulse-text-primary placeholder:text-pulse-text-tertiary',
+            'transition-all duration-150',
+            'hover:border-pulse-border-hover hover:bg-pulse-surface',
+            'focus:outline-none focus:ring-2 focus:ring-pulse-accent/30 focus:border-pulse-accent',
             'disabled:cursor-not-allowed disabled:opacity-50',
             'resize-none',
             error && 'border-pulse-error focus:border-pulse-error',

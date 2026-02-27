@@ -13,7 +13,7 @@ import {
   reviewApplicationSection,
   type GrantForApplication,
 } from '@/lib/services/gemini-application-helper'
-import { isGeminiConfigured } from '@/lib/services/gemini-client'
+import { isGeminiConfigured, GEMINI_MODEL } from '@/lib/services/gemini-client'
 import { z } from 'zod'
 
 const grantSchema = z.object({
@@ -206,7 +206,7 @@ export async function POST(request: NextRequest) {
         data: {
           userId: session.user.id,
           type: `application_helper_${action}`,
-          model: 'gemini-1.5-pro',
+          model: GEMINI_MODEL,
           promptTokens: usage.promptTokens,
           completionTokens: usage.completionTokens,
           totalTokens: usage.totalTokens,

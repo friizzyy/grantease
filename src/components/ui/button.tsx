@@ -6,14 +6,14 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pulse-accent focus-visible:ring-offset-2 focus-visible:ring-offset-pulse-bg disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pulse-accent focus-visible:ring-offset-2 focus-visible:ring-offset-pulse-bg disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]',
   {
     variants: {
       variant: {
         default:
-          'bg-pulse-accent text-pulse-bg hover:bg-pulse-accent/90 hover:shadow-[0_0_20px_rgba(64,255,170,0.3)]',
+          'bg-pulse-accent text-pulse-bg font-medium hover:bg-pulse-accent/90',
         secondary:
-          'bg-pulse-surface border border-pulse-border text-pulse-text hover:bg-pulse-elevated hover:border-pulse-border-hover',
+          'bg-transparent border border-pulse-border text-pulse-text-primary hover:bg-pulse-elevated hover:border-pulse-border-hover',
         outline:
           'border border-pulse-border bg-transparent text-pulse-text hover:bg-pulse-surface hover:border-pulse-border-hover',
         ghost:
@@ -24,7 +24,7 @@ const buttonVariants = cva(
           'bg-pulse-error/10 text-pulse-error border border-pulse-error/20 hover:bg-pulse-error/20',
       },
       size: {
-        default: 'h-10 px-5 py-2',
+        default: 'h-10 px-5 py-2.5',
         sm: 'h-8 px-3 text-xs',
         lg: 'h-12 px-8 text-base',
         xl: 'h-14 px-10 text-lg',

@@ -13,6 +13,7 @@ import {
   isGeminiConfigured,
   type SectionType,
 } from '@/lib/services/gemini-writing-assistant'
+import { GEMINI_MODEL } from '@/lib/services/gemini-client'
 import { z } from 'zod'
 
 const writingContextSchema = z.object({
@@ -235,7 +236,7 @@ export async function POST(request: NextRequest) {
         data: {
           userId: session.user.id,
           type: 'writing_assistant',
-          model: 'gemini-1.5-pro',
+          model: GEMINI_MODEL,
           promptTokens: usage.promptTokens,
           completionTokens: usage.completionTokens,
           totalTokens: usage.totalTokens,

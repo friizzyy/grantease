@@ -67,10 +67,10 @@ export default function OnboardingStep5() {
           <Zap className="w-5 h-5" />
           <span className="text-sm font-medium uppercase tracking-wider">Final Step</span>
         </div>
-        <h1 className="font-serif text-3xl sm:text-4xl text-pulse-text mb-3">
+        <h1 className="text-heading-lg font-bold tracking-tight text-pulse-text mb-3">
           Your preferences
         </h1>
-        <p className="text-lg text-pulse-text-secondary">
+        <p className="text-body text-pulse-text-secondary">
           Help us prioritize grants that fit your needs.
         </p>
       </motion.div>

@@ -5,7 +5,7 @@
  * Uses user vault data and grant context to generate section drafts.
  */
 
-import { getGeminiJsonModel } from './gemini-client'
+import { getAIClient, GEMINI_MODEL, isGeminiConfigured } from './gemini-client'
 import { z } from 'zod'
 
 import { safeJsonParse } from '@/lib/api-utils'
@@ -146,8 +146,8 @@ export async function generateSectionDraft(
   confidence: number
   sources: string[]
 } | null> {
-  const model = getGeminiJsonModel()
-  if (!model) return null
+  const ai = getAIClient()
+  if (!ai) return null
 
   const context = await buildApplicationContext(userId, grantId, formData)
 
@@ -304,8 +304,9 @@ Requirements:
   if (!prompt) return null
 
   try {
-    const result = await model.generateContent(`
-You are an expert grant writer helping prepare a grant application.
+    const result = await ai.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: `You are an expert grant writer helping prepare a grant application.
 
 ${prompt}
 
@@ -314,10 +315,15 @@ Respond in JSON format:
   "content": "The generated text content",
   "confidence": 0.8,
   "sources": ["List of data sources used like 'user mission statement', 'grant description', etc."]
-}
-`)
+}`,
+      config: {
+        temperature: 0.3,
+        maxOutputTokens: 4096,
+        responseMimeType: 'application/json',
+      },
+    })
 
-    const text = result.response.text()
+    const text = result.text ?? ''
     const parsed: unknown = JSON.parse(text)
     const validated = SectionDraftSchema.parse(parsed)
 
@@ -377,14 +383,15 @@ export async function generateSuggestions(
   grantId: string,
   formData: ApplicationFormData
 ): Promise<AISuggestion[]> {
-  const model = getGeminiJsonModel()
-  if (!model) return []
+  const ai = getAIClient()
+  if (!ai) return []
 
   const context = await buildApplicationContext(userId, grantId, formData)
 
   try {
-    const result = await model.generateContent(`
-You are a grant writing expert reviewing a draft application.
+    const result = await ai.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: `You are a grant writing expert reviewing a draft application.
 
 GRANT: ${sanitizePromptInput(context.grant.title, 500)}
 FUNDER: ${sanitizePromptInput(context.grant.sponsor, 500)}
@@ -420,10 +427,15 @@ Respond in JSON format:
   ]
 }
 
-Limit to 5-8 most important suggestions.
-`)
+Limit to 5-8 most important suggestions.`,
+      config: {
+        temperature: 0.3,
+        maxOutputTokens: 4096,
+        responseMimeType: 'application/json',
+      },
+    })
 
-    const text = result.response.text()
+    const text = result.text ?? ''
     const parsed: unknown = JSON.parse(text)
     const validated = ApplicationSuggestionsSchema.parse(parsed)
 
@@ -457,14 +469,15 @@ export async function generateBudgetSuggestions(
   totalBudget: number
   notes: string
 } | null> {
-  const model = getGeminiJsonModel()
-  if (!model) return null
+  const ai = getAIClient()
+  if (!ai) return null
 
   const context = await buildApplicationContext(userId, grantId, formData)
 
   try {
-    const result = await model.generateContent(`
-You are a grant budget expert helping create a realistic project budget.
+    const result = await ai.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: `You are a grant budget expert helping create a realistic project budget.
 
 GRANT: ${sanitizePromptInput(context.grant.title, 500)}
 FUNDER: ${sanitizePromptInput(context.grant.sponsor, 500)}
@@ -493,10 +506,15 @@ Respond in JSON format:
   "notes": "Brief notes about the budget approach and any assumptions"
 }
 
-Target the budget to fit within the funder's range if specified.
-`)
+Target the budget to fit within the funder's range if specified.`,
+      config: {
+        temperature: 0.3,
+        maxOutputTokens: 4096,
+        responseMimeType: 'application/json',
+      },
+    })
 
-    const text = result.response.text()
+    const text = result.text ?? ''
     const parsed: unknown = JSON.parse(text)
     const validated = BudgetSuggestionSchema.parse(parsed)
 

@@ -147,13 +147,13 @@ export default function QuickOnboardingPage() {
         </div>
       </header>
 
-      {/* Progress bar */}
-      <div className="relative z-10 w-full h-1 bg-pulse-border">
+      {/* Progress bar — smooth mint animated */}
+      <div className="relative z-10 w-full h-1 bg-pulse-surface rounded-full overflow-hidden">
         <motion.div
-          className="h-full bg-pulse-accent"
-          initial={{ width: 0 }}
+          className="h-full bg-pulse-accent rounded-full"
+          initial={{ width: '0%' }}
           animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
         />
       </div>
 
@@ -173,7 +173,7 @@ export default function QuickOnboardingPage() {
                   <div className="w-12 h-12 rounded-xl bg-pulse-accent/20 flex items-center justify-center mx-auto mb-4">
                     <Building2 className="w-6 h-6 text-pulse-accent" />
                   </div>
-                  <h1 className="text-2xl font-serif text-pulse-text mb-2">
+                  <h1 className="text-heading-lg font-bold tracking-tight text-pulse-text mb-2">
                     What type of organization?
                   </h1>
                   <p className="text-pulse-text-secondary">
@@ -188,8 +188,8 @@ export default function QuickOnboardingPage() {
                       onClick={() => setEntityType(entity.value)}
                       className={`p-4 rounded-xl border text-left transition-all ${
                         entityType === entity.value
-                          ? 'bg-pulse-accent/10 border-pulse-accent text-pulse-text'
-                          : 'bg-white/[0.02] border-white/[0.06] text-pulse-text-secondary hover:border-white/[0.12]'
+                          ? 'bg-pulse-accent/5 border-pulse-accent/30 ring-1 ring-pulse-accent/20 text-pulse-text'
+                          : 'bg-pulse-surface border-pulse-border text-pulse-text-secondary hover:border-pulse-border-hover'
                       }`}
                     >
                       <div className="text-lg mb-1">{entity.icon}</div>
@@ -212,7 +212,7 @@ export default function QuickOnboardingPage() {
                   <div className="w-12 h-12 rounded-xl bg-pulse-accent/20 flex items-center justify-center mx-auto mb-4">
                     <MapPin className="w-6 h-6 text-pulse-accent" />
                   </div>
-                  <h1 className="text-2xl font-serif text-pulse-text mb-2">
+                  <h1 className="text-heading-lg font-bold tracking-tight text-pulse-text mb-2">
                     Where are you based?
                   </h1>
                   <p className="text-pulse-text-secondary">
@@ -247,7 +247,7 @@ export default function QuickOnboardingPage() {
                   <div className="w-12 h-12 rounded-xl bg-pulse-accent/20 flex items-center justify-center mx-auto mb-4">
                     <Target className="w-6 h-6 text-pulse-accent" />
                   </div>
-                  <h1 className="text-2xl font-serif text-pulse-text mb-2">
+                  <h1 className="text-heading-lg font-bold tracking-tight text-pulse-text mb-2">
                     What do you focus on?
                   </h1>
                   <p className="text-pulse-text-secondary">
@@ -267,10 +267,10 @@ export default function QuickOnboardingPage() {
                         disabled={isDisabled}
                         className={`p-4 rounded-xl border text-left transition-all ${
                           isSelected
-                            ? 'bg-pulse-accent/10 border-pulse-accent text-pulse-text'
+                            ? 'bg-pulse-accent/5 border-pulse-accent/30 ring-1 ring-pulse-accent/20 text-pulse-text'
                             : isDisabled
-                            ? 'bg-white/[0.01] border-white/[0.04] text-pulse-text-tertiary cursor-not-allowed'
-                            : 'bg-white/[0.02] border-white/[0.06] text-pulse-text-secondary hover:border-white/[0.12]'
+                            ? 'bg-pulse-surface/50 border-pulse-border/50 text-pulse-text-tertiary cursor-not-allowed'
+                            : 'bg-pulse-surface border-pulse-border text-pulse-text-secondary hover:border-pulse-border-hover'
                         }`}
                       >
                         <div className="flex items-center justify-between">

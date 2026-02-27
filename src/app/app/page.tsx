@@ -20,6 +20,12 @@ import {
   RefreshCw,
   AlertCircle,
   Shield,
+  Calendar,
+  CheckCircle,
+  XCircle,
+  ExternalLink,
+  Loader2,
+  AlertTriangle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -173,10 +179,10 @@ function AIRecommendationCard({ rec, index }: { rec: typeof aiRecommendations[0]
     >
       <Link
         href={rec.href}
-        className={`block p-4 rounded-xl border transition-all group h-full ${
+        className={`block p-5 md:p-6 rounded-xl border transition-all duration-200 group h-full hover:shadow-lg hover:shadow-pulse-accent/5 hover:-translate-y-0.5 ${
           isHigh
             ? 'bg-gradient-to-br from-pulse-accent/15 to-pulse-accent/5 border-pulse-accent/30 hover:border-pulse-accent/50'
-            : 'bg-pulse-surface/50 border-pulse-border hover:border-pulse-accent/30'
+            : 'bg-pulse-surface border-pulse-border/40 hover:border-pulse-border'
         }`}
       >
         <div className="flex items-start gap-3">
@@ -208,18 +214,128 @@ function AIRecommendationCard({ rec, index }: { rec: typeof aiRecommendations[0]
 // Loading skeleton
 function DashboardSkeleton() {
   return (
-    <div className="p-8 animate-pulse">
+    <div className="px-4 md:px-6 lg:px-8 py-8 animate-pulse">
+      {/* Header */}
       <div className="mb-8">
-        <div className="h-4 bg-pulse-surface rounded w-32 mb-2" />
-        <div className="h-10 bg-pulse-surface rounded w-64 mb-6" />
-        <div className="h-32 bg-pulse-surface rounded-2xl" />
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <div className="h-3 bg-pulse-surface rounded w-28 mb-2" />
+            <div className="h-10 bg-pulse-surface rounded w-72" />
+          </div>
+          <div className="h-9 bg-pulse-surface rounded-lg w-28" />
+        </div>
+
+        {/* Command Bar */}
+        <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 bg-pulse-surface rounded-lg" />
+            <div className="h-4 bg-pulse-surface rounded w-36" />
+          </div>
+          <div className="h-11 bg-pulse-surface rounded-xl mb-3" />
+          <div className="flex flex-wrap gap-2">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="h-7 bg-pulse-surface rounded-full w-36" />
+            ))}
+          </div>
+        </div>
       </div>
-      <div className="grid grid-cols-12 gap-5">
-        <div className="col-span-4 h-40 bg-pulse-surface rounded-2xl" />
-        <div className="col-span-8 h-40 bg-pulse-surface rounded-2xl" />
-        <div className="col-span-12 h-48 bg-pulse-surface rounded-2xl" />
-        <div className="col-span-7 h-64 bg-pulse-surface rounded-2xl" />
-        <div className="col-span-5 h-64 bg-pulse-surface rounded-2xl" />
+
+      {/* Bento Grid */}
+      <div className="grid grid-cols-12 gap-4 md:gap-6">
+        {/* Funding Potential */}
+        <div className="col-span-12 lg:col-span-4">
+          <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-5 h-40">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 bg-pulse-surface rounded-lg" />
+              <div className="h-3 bg-pulse-surface rounded w-28" />
+            </div>
+            <div className="h-10 bg-pulse-surface rounded w-32 mb-2" />
+            <div className="h-3 bg-pulse-surface rounded w-24" />
+          </div>
+        </div>
+
+        {/* Pipeline */}
+        <div className="col-span-12 lg:col-span-8">
+          <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-5 h-40">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-4 bg-pulse-surface rounded w-36" />
+              <div className="h-3 bg-pulse-surface rounded w-16" />
+            </div>
+            <div className="grid grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="text-center">
+                  <div className="w-14 h-14 bg-pulse-surface rounded-full mx-auto mb-2" />
+                  <div className="h-3 bg-pulse-surface rounded w-16 mx-auto" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* AI Recommendations */}
+        <div className="col-span-12">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-4 h-4 bg-pulse-surface rounded" />
+            <div className="h-4 bg-pulse-surface rounded w-40" />
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="rounded-xl border border-pulse-border/30 bg-pulse-surface/30 p-5">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 bg-pulse-surface rounded-lg shrink-0" />
+                  <div className="flex-1">
+                    <div className="h-4 bg-pulse-surface rounded w-32 mb-2" />
+                    <div className="h-3 bg-pulse-surface rounded w-full mb-1" />
+                    <div className="h-3 bg-pulse-surface rounded w-2/3 mb-3" />
+                    <div className="h-3 bg-pulse-surface rounded w-24" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Vault Widget */}
+        <div className="col-span-12 lg:col-span-5">
+          <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-4 h-4 bg-pulse-surface rounded" />
+              <div className="h-4 bg-pulse-surface rounded w-24" />
+            </div>
+            <div className="w-28 h-28 bg-pulse-surface rounded-full mx-auto mb-4" />
+            <div className="h-3 bg-pulse-surface rounded w-48 mx-auto mb-4" />
+            <div className="h-16 bg-pulse-surface/50 rounded-lg mb-4" />
+            <div className="h-10 bg-pulse-surface rounded-lg" />
+          </div>
+        </div>
+
+        {/* Deadlines */}
+        <div className="col-span-12 lg:col-span-7">
+          <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-pulse-surface rounded" />
+                <div className="h-4 bg-pulse-surface rounded w-36" />
+              </div>
+              <div className="h-8 bg-pulse-surface rounded-lg w-16" />
+            </div>
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="p-3 rounded-xl border border-pulse-border/20 bg-pulse-surface/20">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="h-4 bg-pulse-surface rounded w-48" />
+                    <div className="h-4 bg-pulse-surface rounded w-16" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-1.5 bg-pulse-surface rounded-full" />
+                    <div className="h-3 bg-pulse-surface rounded w-16" />
+                    <div className="h-3 bg-pulse-surface rounded w-12" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -228,7 +344,7 @@ function DashboardSkeleton() {
 // Error state
 function DashboardError({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="p-8 flex items-center justify-center min-h-[60vh]">
+    <div className="px-4 md:px-6 lg:px-8 py-8 flex items-center justify-center min-h-[60vh]">
       <GlassCard className="p-8 text-center max-w-md">
         <div className="w-12 h-12 rounded-full bg-pulse-error/20 flex items-center justify-center mx-auto mb-4">
           <AlertCircle className="w-6 h-6 text-pulse-error" />
@@ -273,6 +389,23 @@ export default function AppDashboard() {
   const [error, setError] = useState<string | null>(null)
   const [inputValue, setInputValue] = useState('')
   const [commandBarFocused, setCommandBarFocused] = useState(false)
+  const [commandLoading, setCommandLoading] = useState(false)
+  const [commandResult, setCommandResult] = useState<{
+    response?: string
+    suggestedAction?: { label: string; href: string }
+    grants?: Array<{ id: string; title: string; sponsor: string; amount?: string; deadline?: string }>
+    error?: string
+  } | null>(null)
+  const [plannerLoading, setPlannerLoading] = useState(false)
+  const [plannerResult, setPlannerResult] = useState<{
+    priorities?: Array<{ grantId: string; title: string; urgency: 'critical' | 'urgent' | 'upcoming' | 'comfortable'; daysLeft: number; reason: string }>
+    weeklyPlan?: Array<{ day: string; tasks: string[] }>
+    quickWins?: string[]
+    warnings?: string[]
+    error?: string
+  } | null>(null)
+  const [plannerHours, setPlannerHours] = useState(10)
+  const [showPlanner, setShowPlanner] = useState(false)
 
   const fetchDashboard = useCallback(async () => {
     setIsLoading(true)
@@ -292,6 +425,54 @@ export default function AppDashboard() {
     }
   }, [])
 
+  const handleCommandSubmit = useCallback(async (commandText?: string) => {
+    const text = commandText || inputValue
+    if (!text.trim() || commandLoading) return
+    setCommandLoading(true)
+    setCommandResult(null)
+    try {
+      const response = await fetch('/api/ai/command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command: text.trim() }),
+      })
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}))
+        throw new Error(errData.error || 'Failed to process command')
+      }
+      const data = await response.json()
+      setCommandResult(data)
+    } catch (err) {
+      setCommandResult({ error: err instanceof Error ? err.message : 'Something went wrong. Please try again.' })
+    } finally {
+      setCommandLoading(false)
+    }
+  }, [inputValue, commandLoading])
+
+  const handlePlanMyWeek = useCallback(async () => {
+    if (plannerLoading) return
+    setPlannerLoading(true)
+    setPlannerResult(null)
+    setShowPlanner(true)
+    try {
+      const response = await fetch('/api/ai/deadline-planner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hoursPerWeek: plannerHours }),
+      })
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}))
+        throw new Error(errData.error || 'Failed to generate plan')
+      }
+      const data = await response.json()
+      setPlannerResult(data)
+    } catch (err) {
+      setPlannerResult({ error: err instanceof Error ? err.message : 'Failed to generate plan.' })
+    } finally {
+      setPlannerLoading(false)
+    }
+  }, [plannerHours, plannerLoading])
+
   useEffect(() => {
     fetchDashboard()
   }, [fetchDashboard])
@@ -310,7 +491,7 @@ export default function AppDashboard() {
   const firstName = userName.split(' ')[0]
 
   return (
-    <div className="p-8">
+    <div className="px-4 md:px-6 lg:px-8 py-8">
       {/* Header with AI Command Bar */}
       <motion.div
         className="mb-8"
@@ -322,7 +503,7 @@ export default function AppDashboard() {
             <p className="text-pulse-text-tertiary font-mono text-micro uppercase tracking-wider mb-2">
               Command Center
             </p>
-            <h1 className="font-serif text-display text-pulse-text">
+            <h1 className="text-heading-lg md:text-display font-bold tracking-tight text-pulse-text">
               {getGreeting()}, {firstName}
             </h1>
           </div>
@@ -357,14 +538,25 @@ export default function AppDashboard() {
               <input
                 type="text"
                 placeholder="e.g., Find grants for renewable energy startups..."
+                aria-label="Ask the AI anything about grants"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onFocus={() => setCommandBarFocused(true)}
                 onBlur={() => setCommandBarFocused(false)}
-                className="w-full px-4 py-3 pr-12 rounded-xl bg-pulse-bg border border-pulse-border focus:border-pulse-accent focus:outline-none text-pulse-text placeholder:text-pulse-text-tertiary"
+                onKeyDown={(e) => e.key === 'Enter' && handleCommandSubmit()}
+                className="w-full px-4 py-3 pr-12 rounded-xl bg-pulse-surface border border-pulse-border/40 focus:ring-2 focus:ring-pulse-accent/30 focus:border-pulse-accent focus:outline-none text-sm text-pulse-text placeholder:text-pulse-text-tertiary transition-all duration-150"
               />
-              <button className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-pulse-accent flex items-center justify-center hover:bg-pulse-accent/80 transition-colors">
-                <Send className="w-4 h-4 text-pulse-bg" />
+              <button
+                onClick={() => handleCommandSubmit()}
+                disabled={commandLoading || !inputValue.trim()}
+                aria-label="Send command"
+                className="absolute right-1 top-1/2 -translate-y-1/2 w-10 h-10 rounded-lg bg-pulse-accent flex items-center justify-center hover:bg-pulse-accent/90 active:scale-[0.98] transition-all duration-150 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none"
+              >
+                {commandLoading ? (
+                  <Loader2 className="w-4 h-4 text-pulse-bg animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4 text-pulse-bg" />
+                )}
               </button>
             </div>
 
@@ -373,22 +565,98 @@ export default function AppDashboard() {
               {quickCommands.map((cmd, i) => (
                 <motion.button
                   key={cmd}
-                  className="px-3 py-1.5 rounded-full bg-pulse-elevated border border-pulse-border text-xs text-pulse-text-secondary hover:border-pulse-accent/30 hover:text-pulse-text transition-all"
+                  className="px-3 py-2 rounded-full bg-pulse-elevated border border-pulse-border/40 text-xs text-pulse-text-secondary hover:border-pulse-border hover:text-pulse-text active:scale-[0.98] transition-all duration-150 min-h-[44px] focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.2 + i * 0.05 }}
-                  onClick={() => setInputValue(cmd)}
+                  onClick={() => {
+                    setInputValue(cmd)
+                    handleCommandSubmit(cmd)
+                  }}
                 >
                   {cmd}
                 </motion.button>
               ))}
             </div>
+          {/* Command Result */}
+          {commandResult && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 pt-4 border-t border-pulse-border"
+            >
+              {commandResult.error ? (
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-pulse-error/10 border border-pulse-error/20">
+                  <AlertCircle className="w-5 h-5 text-pulse-error shrink-0 mt-0.5" />
+                  <p className="text-sm text-pulse-error">{commandResult.error}</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {commandResult.response && (
+                    <div className="p-3 rounded-xl bg-pulse-bg border border-pulse-border/40">
+                      <div className="flex items-start gap-3">
+                        <div className="w-7 h-7 rounded-lg bg-pulse-accent/20 flex items-center justify-center shrink-0">
+                          <Sparkles className="w-3.5 h-3.5 text-pulse-accent" />
+                        </div>
+                        <p className="text-sm text-pulse-text whitespace-pre-wrap">{commandResult.response}</p>
+                      </div>
+                    </div>
+                  )}
+                  {commandResult.suggestedAction && (
+                    <Link
+                      href={commandResult.suggestedAction.href}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-pulse-accent text-pulse-bg text-sm font-medium hover:bg-pulse-accent/90 active:scale-[0.98] transition-all duration-150"
+                    >
+                      {commandResult.suggestedAction.label}
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  )}
+                  {commandResult.grants && commandResult.grants.length > 0 && (
+                    <div className="grid sm:grid-cols-2 gap-2">
+                      {commandResult.grants.map((g) => (
+                        <Link
+                          key={g.id}
+                          href={`/app/grants/${encodeURIComponent(g.id)}`}
+                          className="p-3 rounded-xl bg-pulse-surface border border-pulse-border/40 hover:border-pulse-border hover:shadow-lg hover:shadow-pulse-accent/5 transition-all duration-200 group"
+                        >
+                          <p className="text-sm font-medium text-pulse-text group-hover:text-pulse-accent transition-colors line-clamp-1">
+                            {g.title}
+                          </p>
+                          <p className="text-xs text-pulse-text-tertiary mt-0.5">{g.sponsor}</p>
+                          <div className="flex items-center gap-3 mt-2 text-xs text-pulse-text-tertiary">
+                            {g.amount && (
+                              <span className="flex items-center gap-1 text-pulse-accent">
+                                <DollarSign className="w-3 h-3" />
+                                {g.amount}
+                              </span>
+                            )}
+                            {g.deadline && (
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {g.deadline}
+                              </span>
+                            )}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              <button
+                onClick={() => setCommandResult(null)}
+                className="mt-2 text-xs text-pulse-text-tertiary hover:text-pulse-text active:scale-[0.98] transition-all duration-150"
+              >
+                Dismiss
+              </button>
+            </motion.div>
+          )}
           </div>
         </motion.div>
       </motion.div>
 
       {/* Bento Grid with AI Cards */}
-      <div className="grid grid-cols-12 gap-5">
+      <div className="grid grid-cols-12 gap-4 md:gap-6">
         {/* Funding Potential */}
         <motion.div
           className="col-span-12 lg:col-span-4"
@@ -433,11 +701,11 @@ export default function AppDashboard() {
         >
           <GlassCard className="p-5 h-full">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-pulse-text">Application Pipeline</h3>
+              <h3 className="text-sm font-semibold tracking-tight text-pulse-text">Application Pipeline</h3>
               <span className="text-pulse-text-tertiary text-xs">{totalGrants} grants</span>
             </div>
             {totalGrants > 0 ? (
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {applicationStages.map((stage, i) => (
                   <motion.div
                     key={stage.name}
@@ -472,7 +740,7 @@ export default function AppDashboard() {
         <div className="col-span-12">
           <div className="flex items-center gap-2 mb-4">
             <Sparkles className="w-4 h-4 text-pulse-accent" />
-            <h3 className="text-sm font-semibold text-pulse-text">AI Recommendations</h3>
+            <h3 className="text-sm font-semibold tracking-tight text-pulse-text">AI Recommendations</h3>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {aiRecommendations.map((rec, i) => (
@@ -491,7 +759,7 @@ export default function AppDashboard() {
           <GlassCard className="p-5 h-full">
             <div className="flex items-center gap-2 mb-4">
               <Shield className="w-4 h-4 text-pulse-accent" />
-              <h3 className="text-sm font-semibold text-pulse-text">Your Vault</h3>
+              <h3 className="text-sm font-semibold tracking-tight text-pulse-text">Your Vault</h3>
             </div>
 
             {/* Progress Ring */}
@@ -524,7 +792,7 @@ export default function AppDashboard() {
             </div>
 
             {/* Benefits */}
-            <div className="p-3 rounded-lg bg-pulse-accent/5 border border-pulse-accent/20 mb-4">
+            <div className="p-3 rounded-xl bg-pulse-accent/5 border border-pulse-accent/20 mb-4">
               <p className="text-xs font-medium text-pulse-accent mb-1">Why complete your vault?</p>
               <p className="text-xs text-pulse-text-tertiary">
                 Auto-fill ~{(dashboardData.vaultCompleteness?.overall ?? 0)}% of grant applications.
@@ -553,7 +821,7 @@ export default function AppDashboard() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-pulse-warning" />
-                <h3 className="text-sm font-semibold text-pulse-text">Deadlines & Progress</h3>
+                <h3 className="text-sm font-semibold tracking-tight text-pulse-text">Deadlines & Progress</h3>
               </div>
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/app/workspace">View all</Link>
@@ -570,8 +838,8 @@ export default function AppDashboard() {
                   >
                     <Link
                       href={deadline.href}
-                      className={`block p-3 rounded-xl border transition-all hover:border-pulse-accent/30 ${
-                        deadline.urgent ? 'bg-pulse-error/10 border-pulse-error/30' : 'bg-pulse-surface/50 border-pulse-border'
+                      className={`block p-3 rounded-xl border transition-all duration-200 hover:border-pulse-border hover:shadow-lg hover:shadow-pulse-accent/5 hover:-translate-y-0.5 ${
+                        deadline.urgent ? 'bg-pulse-error/10 border-pulse-error/30' : 'bg-pulse-surface border-pulse-border/40'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -617,6 +885,148 @@ export default function AppDashboard() {
           </GlassCard>
         </motion.div>
 
+        {/* Plan My Week */}
+        <motion.div
+          className="col-span-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+        >
+          <GlassCard className="p-5">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-pulse-accent" />
+                <h3 className="text-sm font-semibold tracking-tight text-pulse-text">Weekly Planner</h3>
+              </div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <label htmlFor="planner-hours" className="text-xs text-pulse-text-tertiary">Hours/week:</label>
+                  <input
+                    id="planner-hours"
+                    type="number"
+                    min={1}
+                    max={40}
+                    value={plannerHours}
+                    onChange={(e) => setPlannerHours(Math.max(1, Math.min(40, parseInt(e.target.value) || 10)))}
+                    className="w-16 px-2 py-1 rounded-lg bg-pulse-surface border border-pulse-border/40 text-sm text-pulse-text text-center focus:ring-2 focus:ring-pulse-accent/30 focus:border-pulse-accent focus:outline-none transition-all duration-150"
+                  />
+                </div>
+                <Button size="sm" onClick={handlePlanMyWeek} disabled={plannerLoading}>
+                  {plannerLoading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4 mr-2" />
+                  )}
+                  Plan My Week
+                </Button>
+              </div>
+            </div>
+
+            {showPlanner && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                {plannerLoading && (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 text-pulse-accent animate-spin mr-3" />
+                    <span className="text-sm text-pulse-text-secondary">Analyzing your deadlines and generating a plan...</span>
+                  </div>
+                )}
+
+                {plannerResult?.error && (
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-pulse-error/10 border border-pulse-error/20">
+                    <AlertCircle className="w-5 h-5 text-pulse-error shrink-0 mt-0.5" />
+                    <p className="text-sm text-pulse-error">{plannerResult.error}</p>
+                  </div>
+                )}
+
+                {plannerResult && !plannerResult.error && !plannerLoading && (
+                  <div className="space-y-4">
+                    {/* Prioritized Grants */}
+                    {plannerResult.priorities && plannerResult.priorities.length > 0 && (
+                      <div>
+                        <p className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-2">Priority Grants</p>
+                        <div className="space-y-2">
+                          {plannerResult.priorities.map((p, i) => {
+                            const urgencyColors = {
+                              critical: 'bg-red-500/20 text-red-400 border-red-500/30',
+                              urgent: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+                              upcoming: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+                              comfortable: 'bg-green-500/20 text-green-400 border-green-500/30',
+                            }
+                            return (
+                              <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-pulse-surface border border-pulse-border/40">
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${urgencyColors[p.urgency]}`}>
+                                  {p.urgency}
+                                </span>
+                                <span className="text-sm text-pulse-text flex-1 line-clamp-1">{p.title}</span>
+                                <span className="text-xs text-pulse-text-tertiary shrink-0">{p.daysLeft}d left</span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Weekly Plan */}
+                    {plannerResult.weeklyPlan && plannerResult.weeklyPlan.length > 0 && (
+                      <div>
+                        <p className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-2">This Week</p>
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                          {plannerResult.weeklyPlan.map((day, i) => (
+                            <div key={i} className="p-3 rounded-lg bg-pulse-surface border border-pulse-border/40">
+                              <p className="text-xs font-medium text-pulse-accent mb-1.5">{day.day}</p>
+                              <ul className="space-y-1">
+                                {day.tasks.map((task, j) => (
+                                  <li key={j} className="text-xs text-pulse-text-secondary flex items-start gap-1.5">
+                                    <CheckCircle className="w-3 h-3 text-pulse-text-tertiary shrink-0 mt-0.5" />
+                                    {task}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Quick Wins & Warnings */}
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      {plannerResult.quickWins && plannerResult.quickWins.length > 0 && (
+                        <div className="p-3 rounded-xl bg-pulse-accent/5 border border-pulse-accent/20">
+                          <p className="text-xs font-medium text-pulse-accent mb-2">Quick Wins</p>
+                          <ul className="space-y-1">
+                            {plannerResult.quickWins.map((win, i) => (
+                              <li key={i} className="text-xs text-pulse-text-secondary flex items-start gap-1.5">
+                                <Zap className="w-3 h-3 text-pulse-accent shrink-0 mt-0.5" />
+                                {win}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {plannerResult.warnings && plannerResult.warnings.length > 0 && (
+                        <div className="p-3 rounded-xl bg-pulse-error/5 border border-pulse-error/20">
+                          <p className="text-xs font-medium text-pulse-error mb-2">Warnings</p>
+                          <ul className="space-y-1">
+                            {plannerResult.warnings.map((warn, i) => (
+                              <li key={i} className="text-xs text-pulse-text-secondary flex items-start gap-1.5">
+                                <AlertTriangle className="w-3 h-3 text-pulse-error shrink-0 mt-0.5" />
+                                {warn}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </GlassCard>
+        </motion.div>
+
         {/* AI Quick Stats */}
         <motion.div
           className="col-span-12 lg:col-span-5"
@@ -627,23 +1037,23 @@ export default function AppDashboard() {
           <GlassCard className="p-5 h-full">
             <div className="flex items-center gap-2 mb-4">
               <Bot className="w-4 h-4 text-pulse-accent" />
-              <h3 className="text-sm font-semibold text-pulse-text">AI Working For You</h3>
+              <h3 className="text-sm font-semibold tracking-tight text-pulse-text">AI Working For You</h3>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-3 rounded-xl bg-pulse-surface/50 border border-pulse-border">
-                <p className="text-2xl font-semibold text-pulse-text">{aiStats.grantsAnalyzed.toLocaleString()}</p>
+              <div className="p-3 rounded-xl bg-pulse-surface border border-pulse-border/40">
+                <p className="text-3xl font-bold tabular-nums text-pulse-text">{aiStats.grantsAnalyzed.toLocaleString()}</p>
                 <p className="text-xs text-pulse-text-tertiary">Grants analyzed</p>
               </div>
-              <div className="p-3 rounded-xl bg-pulse-surface/50 border border-pulse-border">
-                <p className="text-2xl font-semibold text-pulse-accent">{aiStats.matchesFound}</p>
+              <div className="p-3 rounded-xl bg-pulse-surface border border-pulse-border/40">
+                <p className="text-3xl font-bold tabular-nums text-pulse-accent">{aiStats.matchesFound}</p>
                 <p className="text-xs text-pulse-text-tertiary">Matches found</p>
               </div>
-              <div className="p-3 rounded-xl bg-pulse-surface/50 border border-pulse-border">
-                <p className="text-2xl font-semibold text-pulse-text">{aiStats.timeSaved}</p>
+              <div className="p-3 rounded-xl bg-pulse-surface border border-pulse-border/40">
+                <p className="text-3xl font-bold tabular-nums text-pulse-text">{aiStats.timeSaved}</p>
                 <p className="text-xs text-pulse-text-tertiary">Time saved</p>
               </div>
-              <div className="p-3 rounded-xl bg-pulse-surface/50 border border-pulse-border">
-                <p className="text-2xl font-semibold text-pulse-text">{aiStats.successRate}%</p>
+              <div className="p-3 rounded-xl bg-pulse-surface border border-pulse-border/40">
+                <p className="text-3xl font-bold tabular-nums text-pulse-text">{aiStats.successRate}%</p>
                 <p className="text-xs text-pulse-text-tertiary">Success rate</p>
               </div>
             </div>
@@ -658,7 +1068,7 @@ export default function AppDashboard() {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className="flex items-center justify-between p-2 -mx-2 rounded-lg hover:bg-pulse-surface/50 transition-colors group"
+                  className="flex items-center justify-between p-2 -mx-2 rounded-lg hover:bg-pulse-surface/50 transition-all duration-200 group"
                 >
                   <div className="flex items-center gap-2">
                     <item.icon className="w-4 h-4 text-pulse-text-tertiary group-hover:text-pulse-accent transition-colors" />

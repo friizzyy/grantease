@@ -5,7 +5,7 @@
  * The LLM only assists with extraction - it does NOT replace scraping.
  */
 
-import { getGeminiExtractionModel } from '@/lib/services/gemini-client';
+import { getAIClient, GEMINI_MODEL } from '@/lib/services/gemini-client';
 import {
   RawGrantPage,
   ExtractedGrant,
@@ -96,8 +96,8 @@ export async function extractWithLLM(
   request: LLMExtractionRequest
 ): Promise<LLMExtractionResponse> {
   try {
-    const model = getGeminiExtractionModel();
-    if (!model) {
+    const ai = getAIClient();
+    if (!ai) {
       return {
         success: false,
         confidence: 0,
@@ -132,14 +132,21 @@ export async function extractWithLLM(
       .replace('{RAW_TEXT}', rawText)
       .replace('{PRE_EXTRACTED}', preExtractedText);
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const result = await ai.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: prompt,
+      config: {
+        temperature: 0.2,
+        maxOutputTokens: 4096,
+        responseMimeType: 'application/json',
+      },
+    });
+    const text = result.text ?? '';
 
     // Parse JSON from response
     let jsonText = text;
 
-    // Handle markdown code blocks
+    // Handle markdown code blocks (fallback if JSON mode didn't work)
     const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) {
       jsonText = jsonMatch[1];

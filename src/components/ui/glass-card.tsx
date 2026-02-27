@@ -25,19 +25,20 @@ export function GlassCard({
     subtle: 'bg-pulse-surface/40 backdrop-blur-lg',
   }
 
-  const borderStyles = border ? 'border border-white/[0.08]' : ''
+  const borderStyles = border ? 'border border-pulse-border/40' : ''
 
   return (
     <div
       className={cn(
-        'relative rounded-2xl overflow-hidden transition-all duration-200',
+        'relative rounded-xl overflow-hidden transition-all duration-200',
         variantStyles[variant],
         borderStyles,
         interactive && [
           'cursor-pointer',
-          'hover:-translate-y-1',
-          'hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.4)]',
-          'hover:border-pulse-accent/20',
+          'hover:-translate-y-0.5',
+          'hover:border-pulse-border',
+          'hover:shadow-lg',
+          'hover:shadow-pulse-accent/5',
         ],
         className
       )}
@@ -49,7 +50,7 @@ export function GlassCard({
       </div>
 
       {/* Bottom edge highlight */}
-      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-pulse-border/40 to-transparent" />
     </div>
   )
 }
@@ -86,7 +87,7 @@ export function GlassCardFooter({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('px-6 py-4 border-t border-white/[0.04] bg-white/[0.02]', className)}
+      className={cn('px-6 py-4 border-t border-pulse-border/40 bg-pulse-surface/30', className)}
       {...props}
     >
       {children}

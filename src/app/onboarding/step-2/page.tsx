@@ -86,10 +86,10 @@ export default function OnboardingStep2() {
           <Target className="w-5 h-5" />
           <span className="text-sm font-medium uppercase tracking-wider">Focus Areas</span>
         </div>
-        <h1 className="font-serif text-3xl sm:text-4xl text-pulse-text mb-3">
+        <h1 className="text-heading-lg font-bold tracking-tight text-pulse-text mb-3">
           What areas does your work focus on?
         </h1>
-        <p className="text-lg text-pulse-text-secondary">
+        <p className="text-body text-pulse-text-secondary">
           Select up to {MAX_SELECTIONS} areas that best describe your focus.
         </p>
       </motion.div>

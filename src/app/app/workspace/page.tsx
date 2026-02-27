@@ -132,30 +132,30 @@ function WorkspaceStats({ workspaces }: { workspaces: Workspace[] }) {
       className="mb-6"
     >
       <GlassCard variant="accent" className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4 sm:gap-6 flex-wrap">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-pulse-accent/20 border border-pulse-accent/30 flex items-center justify-center">
                 <FolderOpen className="w-5 h-5 text-pulse-accent" />
               </div>
               <div>
-                <p className="text-2xl font-semibold text-pulse-text">{workspaces.length}</p>
+                <p className="text-3xl font-bold tabular-nums text-pulse-text">{workspaces.length}</p>
                 <p className="text-xs text-pulse-text-tertiary">Total applications</p>
               </div>
             </div>
-            <div className="w-px h-10 bg-pulse-border" />
+            <div className="w-px h-10 bg-pulse-border hidden sm:block" />
             <div>
-              <p className="text-2xl font-semibold text-pulse-warning">{inProgress}</p>
+              <p className="text-3xl font-bold tabular-nums text-pulse-warning">{inProgress}</p>
               <p className="text-xs text-pulse-text-tertiary">In progress</p>
             </div>
-            <div className="w-px h-10 bg-pulse-border" />
+            <div className="w-px h-10 bg-pulse-border hidden sm:block" />
             <div>
-              <p className="text-2xl font-semibold text-blue-400">{submitted}</p>
+              <p className="text-3xl font-bold tabular-nums text-blue-400">{submitted}</p>
               <p className="text-xs text-pulse-text-tertiary">Submitted</p>
             </div>
-            <div className="w-px h-10 bg-pulse-border" />
+            <div className="w-px h-10 bg-pulse-border hidden sm:block" />
             <div>
-              <p className="text-2xl font-semibold text-pulse-accent">
+              <p className="text-3xl font-bold tabular-nums text-pulse-accent">
                 {totalPipeline >= 1000000
                   ? `$${(totalPipeline / 1000000).toFixed(1)}M`
                   : `$${Math.round(totalPipeline / 1000)}K`
@@ -265,7 +265,7 @@ function WorkspaceCard({ workspace, index }: { workspace: Workspace; index: numb
       transition={{ delay: 0.25 + index * 0.05 }}
     >
       <Link href={`/app/workspace/${workspace.id}`}>
-        <GlassCard className={`p-5 hover:border-pulse-accent/30 transition-all group cursor-pointer ${
+        <GlassCard className={`p-5 md:p-6 hover:border-pulse-border hover:shadow-lg hover:shadow-pulse-accent/5 hover:-translate-y-0.5 transition-all duration-200 group cursor-pointer ${
           isUrgent ? 'border-pulse-warning/30' : ''
         }`}>
           <div className="flex items-start gap-5">
@@ -343,7 +343,7 @@ function WorkspaceCard({ workspace, index }: { workspace: Workspace; index: numb
 
                 {/* Next Step */}
                 {nextStep && workspace.status !== 'submitted' && (
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-pulse-surface/50 border border-pulse-border">
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-pulse-surface border border-pulse-border/40">
                     <Zap className="w-4 h-4 text-pulse-accent shrink-0" />
                     <span className="text-sm text-pulse-text-secondary">
                       Next: <span className="text-pulse-text">{nextStep}</span>
@@ -389,17 +389,89 @@ function EmptyWorkspaces() {
 // Loading skeleton
 function WorkspacesSkeleton() {
   return (
-    <div className="p-8 animate-pulse">
+    <div className="px-4 md:px-6 lg:px-8 py-8 animate-pulse">
+      {/* Header */}
       <div className="mb-8">
-        <div className="h-5 bg-pulse-surface rounded w-32 mb-2" />
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-5 h-5 bg-pulse-surface rounded" />
+          <div className="h-3 bg-pulse-surface rounded w-32" />
+        </div>
         <div className="h-10 bg-pulse-surface rounded w-64 mb-2" />
         <div className="h-5 bg-pulse-surface rounded w-96" />
       </div>
-      <div className="h-20 bg-pulse-surface rounded-2xl mb-6" />
-      <div className="h-24 bg-pulse-surface rounded-2xl mb-6" />
+
+      {/* Stats Bar */}
+      <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-4 mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="flex items-center gap-3">
+                {i === 1 && <div className="w-10 h-10 bg-pulse-surface rounded-lg" />}
+                <div>
+                  <div className="h-8 bg-pulse-surface rounded w-12 mb-1" />
+                  <div className="h-3 bg-pulse-surface rounded w-20" />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="h-9 bg-pulse-surface rounded-lg w-36" />
+        </div>
+      </div>
+
+      {/* AI Insights */}
+      <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-4 mb-6">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 bg-pulse-surface rounded-lg shrink-0" />
+          <div className="flex-1">
+            <div className="h-4 bg-pulse-surface rounded w-40 mb-2" />
+            <div className="h-3 bg-pulse-surface rounded w-full mb-1" />
+            <div className="h-3 bg-pulse-surface rounded w-3/4" />
+          </div>
+          <div className="h-8 bg-pulse-surface rounded-lg w-24" />
+        </div>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="flex items-center gap-2 mb-6">
+        {['All', 'In Progress', 'Submitted'].map(tab => (
+          <div key={tab} className="h-9 bg-pulse-surface rounded-xl w-28" />
+        ))}
+      </div>
+
+      {/* Workspace Cards */}
       <div className="space-y-4">
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-40 bg-pulse-surface rounded-2xl" />
+          <div key={i} className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-5">
+            <div className="flex items-start gap-5">
+              {/* Progress ring placeholder */}
+              <div className="w-14 h-14 bg-pulse-surface rounded-full shrink-0" />
+              <div className="flex-1 min-w-0">
+                {/* Header row */}
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-5 bg-pulse-surface rounded w-48" />
+                  <div className="h-5 bg-pulse-surface rounded-full w-24" />
+                </div>
+                {/* Grant title */}
+                <div className="h-4 bg-pulse-surface rounded w-72 mb-3" />
+                {/* Meta info */}
+                <div className="flex items-center gap-4">
+                  <div className="h-4 bg-pulse-surface rounded w-32" />
+                  <div className="h-4 bg-pulse-surface rounded w-16" />
+                </div>
+                {/* Progress bar area */}
+                <div className="mt-4 pt-4 border-t border-pulse-border/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-4">
+                      <div className="h-4 bg-pulse-surface rounded w-24" />
+                      <div className="h-4 bg-pulse-surface rounded w-20" />
+                    </div>
+                    <div className="h-3 bg-pulse-surface rounded w-24" />
+                  </div>
+                  <div className="h-10 bg-pulse-surface rounded-lg" />
+                </div>
+              </div>
+            </div>
+          </div>
         ))}
       </div>
     </div>
@@ -409,7 +481,7 @@ function WorkspacesSkeleton() {
 // Error state
 function WorkspacesError({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="p-8 flex items-center justify-center min-h-[60vh]">
+    <div className="px-4 md:px-6 lg:px-8 py-8 flex items-center justify-center min-h-[60vh]">
       <GlassCard className="p-8 text-center max-w-md">
         <div className="w-12 h-12 rounded-full bg-pulse-error/20 flex items-center justify-center mx-auto mb-4">
           <AlertCircle className="w-6 h-6 text-pulse-error" />
@@ -471,7 +543,7 @@ export default function WorkspacesPage() {
     : workspaces.filter(w => w.status === filter)
 
   return (
-    <div className="p-8">
+    <div className="px-4 md:px-6 lg:px-8 py-8">
       {/* Header */}
       <motion.div
         className="mb-8"
@@ -486,7 +558,7 @@ export default function WorkspacesPage() {
                 Application Manager
               </span>
             </div>
-            <h1 className="font-serif text-display text-pulse-text">
+            <h1 className="text-heading-lg md:text-display font-bold tracking-tight text-pulse-text">
               Your Workspaces
             </h1>
             <p className="text-pulse-text-secondary mt-2">
@@ -508,7 +580,9 @@ export default function WorkspacesPage() {
 
           {/* Filter Tabs */}
           <motion.div
-            className="flex items-center gap-2 mb-6"
+            className="flex items-center gap-2 mb-6 flex-wrap"
+            role="tablist"
+            aria-label="Filter workspaces"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
@@ -521,10 +595,12 @@ export default function WorkspacesPage() {
               <button
                 key={tab.id}
                 onClick={() => setFilter(tab.id as 'all' | 'in_progress' | 'submitted')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${
+                role="tab"
+                aria-selected={filter === tab.id}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl border active:scale-[0.98] transition-all duration-150 focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none ${
                   filter === tab.id
                     ? 'bg-pulse-accent/10 border-pulse-accent/30 text-pulse-accent'
-                    : 'bg-pulse-surface border-pulse-border text-pulse-text-secondary hover:border-pulse-accent/20 hover:text-pulse-text'
+                    : 'bg-pulse-surface border-pulse-border/40 text-pulse-text-secondary hover:border-pulse-border hover:text-pulse-text'
                 }`}
               >
                 <span className="text-sm font-medium">{tab.label}</span>
@@ -545,9 +621,16 @@ export default function WorkspacesPage() {
           </div>
 
           {filteredWorkspaces.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-pulse-text-tertiary">No applications in this category</p>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-16"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-pulse-surface border border-pulse-border flex items-center justify-center mx-auto mb-4">
+                <FolderOpen className="w-6 h-6 text-pulse-text-tertiary" />
+              </div>
+              <p className="text-body-sm text-pulse-text-secondary">No applications match this filter</p>
+            </motion.div>
           )}
         </>
       )}

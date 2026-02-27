@@ -1,5 +1,9 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Check, ArrowRight, Sparkles } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Check, ArrowRight, Sparkles, Plus, Minus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const tiers = [
@@ -9,12 +13,14 @@ const tiers = [
     period: 'forever',
     description: 'Perfect for individuals exploring grant opportunities.',
     features: [
-      'Unlimited grant searches',
-      'Basic filters and sorting',
-      'Save up to 10 grants',
-      '1 saved search',
-      'Grant detail pages',
-      'Email support',
+      { text: 'Unlimited grant searches', included: true },
+      { text: 'Basic filters and sorting', included: true },
+      { text: 'Save up to 10 grants', included: true },
+      { text: '1 saved search', included: true },
+      { text: 'Grant detail pages', included: true },
+      { text: 'Email support', included: true },
+      { text: 'AI writing assistant', included: false },
+      { text: 'Vault auto-fill', included: false },
     ],
     cta: 'Get Started Free',
     href: '/register',
@@ -25,16 +31,16 @@ const tiers = [
     period: 'per month',
     description: 'For organizations serious about winning grants.',
     features: [
-      'Everything in Starter',
-      'Unlimited saved grants',
-      'Unlimited saved searches',
-      'Email alerts for new grants',
-      'Guided application builder with vault auto-fill',
-      'Data vault for one-time info entry',
-      'Plain English eligibility checks before you apply',
-      'Document organization',
-      'Deadline reminders',
-      'Priority support',
+      { text: 'Everything in Starter', included: true },
+      { text: 'Unlimited saved grants', included: true },
+      { text: 'Unlimited saved searches', included: true },
+      { text: 'Email alerts for new grants', included: true },
+      { text: 'Guided application builder with vault auto-fill', included: true },
+      { text: 'Data vault for one-time info entry', included: true },
+      { text: 'Plain English eligibility checks before you apply', included: true },
+      { text: 'Document organization', included: true },
+      { text: 'Deadline reminders', included: true },
+      { text: 'Priority support', included: true },
     ],
     cta: 'Start Pro Trial',
     href: '/register?plan=pro',
@@ -46,14 +52,14 @@ const tiers = [
     period: 'per month',
     description: 'For teams managing multiple applications.',
     features: [
-      'Everything in Pro',
-      'Up to 5 team members',
-      'Shared workspaces',
-      'Team activity feed',
-      'Role-based permissions',
-      'Advanced analytics',
-      'Custom integrations',
-      'Dedicated support',
+      { text: 'Everything in Pro', included: true },
+      { text: 'Up to 5 team members', included: true },
+      { text: 'Shared workspaces', included: true },
+      { text: 'Team activity feed', included: true },
+      { text: 'Role-based permissions', included: true },
+      { text: 'Advanced analytics', included: true },
+      { text: 'Custom integrations', included: true },
+      { text: 'Dedicated support', included: true },
     ],
     cta: 'Contact Sales',
     href: '/contact?subject=team',
@@ -79,7 +85,39 @@ const faqs = [
   },
 ]
 
+// Animation variants
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+}
+
+const staggerItem = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+}
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 24 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-60px' },
+  transition: { duration: 0.6, ease: 'easeOut' },
+}
+
 export default function PricingPage() {
+  const [openFaq, setOpenFaq] = useState<string | null>(null)
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setPrefersReducedMotion(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
+  const motionProps = (props: Record<string, unknown>) =>
+    prefersReducedMotion ? {} : props
+
   return (
     <main className="pt-20">
       {/* Hero */}
@@ -91,32 +129,56 @@ export default function PricingPage() {
         </div>
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] backdrop-blur-md border border-white/[0.08] mb-8">
-            <Sparkles className="w-4 h-4 text-pulse-accent" />
-            <span className="text-sm text-pulse-text-secondary">Simple pricing</span>
-          </div>
-          <h1 className="text-5xl md:text-6xl font-bold text-pulse-text mb-6 tracking-tight">
+          <motion.div
+            initial={prefersReducedMotion ? undefined : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] backdrop-blur-md border border-white/[0.08] mb-8">
+              <Sparkles className="w-4 h-4 text-pulse-accent" />
+              <span className="text-sm text-pulse-text-secondary">Simple pricing</span>
+            </div>
+          </motion.div>
+          <motion.h1
+            className="text-5xl md:text-6xl font-bold text-pulse-text mb-6 tracking-tight"
+            initial={prefersReducedMotion ? undefined : { opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
+          >
             Start free, upgrade
             <br />
             <span className="text-pulse-accent">when you need more</span>
-          </h1>
-          <p className="text-xl text-pulse-text-secondary max-w-2xl mx-auto leading-relaxed">
+          </motion.h1>
+          <motion.p
+            className="text-xl text-pulse-text-secondary max-w-2xl mx-auto leading-relaxed"
+            initial={prefersReducedMotion ? undefined : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.2 }}
+          >
             No hidden fees, no surprises. Choose the plan that fits your needs.
-          </p>
+          </motion.p>
         </div>
       </section>
 
       {/* Pricing Cards */}
       <section className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-3 gap-8">
+          <motion.div
+            className="grid lg:grid-cols-3 gap-8"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-40px' }}
+          >
             {tiers.map((tier) => (
-              <div
+              <motion.div
                 key={tier.name}
+                variants={staggerItem}
+                whileHover={prefersReducedMotion ? undefined : { y: -2, transition: { duration: 0.2 } }}
                 className={cn(
                   'relative p-8 rounded-2xl backdrop-blur',
                   tier.highlighted
-                    ? 'bg-gradient-to-br from-pulse-accent/10 to-emerald-500/5 border-2 border-pulse-accent/30'
+                    ? 'bg-gradient-to-br from-pulse-accent/10 to-emerald-500/5 ring-1 ring-pulse-accent/30'
                     : 'bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-colors'
                 )}
               >
@@ -133,11 +195,11 @@ export default function PricingPage() {
                 <div className="text-center mb-8">
                   <h3 className="text-lg font-semibold text-pulse-text mb-4">{tier.name}</h3>
                   <div className="flex items-baseline justify-center gap-1 mb-3">
-                    <span className="text-5xl font-bold text-pulse-text">
+                    <span className="text-display font-bold text-pulse-text">
                       {tier.price === 0 ? 'Free' : `$${tier.price}`}
                     </span>
                     {tier.price > 0 && (
-                      <span className="text-pulse-text-tertiary">/{tier.period.replace('per ', '')}</span>
+                      <span className="text-body-sm text-pulse-text-tertiary">/mo</span>
                     )}
                   </div>
                   <p className="text-sm text-pulse-text-secondary">{tier.description}</p>
@@ -148,11 +210,26 @@ export default function PricingPage() {
 
                 <ul className="space-y-4 mb-8">
                   {tier.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-pulse-accent/10 flex items-center justify-center shrink-0 mt-0.5">
-                        <Check className="w-3 h-3 text-pulse-accent" />
+                    <li key={feature.text} className="flex items-start gap-3">
+                      <div className={cn(
+                        'w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5',
+                        feature.included
+                          ? 'bg-pulse-accent/10'
+                          : 'bg-white/[0.03]'
+                      )}>
+                        <Check className={cn(
+                          'w-3 h-3',
+                          feature.included
+                            ? 'text-pulse-accent'
+                            : 'text-pulse-text-tertiary/30'
+                        )} />
                       </div>
-                      <span className="text-sm text-pulse-text-secondary">{feature}</span>
+                      <span className={cn(
+                        'text-sm',
+                        feature.included
+                          ? 'text-pulse-text-secondary'
+                          : 'text-pulse-text-tertiary/50 line-through'
+                      )}>{feature.text}</span>
                     </li>
                   ))}
                 </ul>
@@ -169,14 +246,17 @@ export default function PricingPage() {
                   {tier.cta}
                   {tier.highlighted && <ArrowRight className="w-4 h-4" />}
                 </Link>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
+      <motion.section
+        className="py-24 px-4 sm:px-6 lg:px-8"
+        {...motionProps(fadeInUp)}
+      >
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-pulse-text mb-4">
@@ -184,22 +264,67 @@ export default function PricingPage() {
             </h2>
           </div>
 
-          <div className="space-y-4">
-            {faqs.map((faq) => (
-              <div
-                key={faq.q}
-                className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-colors"
-              >
-                <h3 className="text-base font-medium text-pulse-text mb-2">{faq.q}</h3>
-                <p className="text-sm text-pulse-text-secondary leading-relaxed">{faq.a}</p>
-              </div>
-            ))}
+          <div className="space-y-3">
+            {faqs.map((faq) => {
+              const isOpen = openFaq === faq.q
+              return (
+                <div
+                  key={faq.q}
+                  className={cn(
+                    'rounded-xl transition-all duration-200',
+                    isOpen
+                      ? 'bg-white/[0.03] border border-pulse-accent/20'
+                      : 'bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.1]'
+                  )}
+                >
+                  <button
+                    onClick={() => setOpenFaq(isOpen ? null : faq.q)}
+                    className="w-full p-5 flex items-center justify-between gap-4 text-left"
+                    aria-expanded={isOpen}
+                  >
+                    <span className={cn(
+                      'font-medium transition-colors',
+                      isOpen ? 'text-pulse-accent' : 'text-pulse-text'
+                    )}>
+                      {faq.q}
+                    </span>
+                    <div className={cn(
+                      'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all',
+                      isOpen
+                        ? 'bg-pulse-accent text-pulse-bg'
+                        : 'bg-white/[0.03] border border-white/[0.08] text-pulse-text-tertiary'
+                    )}>
+                      {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                    </div>
+                  </button>
+
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: 'easeOut' }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-5 pb-5 text-sm text-pulse-text-secondary leading-relaxed">
+                          {faq.a}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )
+            })}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* CTA */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 border-t border-white/[0.04]">
+      <motion.section
+        className="py-24 px-4 sm:px-6 lg:px-8 border-t border-white/[0.04]"
+        {...motionProps(fadeInUp)}
+      >
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-pulse-text mb-6">
             Start finding grants
@@ -216,7 +341,7 @@ export default function PricingPage() {
             <ArrowRight className="w-5 h-5" />
           </Link>
         </div>
-      </section>
+      </motion.section>
     </main>
   )
 }

@@ -400,13 +400,59 @@ function SavedStats({ grants }: { grants: SavedGrant[] }) {
 function LoadingState() {
   return (
     <div className="space-y-6">
-      <div className="animate-pulse">
-        <div className="h-20 bg-pulse-surface rounded-xl" />
+      {/* Stats bar skeleton */}
+      <div className="animate-pulse rounded-xl border border-pulse-accent/20 bg-pulse-elevated p-4">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-pulse-surface rounded-lg" />
+              <div>
+                <div className="h-6 w-8 bg-pulse-surface rounded mb-1" />
+                <div className="h-3 w-20 bg-pulse-surface rounded" />
+              </div>
+            </div>
+            <div className="w-px h-10 bg-pulse-border hidden sm:block" />
+            <div>
+              <div className="h-6 w-16 bg-pulse-surface rounded mb-1" />
+              <div className="h-3 w-24 bg-pulse-surface rounded" />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-9 w-24 bg-pulse-surface rounded-lg" />
+            <div className="h-9 w-28 bg-pulse-surface rounded-lg" />
+          </div>
+        </div>
       </div>
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {/* Collection tabs skeleton */}
+      <div className="flex items-center gap-2 animate-pulse">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-10 w-28 bg-pulse-surface rounded-xl" />
+        ))}
+      </div>
+      {/* Grant cards skeleton */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="animate-pulse">
-            <div className="h-64 bg-pulse-surface rounded-xl" />
+          <div key={i} className="animate-pulse rounded-xl border border-pulse-border bg-pulse-elevated p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div className="h-7 w-24 bg-pulse-surface rounded-lg" />
+              <div className="h-8 w-8 bg-pulse-surface rounded-lg" />
+            </div>
+            <div className="h-6 bg-pulse-surface rounded w-full mb-1" />
+            <div className="h-6 bg-pulse-surface rounded w-3/4 mb-1" />
+            <div className="h-4 bg-pulse-surface rounded w-1/2 mb-3" />
+            <div className="h-12 bg-pulse-surface rounded w-full mb-4" />
+            <div className="flex gap-2 mb-4">
+              <div className="h-5 w-16 bg-pulse-surface rounded-full" />
+              <div className="h-5 w-20 bg-pulse-surface rounded-full" />
+            </div>
+            <div className="flex items-center justify-between pt-3 border-t border-pulse-border">
+              <div className="h-4 w-24 bg-pulse-surface rounded" />
+              <div className="h-4 w-20 bg-pulse-surface rounded" />
+            </div>
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-pulse-border/50">
+              <div className="h-3 w-20 bg-pulse-surface rounded" />
+              <div className="h-4 w-16 bg-pulse-surface rounded-full" />
+            </div>
           </div>
         ))}
       </div>
@@ -575,7 +621,7 @@ export default function SavedGrantsPage() {
 
   if (isLoading) {
     return (
-      <div className="p-8">
+      <div className="px-4 md:px-6 lg:px-8 py-8">
         <motion.div
           className="mb-8"
           initial={{ opacity: 0, y: -20 }}
@@ -596,7 +642,7 @@ export default function SavedGrantsPage() {
 
   if (error) {
     return (
-      <div className="p-8">
+      <div className="px-4 md:px-6 lg:px-8 py-8">
         <motion.div
           className="mb-8"
           initial={{ opacity: 0, y: -20 }}
@@ -610,7 +656,7 @@ export default function SavedGrantsPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="px-4 md:px-6 lg:px-8 py-8">
       {/* Header */}
       <motion.div
         className="mb-8"
@@ -723,7 +769,7 @@ export default function SavedGrantsPage() {
 
           {/* Grant Grid */}
           <AnimatePresence mode="popLayout">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {filteredGrants.map((grant, index) => (
                 <SavedGrantCard
                   key={grant.id}
@@ -752,7 +798,11 @@ export default function SavedGrantsPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Create new collection"
             onClick={() => setShowNewCollectionModal(false)}
+            onKeyDown={(e) => e.key === 'Escape' && setShowNewCollectionModal(false)}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
@@ -767,7 +817,8 @@ export default function SavedGrantsPage() {
                   value={newCollectionName}
                   onChange={(e) => setNewCollectionName(e.target.value)}
                   placeholder="Collection name..."
-                  className="w-full px-4 py-3 rounded-xl bg-pulse-surface border border-pulse-border text-pulse-text placeholder:text-pulse-text-tertiary focus:outline-none focus:border-pulse-accent mb-4"
+                  aria-label="Collection name"
+                  className="w-full px-4 py-3 rounded-xl bg-pulse-surface border border-pulse-border text-pulse-text placeholder:text-pulse-text-tertiary focus:outline-none focus:border-pulse-accent focus-visible:ring-2 focus-visible:ring-pulse-accent/50 mb-4"
                   onKeyDown={(e) => e.key === 'Enter' && handleCreateCollection()}
                   autoFocus
                 />

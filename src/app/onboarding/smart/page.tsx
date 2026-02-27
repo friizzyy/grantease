@@ -146,10 +146,10 @@ export default function SmartOnboarding() {
           <Wand2 className="w-5 h-5" />
           <span className="text-sm font-medium uppercase tracking-wider">Smart Setup</span>
         </div>
-        <h1 className="font-serif text-3xl sm:text-4xl text-pulse-text mb-3">
+        <h1 className="text-heading-lg font-bold tracking-tight text-pulse-text mb-3">
           Let AI build your profile
         </h1>
-        <p className="text-lg text-pulse-text-secondary">
+        <p className="text-body text-pulse-text-secondary">
           Paste your website or tell us about your organization, and we&apos;ll create a personalized grant profile.
         </p>
       </motion.div>

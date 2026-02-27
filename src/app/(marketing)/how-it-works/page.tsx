@@ -1,4 +1,8 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import {
   ArrowRight,
   Search,
@@ -14,11 +18,120 @@ import {
   RefreshCw,
 } from 'lucide-react'
 
+// Animation variants
+const fadeInUp = {
+  initial: { opacity: 0, y: 24 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-60px' },
+  transition: { duration: 0.6, ease: 'easeOut' },
+}
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
+}
+
+const staggerItem = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+}
+
+const hoverLift = {
+  whileHover: { y: -2, transition: { duration: 0.2 } },
+  whileTap: { scale: 0.98 },
+}
+
 export default function HowItWorksPage() {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setPrefersReducedMotion(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
+  const motionProps = (props: Record<string, unknown>) =>
+    prefersReducedMotion ? {} : props
+
+  const steps = [
+    {
+      number: '1',
+      icon: Search,
+      title: 'Find Your Matches',
+      subtitle: 'Stop searching. Start discovering.',
+      description:
+        "Tell us about your organization: what you do, where you're located, what you need funding for. Our AI searches 20,000+ grants from federal, state, and private sources. In seconds, you see only the grants you actually qualify for.",
+      bullets: [
+        'AI analyzes your profile against every requirement',
+        "See why each grant matches (or doesn't)",
+        'Filter by amount, deadline, difficulty',
+        'Save promising grants for later',
+      ],
+      bulletIcon: CheckCircle2,
+      accent: false,
+    },
+    {
+      number: '2',
+      icon: BookOpen,
+      title: 'Understand Before You Apply',
+      subtitle: "Know exactly what you're getting into.",
+      description:
+        "Every grant is explained in plain English, not government jargon. See exactly what the grant funds, who qualifies, what documents you'll need, and how much effort it takes to apply. Make informed decisions before investing your time.",
+      bullets: [
+        'Plain English summary of requirements',
+        'Detailed eligibility breakdown',
+        'List of required documents',
+        'Estimated time to complete application',
+      ],
+      bulletIcon: CheckCircle2,
+      accent: false,
+    },
+    {
+      number: '3',
+      icon: PenLine,
+      title: 'Write with AI Assistance',
+      subtitle: 'This is where the magic happens.',
+      description:
+        "You're not alone. Our AI writing assistant helps you craft each section of your application. Your vault auto-fills basic information. You never retype your address, EIN, or organization details. Get feedback on your drafts before you submit.",
+      bullets: [
+        'Section-by-section guidance',
+        'AI drafts you can edit and refine',
+        'Your vault auto-fills 90% of basic fields. Never retype your EIN, address, or mission',
+        'Feedback on clarity and completeness',
+      ],
+      bulletIcon: Sparkles,
+      accent: true,
+      callout:
+        'Professional applications without hiring a $5,000 consultant. Our AI helps you sound professional while keeping your authentic voice. Every word is yours to approve.',
+    },
+    {
+      number: '4',
+      icon: Send,
+      title: 'Submit & Track',
+      subtitle: 'Confidence at every stage.',
+      description:
+        'Review your complete application before submitting. Track your status, deadlines, and any follow-up requirements all in one place. We help you stay organized even after you hit submit.',
+      bullets: [
+        'Complete application preview',
+        'Deadline reminders',
+        'Status tracking dashboard',
+        'Follow-up guidance if needed',
+      ],
+      bulletIcon: CheckCircle2,
+      accent: false,
+      isLast: true,
+    },
+  ]
+
   return (
     <main className="pt-20">
       {/* Hero */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <motion.section
+        className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden"
+        {...motionProps(fadeInUp)}
+      >
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-pulse-accent/[0.05] blur-[120px]" />
         </div>
@@ -43,220 +156,145 @@ export default function HowItWorksPage() {
           {/* Quick stats */}
           <div className="inline-flex flex-wrap justify-center items-center gap-6 md:gap-10 px-6 py-4 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
             <div className="text-center">
-              <div className="text-2xl font-bold text-pulse-accent">5 min</div>
-              <div className="text-xs text-pulse-text-tertiary">Profile setup</div>
+              <div className="text-2xl font-bold text-pulse-accent tabular-nums">5 min</div>
+              <div className="text-xs text-pulse-text-tertiary uppercase tracking-wider font-medium">Profile setup</div>
             </div>
             <div className="w-px h-8 bg-white/[0.08]" />
             <div className="text-center">
               <div className="text-2xl font-bold text-pulse-accent">Instant</div>
-              <div className="text-xs text-pulse-text-tertiary">Grant matches</div>
+              <div className="text-xs text-pulse-text-tertiary uppercase tracking-wider font-medium">Grant matches</div>
             </div>
             <div className="w-px h-8 bg-white/[0.08]" />
             <div className="text-center">
               <div className="text-2xl font-bold text-pulse-accent">AI-guided</div>
-              <div className="text-xs text-pulse-text-tertiary">Applications</div>
+              <div className="text-xs text-pulse-text-tertiary uppercase tracking-wider font-medium">Applications</div>
             </div>
             <div className="w-px h-8 bg-white/[0.08]" />
             <div className="text-center">
-              <div className="text-2xl font-bold text-pulse-accent">100%</div>
-              <div className="text-xs text-pulse-text-tertiary">Award is yours</div>
+              <div className="text-2xl font-bold text-pulse-accent tabular-nums">100%</div>
+              <div className="text-xs text-pulse-text-tertiary uppercase tracking-wider font-medium">Award is yours</div>
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* The 4-Step Journey - Detailed */}
       <section className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
+          <motion.div
+            className="text-center mb-16"
+            {...motionProps(fadeInUp)}
+          >
             <h2 className="text-3xl md:text-4xl font-bold text-pulse-text mb-4">
               Your path from discovery to funded
             </h2>
             <p className="text-lg text-pulse-text-secondary max-w-2xl mx-auto">
               Four clear steps. Each one designed to remove confusion and build your confidence.
             </p>
-          </div>
+          </motion.div>
 
-          {/* Step 1 */}
-          <div className="mb-16">
-            <div className="flex items-start gap-6 md:gap-10">
-              <div className="hidden md:flex flex-col items-center">
-                <div className="w-16 h-16 rounded-2xl bg-pulse-accent/20 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-pulse-accent">1</span>
-                </div>
-                <div className="w-px h-full bg-gradient-to-b from-pulse-accent/30 to-transparent mt-4" />
-              </div>
-              <div className="flex-1">
-                <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-pulse-accent/10 flex items-center justify-center">
-                      <Search className="w-6 h-6 text-pulse-accent" />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-semibold text-pulse-text">Find Your Matches</h3>
-                      <p className="text-sm text-pulse-text-tertiary">Stop searching. Start discovering.</p>
-                    </div>
-                  </div>
-                  <p className="text-pulse-text-secondary mb-6 leading-relaxed">
-                    Tell us about your organization: what you do, where you&apos;re located, what you need funding for.
-                    Our AI searches 20,000+ grants from federal, state, and private sources. In seconds, you see
-                    only the grants you actually qualify for.
-                  </p>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    {[
-                      'AI analyzes your profile against every requirement',
-                      'See why each grant matches (or doesn\'t)',
-                      'Filter by amount, deadline, difficulty',
-                      'Save promising grants for later',
-                    ].map((item, i) => (
-                      <div key={i} className="flex items-start gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-pulse-accent mt-0.5 shrink-0" />
-                        <span className="text-sm text-pulse-text-secondary">{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <div className="space-y-16">
+            {steps.map((step, index) => {
+              const BulletIcon = step.bulletIcon
+              const isEven = index % 2 === 1
 
-          {/* Step 2 */}
-          <div className="mb-16">
-            <div className="flex items-start gap-6 md:gap-10">
-              <div className="hidden md:flex flex-col items-center">
-                <div className="w-16 h-16 rounded-2xl bg-pulse-accent/20 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-pulse-accent">2</span>
-                </div>
-                <div className="w-px h-full bg-gradient-to-b from-pulse-accent/30 to-transparent mt-4" />
-              </div>
-              <div className="flex-1">
-                <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-pulse-accent/10 flex items-center justify-center">
-                      <BookOpen className="w-6 h-6 text-pulse-accent" />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-semibold text-pulse-text">Understand Before You Apply</h3>
-                      <p className="text-sm text-pulse-text-tertiary">Know exactly what you&apos;re getting into.</p>
-                    </div>
-                  </div>
-                  <p className="text-pulse-text-secondary mb-6 leading-relaxed">
-                    Every grant is explained in plain English, not government jargon. See exactly what the grant funds,
-                    who qualifies, what documents you&apos;ll need, and how much effort it takes to apply.
-                    Make informed decisions before investing your time.
-                  </p>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    {[
-                      'Plain English summary of requirements',
-                      'Detailed eligibility breakdown',
-                      'List of required documents',
-                      'Estimated time to complete application',
-                    ].map((item, i) => (
-                      <div key={i} className="flex items-start gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-pulse-accent mt-0.5 shrink-0" />
-                        <span className="text-sm text-pulse-text-secondary">{item}</span>
+              return (
+                <motion.div
+                  key={step.number}
+                  {...motionProps({
+                    initial: { opacity: 0, y: 24 },
+                    whileInView: { opacity: 1, y: 0 },
+                    viewport: { once: true, margin: '-60px' },
+                    transition: { duration: 0.6, ease: 'easeOut' },
+                  })}
+                >
+                  <div className={`flex items-start gap-6 md:gap-10 ${isEven ? 'md:flex-row-reverse' : ''}`}>
+                    {/* Step number indicator with connecting line */}
+                    <div className="hidden md:flex flex-col items-center">
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
+                        step.isLast ? 'bg-emerald-500/20' : 'bg-pulse-accent/20'
+                      }`}>
+                        <span className={`text-2xl font-bold ${
+                          step.isLast ? 'text-emerald-400' : 'text-pulse-accent'
+                        }`}>{step.number}</span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                      {!step.isLast && (
+                        <div className="w-px h-full bg-gradient-to-b from-pulse-accent/30 to-transparent mt-4 min-h-[80px]" />
+                      )}
+                    </div>
 
-          {/* Step 3 */}
-          <div className="mb-16">
-            <div className="flex items-start gap-6 md:gap-10">
-              <div className="hidden md:flex flex-col items-center">
-                <div className="w-16 h-16 rounded-2xl bg-pulse-accent/20 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-pulse-accent">3</span>
-                </div>
-                <div className="w-px h-full bg-gradient-to-b from-pulse-accent/30 to-transparent mt-4" />
-              </div>
-              <div className="flex-1">
-                <div className="p-8 rounded-2xl bg-gradient-to-br from-pulse-accent/5 to-transparent border border-pulse-accent/20">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-pulse-accent/20 flex items-center justify-center">
-                      <PenLine className="w-6 h-6 text-pulse-accent" />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-semibold text-pulse-text">Write with AI Assistance</h3>
-                      <p className="text-sm text-pulse-accent font-medium">This is where the magic happens.</p>
-                    </div>
-                  </div>
-                  <p className="text-pulse-text-secondary mb-6 leading-relaxed">
-                    You&apos;re not alone. Our AI writing assistant helps you craft each section of your application.
-                    Your vault auto-fills basic information. You never retype your address, EIN, or organization details.
-                    Get feedback on your drafts before you submit.
-                  </p>
-                  <div className="grid sm:grid-cols-2 gap-4 mb-6">
-                    {[
-                      'Section-by-section guidance',
-                      'AI drafts you can edit and refine',
-                      'Your vault auto-fills 90% of basic fields. Never retype your EIN, address, or mission',
-                      'Feedback on clarity and completeness',
-                    ].map((item, i) => (
-                      <div key={i} className="flex items-start gap-2">
-                        <Sparkles className="w-4 h-4 text-pulse-accent mt-0.5 shrink-0" />
-                        <span className="text-sm text-pulse-text">{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="p-4 rounded-xl bg-pulse-bg/50 border border-white/[0.06]">
-                    <p className="text-sm text-pulse-text-secondary">
-                      <span className="text-pulse-accent font-medium">Professional applications without hiring a $5,000 consultant.</span> Our AI helps you
-                      sound professional while keeping your authentic voice. Every word is yours to approve.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                    {/* Content card */}
+                    <div className="flex-1">
+                      <div className={`p-8 rounded-2xl ${
+                        step.accent
+                          ? 'bg-gradient-to-br from-pulse-accent/5 to-transparent border border-pulse-accent/20'
+                          : 'bg-white/[0.02] border border-white/[0.06]'
+                      }`}>
+                        <div className="flex items-center gap-4 mb-6">
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                            step.isLast ? 'bg-emerald-500/10' : step.accent ? 'bg-pulse-accent/20' : 'bg-pulse-accent/10'
+                          }`}>
+                            <step.icon className={`w-6 h-6 ${
+                              step.isLast ? 'text-emerald-400' : 'text-pulse-accent'
+                            }`} />
+                          </div>
+                          <div>
+                            <h3 className="text-2xl font-semibold text-pulse-text">{step.title}</h3>
+                            <p className={`text-sm ${
+                              step.accent ? 'text-pulse-accent font-medium' : 'text-pulse-text-tertiary'
+                            }`}>{step.subtitle}</p>
+                          </div>
 
-          {/* Step 4 */}
-          <div>
-            <div className="flex items-start gap-6 md:gap-10">
-              <div className="hidden md:flex flex-col items-center">
-                <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-emerald-400">4</span>
-                </div>
-              </div>
-              <div className="flex-1">
-                <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                      <Send className="w-6 h-6 text-emerald-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-semibold text-pulse-text">Submit & Track</h3>
-                      <p className="text-sm text-pulse-text-tertiary">Confidence at every stage.</p>
-                    </div>
-                  </div>
-                  <p className="text-pulse-text-secondary mb-6 leading-relaxed">
-                    Review your complete application before submitting. Track your status, deadlines, and any
-                    follow-up requirements all in one place. We help you stay organized even after you hit submit.
-                  </p>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    {[
-                      'Complete application preview',
-                      'Deadline reminders',
-                      'Status tracking dashboard',
-                      'Follow-up guidance if needed',
-                    ].map((item, i) => (
-                      <div key={i} className="flex items-start gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
-                        <span className="text-sm text-pulse-text-secondary">{item}</span>
+                          {/* Mobile step number */}
+                          <div className={`md:hidden ml-auto w-10 h-10 rounded-xl flex items-center justify-center ${
+                            step.isLast ? 'bg-emerald-500/20' : 'bg-pulse-accent/20'
+                          }`}>
+                            <span className={`text-lg font-bold ${
+                              step.isLast ? 'text-emerald-400' : 'text-pulse-accent'
+                            }`}>{step.number}</span>
+                          </div>
+                        </div>
+
+                        <p className="text-pulse-text-secondary mb-6 leading-relaxed">
+                          {step.description}
+                        </p>
+
+                        <div className={`grid sm:grid-cols-2 gap-4 ${step.callout ? 'mb-6' : ''}`}>
+                          {step.bullets.map((item, i) => (
+                            <div key={i} className="flex items-start gap-2">
+                              <BulletIcon className={`w-4 h-4 mt-0.5 shrink-0 ${
+                                step.isLast ? 'text-emerald-400' : 'text-pulse-accent'
+                              }`} />
+                              <span className={`text-sm ${
+                                step.accent ? 'text-pulse-text' : 'text-pulse-text-secondary'
+                              }`}>{item}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {step.callout && (
+                          <div className="p-4 rounded-xl bg-pulse-bg/50 border border-white/[0.06]">
+                            <p className="text-sm text-pulse-text-secondary">
+                              <span className="text-pulse-accent font-medium">Professional applications without hiring a $5,000 consultant.</span> Our AI helps you
+                              sound professional while keeping your authentic voice. Every word is yours to approve.
+                            </p>
+                          </div>
+                        )}
                       </div>
-                    ))}
+                    </div>
                   </div>
-                </div>
-              </div>
-            </div>
+                </motion.div>
+              )
+            })}
           </div>
         </div>
       </section>
 
       {/* What's Different */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white/[0.01] border-y border-white/[0.04]">
+      <motion.section
+        className="py-24 px-4 sm:px-6 lg:px-8 bg-white/[0.01] border-y border-white/[0.04]"
+        {...motionProps(fadeInUp)}
+      >
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-pulse-text mb-4">
@@ -267,7 +305,13 @@ export default function HowItWorksPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+          >
             {[
               {
                 icon: MessageSquare,
@@ -300,23 +344,28 @@ export default function HowItWorksPage() {
                 description: 'Good answers you write for one grant can be adapted for others. Your work compounds.',
               },
             ].map((feature) => (
-              <div
+              <motion.div
                 key={feature.title}
-                className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06]"
+                variants={staggerItem}
+                {...(prefersReducedMotion ? {} : hoverLift)}
+                className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-colors"
               >
                 <div className="w-10 h-10 rounded-lg bg-pulse-accent/10 flex items-center justify-center mb-4">
                   <feature.icon className="w-5 h-5 text-pulse-accent" />
                 </div>
                 <h3 className="text-lg font-semibold text-pulse-text mb-2">{feature.title}</h3>
                 <p className="text-sm text-pulse-text-secondary">{feature.description}</p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* FAQ */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
+      <motion.section
+        className="py-24 px-4 sm:px-6 lg:px-8"
+        {...motionProps(fadeInUp)}
+      >
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-pulse-text mb-4">
@@ -332,7 +381,7 @@ export default function HowItWorksPage() {
               },
               {
                 q: 'How long does it take to get started?',
-                a: 'About 5 minutes to create your profile. You\'ll see matched grants immediately after. Your first application depends on the grant, but we show you time estimates upfront.',
+                a: "About 5 minutes to create your profile. You'll see matched grants immediately after. Your first application depends on the grant, but we show you time estimates upfront.",
               },
               {
                 q: 'Do you take a percentage of my award?',
@@ -357,10 +406,13 @@ export default function HowItWorksPage() {
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* CTA */}
-      <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden border-t border-white/[0.04]">
+      {/* CTA - "Ready to get started?" */}
+      <motion.section
+        className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden border-t border-white/[0.04]"
+        {...motionProps(fadeInUp)}
+      >
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-pulse-accent/[0.05] blur-[120px]" />
         </div>
@@ -394,7 +446,7 @@ export default function HowItWorksPage() {
             Free to start. No credit card required.
           </p>
         </div>
-      </section>
+      </motion.section>
     </main>
   )
 }

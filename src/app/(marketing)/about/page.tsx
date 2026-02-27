@@ -1,4 +1,8 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { ArrowRight, Target, Users, Lightbulb, Heart, Sparkles, Shield, Globe, Zap, Award } from 'lucide-react'
 
 const values = [
@@ -38,11 +42,50 @@ const stats = [
   { value: '94%', label: 'Match Accuracy' },
 ]
 
+// Animation variants
+const fadeInUp = {
+  initial: { opacity: 0, y: 24 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-60px' },
+  transition: { duration: 0.6, ease: 'easeOut' },
+}
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
+}
+
+const staggerItem = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+}
+
+const hoverLift = {
+  whileHover: { y: -2, transition: { duration: 0.2 } },
+  whileTap: { scale: 0.98 },
+}
+
 export default function AboutPage() {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setPrefersReducedMotion(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
+  const motionProps = (props: Record<string, unknown>) =>
+    prefersReducedMotion ? {} : props
+
   return (
     <main className="pt-20">
       {/* Hero */}
-      <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <motion.section
+        className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden"
+        {...motionProps(fadeInUp)}
+      >
         {/* Ambient backgrounds */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 right-1/4 w-[800px] h-[800px] rounded-full bg-pulse-accent/[0.06] blur-[150px]" />
@@ -50,51 +93,58 @@ export default function AboutPage() {
         </div>
 
         <div className="max-w-6xl mx-auto relative z-10">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left content */}
-            <div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-6">
-                <Sparkles className="w-4 h-4 text-pulse-accent" />
-                <span className="text-sm text-pulse-text-secondary">About Grants By AI</span>
-              </div>
-
-              <h1 className="text-4xl md:text-5xl font-bold text-pulse-text mb-6 tracking-tight">
-                Making grants{' '}
-                <span className="text-pulse-accent">accessible</span>
-              </h1>
-
-              <p className="text-lg text-pulse-text-secondary leading-relaxed mb-8">
-                We believe finding grants shouldn&apos;t require a dedicated staff member or expensive consultants.
-                Our mission is to democratize access to funding.
-              </p>
-
-              <Link
-                href="/register"
-                className="group inline-flex items-center gap-2 px-6 py-3 bg-pulse-accent text-pulse-bg font-semibold rounded-xl hover:bg-pulse-accent/90 transition-all"
-              >
-                Join 15K+ Organizations
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
+          {/* Mission statement - centered, prominent */}
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-8">
+              <Sparkles className="w-4 h-4 text-pulse-accent" />
+              <span className="text-sm text-pulse-text-secondary">About Grants By AI</span>
             </div>
 
-            {/* Right - Stats grid */}
-            <div className="grid grid-cols-2 gap-4">
-              {stats.map((stat) => (
-                <div
-                  key={stat.label}
-                  className="group p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all"
-                >
-                  <div className="text-3xl font-bold text-pulse-accent mb-1">{stat.value}</div>
-                  <div className="text-sm text-pulse-text-tertiary">{stat.label}</div>
-                </div>
-              ))}
-            </div>
+            <h1 className="text-display font-bold text-pulse-text mb-6 tracking-tight">
+              Democratizing access to <span className="text-pulse-accent">funding</span>
+            </h1>
+
+            <p className="text-lg text-pulse-text-secondary leading-relaxed max-w-2xl mx-auto mb-8">
+              We believe finding grants shouldn&apos;t require a dedicated staff member or expensive consultants.
+              Our mission is to make funding accessible to every organization that deserves it.
+            </p>
+
+            <Link
+              href="/register"
+              className="group inline-flex items-center gap-2 px-6 py-3 bg-pulse-accent text-pulse-bg font-semibold rounded-xl hover:bg-pulse-accent/90 transition-all"
+            >
+              Join 15K+ Organizations
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
           </div>
+
+          {/* Stats grid */}
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-40px' }}
+          >
+            {stats.map((stat) => (
+              <motion.div
+                key={stat.label}
+                variants={staggerItem}
+                className="group p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all text-center"
+              >
+                <div className="text-3xl font-bold text-pulse-accent mb-1 tabular-nums">{stat.value}</div>
+                <div className="text-xs text-pulse-text-tertiary uppercase tracking-wider font-medium">{stat.label}</div>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Timeline */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 border-y border-white/[0.04]">
+      <motion.section
+        className="py-20 px-4 sm:px-6 lg:px-8 border-y border-white/[0.04]"
+        {...motionProps(fadeInUp)}
+      >
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
@@ -105,13 +155,21 @@ export default function AboutPage() {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-6">
+          <motion.div
+            className="grid md:grid-cols-4 gap-6"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-40px' }}
+          >
             {timeline.map((item) => (
-              <div
+              <motion.div
                 key={item.year}
+                variants={staggerItem}
+                {...(prefersReducedMotion ? {} : hoverLift)}
                 className="group p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all"
               >
-                <span className="text-3xl font-bold text-pulse-accent/30 block mb-4 group-hover:text-pulse-accent/50 transition-colors">
+                <span className="text-3xl font-bold text-pulse-accent/30 block mb-4 group-hover:text-pulse-accent/50 transition-colors tabular-nums">
                   {item.year}
                 </span>
                 <h3 className="text-lg font-semibold text-pulse-text mb-2 group-hover:text-pulse-accent transition-colors">
@@ -120,14 +178,17 @@ export default function AboutPage() {
                 <p className="text-sm text-pulse-text-secondary leading-relaxed">
                   {item.description}
                 </p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Values */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      <motion.section
+        className="py-20 px-4 sm:px-6 lg:px-8"
+        {...motionProps(fadeInUp)}
+      >
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
@@ -138,12 +199,20 @@ export default function AboutPage() {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <motion.div
+            className="grid md:grid-cols-2 gap-6"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-40px' }}
+          >
             {values.map((value) => {
               const Icon = value.icon
               return (
-                <div
+                <motion.div
                   key={value.title}
+                  variants={staggerItem}
+                  {...(prefersReducedMotion ? {} : hoverLift)}
                   className="group flex gap-5 p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all"
                 >
                   <div className="w-12 h-12 rounded-xl bg-pulse-accent/10 flex items-center justify-center shrink-0 group-hover:bg-pulse-accent/20 transition-colors">
@@ -157,17 +226,26 @@ export default function AboutPage() {
                       {value.description}
                     </p>
                   </div>
-                </div>
+                </motion.div>
               )
             })}
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Features bar */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 border-y border-white/[0.04]">
+      <motion.section
+        className="py-16 px-4 sm:px-6 lg:px-8 border-y border-white/[0.04]"
+        {...motionProps(fadeInUp)}
+      >
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-40px' }}
+          >
             {[
               { icon: Zap, title: 'Lightning Fast', desc: '< 1 second search' },
               { icon: Shield, title: 'Secure', desc: 'SOC 2 compliant' },
@@ -176,21 +254,24 @@ export default function AboutPage() {
             ].map((feature) => {
               const Icon = feature.icon
               return (
-                <div key={feature.title} className="group">
+                <motion.div key={feature.title} className="group" variants={staggerItem}>
                   <div className="w-12 h-12 rounded-xl bg-pulse-accent/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-pulse-accent/20 transition-colors">
                     <Icon className="w-6 h-6 text-pulse-accent" />
                   </div>
                   <h3 className="font-semibold text-pulse-text mb-1">{feature.title}</h3>
                   <p className="text-sm text-pulse-text-tertiary">{feature.desc}</p>
-                </div>
+                </motion.div>
               )
             })}
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* CTA */}
-      <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <motion.section
+        className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden"
+        {...motionProps(fadeInUp)}
+      >
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-pulse-accent/[0.06] blur-[150px]" />
         </div>
@@ -220,7 +301,7 @@ export default function AboutPage() {
             </Link>
           </div>
         </div>
-      </section>
+      </motion.section>
     </main>
   )
 }

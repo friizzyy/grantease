@@ -4,10 +4,12 @@ import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Lock, ArrowLeft, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { Lock, ArrowLeft, CheckCircle2, AlertCircle, Eye, EyeOff, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { AnimatedLogo } from '@/components/ui/animated-logo'
+import { BrandLogo } from '@/components/ui/brand-logo'
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams()
@@ -145,6 +147,10 @@ function ResetPasswordForm() {
     >
       <Card className="border-pulse-border/50 overflow-hidden relative">
         <CardHeader className="text-center relative z-10">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <AnimatedLogo size="md" className="text-pulse-accent" />
+            <BrandLogo size="lg" />
+          </div>
           <CardTitle className="font-serif text-heading-md">Reset your password</CardTitle>
           <CardDescription>
             Enter your new password below
@@ -222,19 +228,18 @@ function ResetPasswordForm() {
               </div>
 
               {/* Password requirements */}
-              <div className="text-xs text-pulse-text-tertiary space-y-1">
-                <p className={password.length >= 8 ? 'text-pulse-accent' : ''}>
-                  {password.length >= 8 ? '✓' : '○'} At least 8 characters
-                </p>
-                <p className={/[A-Z]/.test(password) ? 'text-pulse-accent' : ''}>
-                  {/[A-Z]/.test(password) ? '✓' : '○'} One uppercase letter
-                </p>
-                <p className={/[a-z]/.test(password) ? 'text-pulse-accent' : ''}>
-                  {/[a-z]/.test(password) ? '✓' : '○'} One lowercase letter
-                </p>
-                <p className={/[0-9]/.test(password) ? 'text-pulse-accent' : ''}>
-                  {/[0-9]/.test(password) ? '✓' : '○'} One number
-                </p>
+              <div className="text-xs text-pulse-text-tertiary space-y-1.5">
+                {[
+                  { met: password.length >= 8, label: 'At least 8 characters' },
+                  { met: /[A-Z]/.test(password), label: 'One uppercase letter' },
+                  { met: /[a-z]/.test(password), label: 'One lowercase letter' },
+                  { met: /[0-9]/.test(password), label: 'One number' },
+                ].map((req) => (
+                  <div key={req.label} className={`flex items-center gap-2 ${req.met ? 'text-pulse-accent' : ''}`}>
+                    <Check className="w-3 h-3" />
+                    <span>{req.label}</span>
+                  </div>
+                ))}
               </div>
 
               <Button type="submit" className="w-full" loading={isLoading}>

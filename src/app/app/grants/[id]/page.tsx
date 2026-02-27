@@ -42,6 +42,13 @@ import {
   Globe,
   RefreshCw,
   Loader2,
+  Shield,
+  ChevronDown,
+  ChevronUp,
+  CheckCircle,
+  XCircle,
+  BarChart3,
+  Award,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -280,18 +287,141 @@ function RequirementItem({ requirement, index }: { requirement: string; index: n
 // Loading skeleton
 function GrantSkeleton() {
   return (
-    <div className="p-8 animate-pulse">
-      <div className="h-5 bg-pulse-surface rounded w-40 mb-6" />
-      <div className="h-48 bg-pulse-surface rounded-2xl mb-6" />
+    <div className="px-4 md:px-6 lg:px-8 py-8 animate-pulse">
+      {/* Back button */}
+      <div className="flex items-center gap-2 mb-6">
+        <div className="w-4 h-4 bg-pulse-surface rounded" />
+        <div className="h-4 bg-pulse-surface rounded w-32" />
+      </div>
+
+      {/* Header Card */}
+      <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-6 mb-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-4 h-4 bg-pulse-surface rounded" />
+              <div className="h-4 bg-pulse-surface rounded w-36" />
+            </div>
+            <div className="h-8 bg-pulse-surface rounded w-3/4 mb-3" />
+            <div className="flex flex-wrap gap-2">
+              <div className="h-6 bg-pulse-surface rounded-full w-16" />
+              <div className="h-6 bg-pulse-surface rounded-full w-24" />
+              <div className="h-6 bg-pulse-surface rounded-full w-20" />
+            </div>
+          </div>
+          <div className="w-24 h-16 bg-pulse-surface rounded-xl shrink-0 ml-4" />
+        </div>
+        {/* Quick Stats */}
+        <div className="flex flex-wrap items-center gap-6 py-4 border-t border-b border-pulse-border/30 mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 bg-pulse-surface rounded" />
+            <div className="h-5 bg-pulse-surface rounded w-28" />
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 bg-pulse-surface rounded" />
+            <div className="h-5 bg-pulse-surface rounded w-24" />
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 bg-pulse-surface rounded" />
+            <div className="h-5 bg-pulse-surface rounded w-20" />
+          </div>
+        </div>
+        {/* CTA */}
+        <div className="h-14 bg-pulse-surface rounded-lg w-64 mb-2" />
+        <div className="h-3 bg-pulse-surface rounded w-48 mb-4" />
+        {/* Action buttons */}
+        <div className="flex flex-wrap gap-3">
+          <div className="h-10 bg-pulse-surface rounded-lg w-32" />
+          <div className="h-10 bg-pulse-surface rounded-lg w-28" />
+          <div className="h-10 bg-pulse-surface rounded-lg w-20" />
+        </div>
+        <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-pulse-border/30">
+          <div className="h-10 bg-pulse-surface rounded-lg w-40" />
+          <div className="h-10 bg-pulse-surface rounded-lg w-40" />
+        </div>
+      </div>
+
+      {/* Main Content Grid */}
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="h-32 bg-pulse-surface rounded-2xl" />
-          <div className="h-48 bg-pulse-surface rounded-2xl" />
-          <div className="h-64 bg-pulse-surface rounded-2xl" />
+          {/* AI Analysis */}
+          <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-5">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-pulse-surface rounded-lg shrink-0" />
+              <div className="flex-1">
+                <div className="h-4 bg-pulse-surface rounded w-24 mb-2" />
+                <div className="h-3 bg-pulse-surface rounded w-full mb-1" />
+                <div className="h-3 bg-pulse-surface rounded w-3/4 mb-3" />
+                <div className="h-8 bg-pulse-surface rounded-lg w-40" />
+              </div>
+            </div>
+          </div>
+          {/* Overview */}
+          <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-6">
+            <div className="h-5 bg-pulse-surface rounded w-24 mb-4" />
+            <div className="space-y-2">
+              <div className="h-3 bg-pulse-surface rounded w-full" />
+              <div className="h-3 bg-pulse-surface rounded w-full" />
+              <div className="h-3 bg-pulse-surface rounded w-5/6" />
+              <div className="h-3 bg-pulse-surface rounded w-full" />
+              <div className="h-3 bg-pulse-surface rounded w-4/5" />
+            </div>
+          </div>
+          {/* Requirements */}
+          <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-6">
+            <div className="h-5 bg-pulse-surface rounded w-44 mb-4" />
+            <div className="space-y-2">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="flex items-start gap-3 p-3 rounded-lg border border-pulse-border/20 bg-pulse-surface/20">
+                  <div className="w-5 h-5 bg-pulse-surface rounded-full shrink-0" />
+                  <div className="h-4 bg-pulse-surface rounded flex-1" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
         <div className="space-y-6">
-          <div className="h-48 bg-pulse-surface rounded-2xl" />
-          <div className="h-64 bg-pulse-surface rounded-2xl" />
+          {/* Match Score Card */}
+          <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-5 h-5 bg-pulse-surface rounded" />
+                  <div className="h-3 bg-pulse-surface rounded w-24" />
+                </div>
+                <div className="h-10 bg-pulse-surface rounded w-20" />
+              </div>
+              <div className="w-12 h-12 bg-pulse-surface rounded-full" />
+            </div>
+            <div className="h-1.5 bg-pulse-surface rounded-full" />
+          </div>
+          {/* Key Details Card */}
+          <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-6">
+            <div className="h-5 bg-pulse-surface rounded w-24 mb-4" />
+            <div className="space-y-4">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="flex items-start gap-3">
+                  <div className="w-9 h-9 bg-pulse-surface rounded-lg shrink-0" />
+                  <div className="flex-1">
+                    <div className="h-3 bg-pulse-surface rounded w-24 mb-1" />
+                    <div className="h-4 bg-pulse-surface rounded w-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Contact Card */}
+          <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-6">
+            <div className="h-5 bg-pulse-surface rounded w-40 mb-4" />
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-pulse-surface rounded-lg" />
+                  <div className="h-4 bg-pulse-surface rounded w-40" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -301,7 +431,7 @@ function GrantSkeleton() {
 // Error state
 function GrantError({ onRetry, error }: { onRetry: () => void; error: string }) {
   return (
-    <div className="p-8 flex items-center justify-center min-h-[60vh]">
+    <div className="px-4 md:px-6 lg:px-8 py-8 flex items-center justify-center min-h-[60vh]">
       <GlassCard className="p-8 text-center max-w-md">
         <div className="w-12 h-12 rounded-full bg-pulse-error/20 flex items-center justify-center mx-auto mb-4">
           <AlertCircle className="w-6 h-6 text-pulse-error" />
@@ -338,6 +468,33 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
   const [isSaved, setIsSaved] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false)
+
+  // Eligibility check state
+  const [eligibilityLoading, setEligibilityLoading] = useState(false)
+  const [eligibilityResult, setEligibilityResult] = useState<{
+    verdict: 'eligible' | 'likely' | 'unclear' | 'ineligible'
+    score: number
+    checks: Array<{ requirement: string; met: boolean; note?: string }>
+    strengths: string[]
+    weaknesses: string[]
+    nextSteps: string[]
+    documentsNeeded: string[]
+    error?: string
+  } | null>(null)
+  const [showEligibility, setShowEligibility] = useState(false)
+
+  // Success prediction state
+  const [successLoading, setSuccessLoading] = useState(false)
+  const [successResult, setSuccessResult] = useState<{
+    overallScore: number
+    confidence: 'high' | 'medium' | 'low'
+    factors: Array<{ name: string; score: number; color: string }>
+    improvements: Array<{ action: string; impact: string; effort: string }>
+    competitivePosition: string
+    estimatedSuccessRate: string
+    error?: string
+  } | null>(null)
+  const [showSuccess, setShowSuccess] = useState(false)
 
   const fetchGrant = useCallback(async () => {
     setIsLoading(true)
@@ -528,6 +685,90 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
     }
   }
 
+  const handleEligibilityCheck = async () => {
+    if (eligibilityLoading || !grant) return
+    setEligibilityLoading(true)
+    setEligibilityResult(null)
+    setShowEligibility(true)
+    try {
+      const response = await fetch('/api/ai/eligibility-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          grantId: grant.id,
+          title: grant.title,
+          sponsor: grant.sponsor,
+          eligibility: grant.eligibility,
+          requirements: grant.requirements,
+          categories: grant.categories,
+          amountMin: grant.amountMin,
+          amountMax: grant.amountMax,
+        }),
+      })
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}))
+        throw new Error(errData.error || 'Failed to check eligibility')
+      }
+      const data = await response.json()
+      setEligibilityResult(data)
+    } catch (err) {
+      setEligibilityResult({
+        verdict: 'unclear',
+        score: 0,
+        checks: [],
+        strengths: [],
+        weaknesses: [],
+        nextSteps: [],
+        documentsNeeded: [],
+        error: err instanceof Error ? err.message : 'Failed to check eligibility',
+      })
+    } finally {
+      setEligibilityLoading(false)
+    }
+  }
+
+  const handleSuccessPrediction = async () => {
+    if (successLoading || !grant) return
+    setSuccessLoading(true)
+    setSuccessResult(null)
+    setShowSuccess(true)
+    try {
+      const response = await fetch('/api/ai/success-prediction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          grantId: grant.id,
+          title: grant.title,
+          sponsor: grant.sponsor,
+          eligibility: grant.eligibility,
+          requirements: grant.requirements,
+          categories: grant.categories,
+          amountMin: grant.amountMin,
+          amountMax: grant.amountMax,
+          deadlineDate: grant.deadlineDate,
+        }),
+      })
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}))
+        throw new Error(errData.error || 'Failed to predict success')
+      }
+      const data = await response.json()
+      setSuccessResult(data)
+    } catch (err) {
+      setSuccessResult({
+        overallScore: 0,
+        confidence: 'low',
+        factors: [],
+        improvements: [],
+        competitivePosition: '',
+        estimatedSuccessRate: '',
+        error: err instanceof Error ? err.message : 'Failed to predict success',
+      })
+    } finally {
+      setSuccessLoading(false)
+    }
+  }
+
   if (isLoading) {
     return <GrantSkeleton />
   }
@@ -541,7 +782,7 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
   const amountDisplay = formatAmount(grant.amountMin, grant.amountMax, grant.amountText)
 
   return (
-    <div className="p-8">
+    <div className="px-4 md:px-6 lg:px-8 py-8">
       {/* Back Button */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
@@ -549,7 +790,7 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
       >
         <Link
           href="/app/discover"
-          className="inline-flex items-center gap-2 text-sm text-pulse-text-secondary hover:text-pulse-accent transition-colors mb-6"
+          className="inline-flex items-center gap-2 text-sm text-pulse-text-secondary hover:text-pulse-accent transition-colors mb-6 min-h-[44px] focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none rounded-lg"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Discovery
@@ -570,7 +811,7 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
                 <Building2 className="w-4 h-4 text-pulse-accent" />
                 <span className="text-sm font-medium text-pulse-accent">{grant.sponsor}</span>
               </div>
-              <h1 className="font-serif text-2xl lg:text-3xl text-pulse-text mb-3">
+              <h1 className="text-heading-lg md:text-display font-bold tracking-tight text-pulse-text mb-3">
                 {grant.title}
               </h1>
               <div className="flex flex-wrap items-center gap-2">
@@ -680,8 +921,336 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
               Share
             </Button>
           </div>
+
+          {/* AI Analysis Buttons */}
+          <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-pulse-border">
+            <Button
+              onClick={handleEligibilityCheck}
+              disabled={eligibilityLoading}
+              className="bg-[#40ffaa] text-[#0a0e27] hover:bg-[#40ffaa]/80 rounded-lg font-medium"
+            >
+              {eligibilityLoading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Shield className="w-4 h-4 mr-2" />
+              )}
+              Check My Eligibility
+            </Button>
+            <Button
+              onClick={handleSuccessPrediction}
+              disabled={successLoading}
+              className="bg-[#40ffaa] text-[#0a0e27] hover:bg-[#40ffaa]/80 rounded-lg font-medium"
+            >
+              {successLoading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <BarChart3 className="w-4 h-4 mr-2" />
+              )}
+              Predict My Success
+            </Button>
+          </div>
         </GlassCard>
       </motion.div>
+
+      {/* Eligibility Check Results */}
+      {showEligibility && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <GlassCard className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-pulse-accent" />
+                <h2 className="text-lg font-semibold text-pulse-text">Eligibility Check</h2>
+              </div>
+              <button
+                onClick={() => setShowEligibility(false)}
+                aria-label="Collapse eligibility check"
+                className="p-2 rounded-lg hover:bg-pulse-surface text-pulse-text-tertiary hover:text-pulse-text transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none"
+              >
+                <ChevronUp className="w-5 h-5" />
+              </button>
+            </div>
+
+            {eligibilityLoading && (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 text-pulse-accent animate-spin mr-3" />
+                <span className="text-sm text-pulse-text-secondary">Checking your eligibility...</span>
+              </div>
+            )}
+
+            {eligibilityResult?.error && (
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-pulse-error/10 border border-pulse-error/20">
+                <AlertCircle className="w-5 h-5 text-pulse-error shrink-0 mt-0.5" />
+                <p className="text-sm text-pulse-error">{eligibilityResult.error}</p>
+              </div>
+            )}
+
+            {eligibilityResult && !eligibilityResult.error && !eligibilityLoading && (
+              <div className="space-y-5">
+                {/* Verdict Badge & Score */}
+                <div className="flex items-center gap-4">
+                  {(() => {
+                    const verdictStyles = {
+                      eligible: 'bg-green-500/20 text-green-400 border-green-500/30',
+                      likely: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+                      unclear: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+                      ineligible: 'bg-red-500/20 text-red-400 border-red-500/30',
+                    }
+                    const verdictLabels = {
+                      eligible: 'Eligible',
+                      likely: 'Likely Eligible',
+                      unclear: 'Unclear',
+                      ineligible: 'Not Eligible',
+                    }
+                    return (
+                      <span className={`px-3 py-1.5 rounded-full text-sm font-medium border ${verdictStyles[eligibilityResult.verdict]}`}>
+                        {verdictLabels[eligibilityResult.verdict]}
+                      </span>
+                    )
+                  })()}
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between text-sm mb-1">
+                      <span className="text-pulse-text-secondary">Eligibility Score</span>
+                      <span className="text-pulse-accent font-semibold">{eligibilityResult.score}%</span>
+                    </div>
+                    <div className="h-2 bg-pulse-border rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full bg-pulse-accent rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${eligibilityResult.score}%` }}
+                        transition={{ duration: 0.8 }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Requirement Checks */}
+                {eligibilityResult.checks.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-2">Requirement Checks</p>
+                    <div className="space-y-1.5">
+                      {eligibilityResult.checks.map((check, i) => (
+                        <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-pulse-surface/50">
+                          {check.met ? (
+                            <CheckCircle className="w-4 h-4 text-green-400 shrink-0 mt-0.5" />
+                          ) : (
+                            <XCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                          )}
+                          <div>
+                            <p className="text-sm text-pulse-text">{check.requirement}</p>
+                            {check.note && <p className="text-xs text-pulse-text-tertiary mt-0.5">{check.note}</p>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Strengths & Weaknesses */}
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {eligibilityResult.strengths.length > 0 && (
+                    <div className="p-3 rounded-lg bg-green-500/5 border border-green-500/20">
+                      <p className="text-xs font-medium text-green-400 mb-2">Strengths</p>
+                      <ul className="space-y-1">
+                        {eligibilityResult.strengths.map((s, i) => (
+                          <li key={i} className="text-xs text-pulse-text-secondary flex items-start gap-1.5">
+                            <CheckCircle className="w-3 h-3 text-green-400 shrink-0 mt-0.5" />
+                            {s}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {eligibilityResult.weaknesses.length > 0 && (
+                    <div className="p-3 rounded-lg bg-red-500/5 border border-red-500/20">
+                      <p className="text-xs font-medium text-red-400 mb-2">Weaknesses</p>
+                      <ul className="space-y-1">
+                        {eligibilityResult.weaknesses.map((w, i) => (
+                          <li key={i} className="text-xs text-pulse-text-secondary flex items-start gap-1.5">
+                            <AlertCircle className="w-3 h-3 text-red-400 shrink-0 mt-0.5" />
+                            {w}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* Next Steps */}
+                {eligibilityResult.nextSteps.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-2">Next Steps</p>
+                    <div className="space-y-1.5">
+                      {eligibilityResult.nextSteps.map((step, i) => (
+                        <div key={i} className="flex items-start gap-2 text-sm text-pulse-text-secondary">
+                          <span className="w-5 h-5 rounded-full bg-pulse-accent/20 text-pulse-accent text-xs flex items-center justify-center shrink-0 mt-0.5">
+                            {i + 1}
+                          </span>
+                          {step}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Documents Needed */}
+                {eligibilityResult.documentsNeeded.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-2">Documents Needed</p>
+                    <div className="flex flex-wrap gap-2">
+                      {eligibilityResult.documentsNeeded.map((doc, i) => (
+                        <span key={i} className="px-2.5 py-1 rounded-full bg-pulse-surface text-xs text-pulse-text-secondary border border-pulse-border">
+                          <FileText className="w-3 h-3 inline mr-1" />
+                          {doc}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </GlassCard>
+        </motion.div>
+      )}
+
+      {/* Success Prediction Results */}
+      {showSuccess && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <GlassCard className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-pulse-accent" />
+                <h2 className="text-lg font-semibold text-pulse-text">Success Prediction</h2>
+              </div>
+              <button
+                onClick={() => setShowSuccess(false)}
+                aria-label="Collapse success prediction"
+                className="p-2 rounded-lg hover:bg-pulse-surface text-pulse-text-tertiary hover:text-pulse-text transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none"
+              >
+                <ChevronUp className="w-5 h-5" />
+              </button>
+            </div>
+
+            {successLoading && (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 text-pulse-accent animate-spin mr-3" />
+                <span className="text-sm text-pulse-text-secondary">Analyzing your success probability...</span>
+              </div>
+            )}
+
+            {successResult?.error && (
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-pulse-error/10 border border-pulse-error/20">
+                <AlertCircle className="w-5 h-5 text-pulse-error shrink-0 mt-0.5" />
+                <p className="text-sm text-pulse-error">{successResult.error}</p>
+              </div>
+            )}
+
+            {successResult && !successResult.error && !successLoading && (
+              <div className="space-y-5">
+                {/* Score and Confidence */}
+                <div className="flex items-center gap-6">
+                  {/* Circular progress */}
+                  <div className="relative w-24 h-24 shrink-0">
+                    <svg width={96} height={96} className="transform -rotate-90">
+                      <circle cx={48} cy={48} r={40} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={6} />
+                      <motion.circle
+                        cx={48} cy={48} r={40} fill="none"
+                        stroke="#40ffaa"
+                        strokeWidth={6}
+                        strokeLinecap="round"
+                        initial={{ strokeDasharray: 251.3, strokeDashoffset: 251.3 }}
+                        animate={{ strokeDashoffset: 251.3 - (successResult.overallScore / 100) * 251.3 }}
+                        transition={{ duration: 1, ease: 'easeOut' }}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-2xl font-bold text-pulse-accent">{successResult.overallScore}</span>
+                      <span className="text-xs text-pulse-text-tertiary">/ 100</span>
+                    </div>
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-pulse-text-secondary">Confidence:</span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${
+                        successResult.confidence === 'high' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
+                        successResult.confidence === 'medium' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
+                        'bg-orange-500/20 text-orange-400 border-orange-500/30'
+                      }`}>
+                        {successResult.confidence}
+                      </span>
+                    </div>
+                    {successResult.competitivePosition && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-pulse-text-secondary">Position:</span>
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-pulse-accent/20 text-pulse-accent border border-pulse-accent/30">
+                          <Award className="w-3 h-3 inline mr-1" />
+                          {successResult.competitivePosition}
+                        </span>
+                      </div>
+                    )}
+                    {successResult.estimatedSuccessRate && (
+                      <p className="text-sm text-pulse-text-secondary">
+                        Est. success rate: <span className="text-pulse-accent font-semibold">{successResult.estimatedSuccessRate}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Factor Breakdown */}
+                {successResult.factors.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-3">Factor Breakdown</p>
+                    <div className="space-y-2.5">
+                      {successResult.factors.map((factor, i) => (
+                        <div key={i}>
+                          <div className="flex items-center justify-between text-sm mb-1">
+                            <span className="text-pulse-text-secondary">{factor.name}</span>
+                            <span className="text-pulse-text font-medium">{factor.score}%</span>
+                          </div>
+                          <div className="h-2 bg-pulse-border rounded-full overflow-hidden">
+                            <motion.div
+                              className="h-full rounded-full"
+                              style={{ backgroundColor: factor.color || '#40ffaa' }}
+                              initial={{ width: 0 }}
+                              animate={{ width: `${factor.score}%` }}
+                              transition={{ duration: 0.6, delay: i * 0.1 }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Improvement Plan */}
+                {successResult.improvements.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-2">Improvement Plan</p>
+                    <div className="grid sm:grid-cols-2 gap-2">
+                      {successResult.improvements.map((imp, i) => (
+                        <div key={i} className="p-3 rounded-lg bg-pulse-surface/50 border border-pulse-border">
+                          <p className="text-sm text-pulse-text mb-1">{imp.action}</p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-pulse-accent">Impact: {imp.impact}</span>
+                            <span className="text-xs text-pulse-text-tertiary">Effort: {imp.effort}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </GlassCard>
+        </motion.div>
+      )}
 
       {/* Main Content */}
       <div className="grid lg:grid-cols-3 gap-6">

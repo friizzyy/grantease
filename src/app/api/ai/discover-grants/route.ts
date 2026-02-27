@@ -10,7 +10,7 @@ import {
   searchGrantsByKeyword,
   findGrantsForNeed,
 } from '@/lib/services/gemini-grant-discovery'
-import { isGeminiConfigured } from '@/lib/services/gemini-client'
+import { isGeminiConfigured, GEMINI_MODEL } from '@/lib/services/gemini-client'
 import { z } from 'zod'
 
 const discoverGrantsSchema = z.object({
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
         data: {
           userId: session.user.id,
           type: 'grant_discovery',
-          model: 'gemini-1.5-pro',
+          model: GEMINI_MODEL,
           promptTokens: usage.promptTokens,
           completionTokens: usage.completionTokens,
           totalTokens: usage.totalTokens,
@@ -180,7 +180,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Grant discovery error:', error)
     return NextResponse.json(
-      { error: 'Failed to discover grants' },
+      { error: 'Grant discovery encountered an error. Please try again or use Browse mode.' },
       { status: 500 }
     )
   }

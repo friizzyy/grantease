@@ -97,7 +97,7 @@ export default function OnboardingStep4() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="font-serif text-3xl sm:text-4xl text-pulse-text mb-4"
+            className="text-heading-lg font-bold tracking-tight text-pulse-text mb-4"
           >
             Looking good!
           </motion.h1>
@@ -152,10 +152,10 @@ export default function OnboardingStep4() {
           <HelpCircle className="w-5 h-5" />
           <span className="text-sm font-medium uppercase tracking-wider">Additional Details</span>
         </div>
-        <h1 className="font-serif text-3xl sm:text-4xl text-pulse-text mb-3">
+        <h1 className="text-heading-lg font-bold tracking-tight text-pulse-text mb-3">
           A few more details
         </h1>
-        <p className="text-lg text-pulse-text-secondary">
+        <p className="text-body text-pulse-text-secondary">
           These help us fine-tune your grant recommendations.
         </p>
       </motion.div>

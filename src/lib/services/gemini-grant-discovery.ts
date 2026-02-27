@@ -1,7 +1,7 @@
 /**
  * GEMINI GRANT DISCOVERY SERVICE
  * ------------------------------
- * Uses Gemini's web search capabilities to find grants in real-time.
+ * Uses Gemini's Google Search grounding to find grants in real-time.
  * This finds grants that aren't in federal databases:
  * - State and local grants
  * - Foundation grants
@@ -10,7 +10,7 @@
  * - Recently announced grants
  */
 
-import { getGeminiProModel, extractUsageFromResult, isGeminiConfigured, type GeminiUsage } from './gemini-client'
+import { getAIClient, extractUsageFromResponse, isGeminiConfigured, GEMINI_MODEL, type GeminiUsage } from './gemini-client'
 import type { UserProfile } from '@/lib/types/onboarding'
 import { sanitizePromptInput, sanitizePromptArray } from '@/lib/utils/prompt-sanitizer'
 
@@ -37,9 +37,9 @@ export interface DiscoveredGrant {
   deadline?: string
   eligibility?: string[]
   categories?: string[]
-  source: string // Where we found it (website name)
-  confidence: number // How confident we are this is a real grant (0-100)
-  relevanceScore: number // How relevant to the user (0-100)
+  source: string
+  confidence: number
+  relevanceScore: number
   discoveredAt: string
 }
 
@@ -47,17 +47,17 @@ export interface DiscoveredGrant {
  * Search parameters for grant discovery
  */
 export interface GrantDiscoveryParams {
-  // User context
   industryTags: string[]
   entityType: string
   state?: string
-
-  // Search focus
   searchFocus?: 'new_grants' | 'local_grants' | 'foundation_grants' | 'all'
+  specificNeeds?: string[]
+  excludeKeywords?: string[]
+}
 
-  // Additional context
-  specificNeeds?: string[] // e.g., "equipment", "expansion", "training"
-  excludeKeywords?: string[] // Grants to skip
+/** Get the current year dynamically */
+function getCurrentYear(): number {
+  return new Date().getFullYear()
 }
 
 /**
@@ -66,8 +66,8 @@ export interface GrantDiscoveryParams {
 function buildSearchQueries(params: GrantDiscoveryParams): string[] {
   const queries: string[] = []
   const { industryTags, entityType, state, searchFocus, specificNeeds } = params
+  const year = getCurrentYear()
 
-  // Map entity types to search terms
   const entityTerms: Record<string, string[]> = {
     'small_business': ['small business grants', 'entrepreneur grants', 'business funding'],
     'nonprofit': ['nonprofit grants', '501c3 grants', 'charitable funding'],
@@ -78,7 +78,6 @@ function buildSearchQueries(params: GrantDiscoveryParams): string[] {
     'tribal': ['tribal grants', 'native american grants'],
   }
 
-  // Map industries to search terms
   const industryTerms: Record<string, string[]> = {
     'agriculture': ['farm grants', 'agricultural grants', 'USDA grants', 'rural development grants', 'farmer assistance'],
     'arts_culture': ['arts grants', 'cultural grants', 'NEA grants', 'artist funding'],
@@ -96,22 +95,18 @@ function buildSearchQueries(params: GrantDiscoveryParams): string[] {
     'youth': ['youth grants', 'children grants', 'family services funding'],
   }
 
-  // Build queries based on focus
   const baseTerms: string[] = []
 
-  // Add entity-based terms
   if (entityType && entityTerms[entityType]) {
     baseTerms.push(...entityTerms[entityType].slice(0, 2))
   }
 
-  // Add industry-based terms
   for (const tag of industryTags.slice(0, 3)) {
     if (industryTerms[tag]) {
       baseTerms.push(...industryTerms[tag].slice(0, 2))
     }
   }
 
-  // Add state-specific queries
   if (state) {
     const stateNames: Record<string, string> = {
       'CA': 'California', 'TX': 'Texas', 'NY': 'New York', 'FL': 'Florida',
@@ -130,8 +125,7 @@ function buildSearchQueries(params: GrantDiscoveryParams): string[] {
     }
     const stateName = stateNames[state] || state
 
-    // State-specific grant searches
-    queries.push(`${stateName} state grants 2024 2025`)
+    queries.push(`${stateName} state grants ${year}`)
     queries.push(`${stateName} small business grants open now`)
 
     if (industryTags.includes('agriculture')) {
@@ -139,9 +133,8 @@ function buildSearchQueries(params: GrantDiscoveryParams): string[] {
     }
   }
 
-  // Add focus-specific queries
   if (searchFocus === 'new_grants' || searchFocus === 'all') {
-    queries.push('new grants announced 2024 2025')
+    queries.push(`new grants announced ${year}`)
     queries.push('grants opening soon applications')
   }
 
@@ -155,38 +148,68 @@ function buildSearchQueries(params: GrantDiscoveryParams): string[] {
     queries.push('regional grants funding programs')
   }
 
-  // Add specific needs
   if (specificNeeds && specificNeeds.length > 0) {
     for (const need of specificNeeds.slice(0, 2)) {
       queries.push(`grants for ${need} ${entityType || 'small business'}`)
     }
   }
 
-  // Combine base terms into queries
   for (let i = 0; i < baseTerms.length; i += 2) {
-    const query = baseTerms.slice(i, i + 2).join(' ') + ' open applications 2024 2025'
+    const query = baseTerms.slice(i, i + 2).join(' ') + ` open applications ${year}`
     queries.push(query)
   }
 
-  // Deduplicate and limit
   return [...new Set(queries)].slice(0, 8)
 }
 
 /**
- * Use Gemini to search the web and find grants
- * Note: This uses Gemini's grounding with Google Search feature
+ * Parse JSON from Gemini response text, handling multiple formats
+ */
+function parseGrantsJSON(text: string): unknown {
+  // Try direct JSON parse first (when using JSON mode)
+  try {
+    return JSON.parse(text)
+  } catch {
+    // Continue to other methods
+  }
+
+  // Try extracting JSON from markdown code blocks
+  const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/)
+  if (jsonMatch) {
+    try {
+      return JSON.parse(jsonMatch[1])
+    } catch {
+      // Continue
+    }
+  }
+
+  // Try finding a JSON array in the response
+  const arrayMatch = text.match(/\[[\s\S]*\]/)
+  if (arrayMatch) {
+    try {
+      return JSON.parse(arrayMatch[0])
+    } catch {
+      // Failed
+    }
+  }
+
+  return null
+}
+
+/**
+ * Use Gemini with Google Search grounding to discover grants in real-time
  */
 export async function discoverGrants(
   profile: UserProfile,
   options?: Partial<GrantDiscoveryParams>
 ): Promise<GrantDiscoveryResult> {
   if (!isGeminiConfigured()) {
-    console.warn('Gemini not configured for grant discovery')
+    console.warn('[GrantDiscovery] Gemini not configured')
     return { grants: [], usage: ZERO_USAGE }
   }
 
-  const model = getGeminiProModel()
-  if (!model) {
+  const ai = getAIClient()
+  if (!ai) {
     return { grants: [], usage: ZERO_USAGE }
   }
 
@@ -200,8 +223,8 @@ export async function discoverGrants(
   }
 
   const searchQueries = buildSearchQueries(params)
+  const year = getCurrentYear()
 
-  // Build the discovery prompt
   const prompt = `You are a grant research assistant helping find real funding opportunities.
 
 ## USER PROFILE
@@ -224,7 +247,7 @@ ${searchQueries.map((q, i) => `${i + 1}. "${q}"`).join('\n')}
 
 ## IMPORTANT RULES
 1. Only include REAL grants with verifiable URLs
-2. Only include grants that are CURRENTLY OPEN or opening soon
+2. Only include grants that are CURRENTLY OPEN or opening soon in ${year}
 3. Focus on grants accessible to ${params.entityType === 'small_business' ? 'small businesses' : params.entityType === 'individual' ? 'individuals' : params.entityType}
 4. Prioritize grants with reasonable application requirements
 5. Include the actual grant website URL, not a news article
@@ -232,7 +255,6 @@ ${searchQueries.map((q, i) => `${i + 1}. "${q}"`).join('\n')}
 ## OUTPUT FORMAT
 Return a JSON array of discovered grants:
 
-\`\`\`json
 [
   {
     "title": "Exact grant program name",
@@ -240,7 +262,7 @@ Return a JSON array of discovered grants:
     "description": "2-3 sentence description of what the grant funds",
     "url": "https://actual-grant-application-page.gov",
     "amountRange": "$5,000 - $50,000",
-    "deadline": "March 15, 2025 or Rolling",
+    "deadline": "March 15, ${year} or Rolling",
     "eligibility": ["Small businesses", "Located in California"],
     "categories": ["agriculture", "small business"],
     "source": "California Governor's Office",
@@ -249,42 +271,38 @@ Return a JSON array of discovered grants:
     "discoveredAt": "${new Date().toISOString().split('T')[0]}"
   }
 ]
-\`\`\`
 
 Find 5-10 real grants. If you can't find verified grants, return an empty array [].
 Quality over quantity - only include grants you're confident are real and currently available.`
 
   try {
-    // Use generateContent with Google Search grounding
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      // Note: Google Search grounding requires specific API configuration
-      // This may need adjustment based on your Gemini API access level
+    const response = await ai.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: prompt,
+      config: {
+        temperature: 0.3,
+        maxOutputTokens: 4096,
+        tools: [{ googleSearch: {} }],
+      },
     })
 
-    const usage = extractUsageFromResult(result)
-    const response = result.response.text()
+    const usage = extractUsageFromResponse(response)
+    const text = response.text
 
-    // Extract JSON from response
-    const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/)
-    if (!jsonMatch) {
-      // Try to parse the whole response as JSON
-      try {
-        const grants: unknown = JSON.parse(response)
-        if (Array.isArray(grants)) {
-          return { grants: validateAndCleanGrants(grants as DiscoveredGrant[], params), usage }
-        }
-      } catch {
-        console.warn('Could not parse grant discovery response')
-        return { grants: [], usage }
-      }
+    if (!text) {
+      console.warn('[GrantDiscovery] Empty response from Gemini')
       return { grants: [], usage }
     }
 
-    const grants: unknown = JSON.parse(jsonMatch[1])
-    return { grants: validateAndCleanGrants(grants as DiscoveredGrant[], params), usage }
+    const parsed = parseGrantsJSON(text)
+    if (Array.isArray(parsed)) {
+      return { grants: validateAndCleanGrants(parsed as DiscoveredGrant[], params), usage }
+    }
+
+    console.warn('[GrantDiscovery] Could not parse grants from response')
+    return { grants: [], usage }
   } catch (error) {
-    console.error('Grant discovery error:', error)
+    console.error('[GrantDiscovery] Error:', error)
     return { grants: [], usage: ZERO_USAGE }
   }
 }
@@ -294,7 +312,7 @@ Quality over quantity - only include grants you're confident are real and curren
  */
 function validateAndCleanGrants(
   grants: DiscoveredGrant[],
-  params: GrantDiscoveryParams
+  _params: GrantDiscoveryParams
 ): DiscoveredGrant[] {
   if (!Array.isArray(grants)) {
     return []
@@ -302,21 +320,15 @@ function validateAndCleanGrants(
 
   return grants
     .filter(grant => {
-      // Must have required fields
       if (!grant.title || !grant.sponsor || !grant.url) {
         return false
       }
-
-      // URL must look valid
       if (!grant.url.startsWith('http')) {
         return false
       }
-
-      // Confidence must be reasonable
       if (grant.confidence && grant.confidence < 50) {
         return false
       }
-
       return true
     })
     .map(grant => ({
@@ -326,16 +338,15 @@ function validateAndCleanGrants(
       relevanceScore: grant.relevanceScore || 60,
     }))
     .sort((a, b) => {
-      // Sort by relevance * confidence
       const scoreA = (a.relevanceScore || 0) * (a.confidence || 0)
       const scoreB = (b.relevanceScore || 0) * (b.confidence || 0)
       return scoreB - scoreA
     })
-    .slice(0, 15) // Limit results
+    .slice(0, 15)
 }
 
 /**
- * Search for grants matching specific keywords
+ * Search for grants matching specific keywords with Google Search grounding
  */
 export async function searchGrantsByKeyword(
   keyword: string,
@@ -345,29 +356,41 @@ export async function searchGrantsByKeyword(
     return { grants: [], usage: ZERO_USAGE }
   }
 
-  const model = getGeminiProModel()
-  if (!model) {
+  const ai = getAIClient()
+  if (!ai) {
     return { grants: [], usage: ZERO_USAGE }
   }
+
+  const year = getCurrentYear()
 
   const prompt = `Search for real, currently open grants related to: "${sanitizePromptInput(keyword, 500)}"
 ${profile?.state ? `Location focus: ${sanitizePromptInput(profile.state, 100)}, USA` : ''}
 ${profile?.entityType ? `For: ${sanitizePromptInput(profile.entityType, 100)}` : ''}
 
-Find 5-10 real grant programs with verifiable URLs.
-Return JSON array with: title, sponsor, description, url, amountRange, deadline, confidence, relevanceScore.
+Find 5-10 real grant programs with verifiable URLs that are open in ${year}.
+Return a JSON array with objects containing: title, sponsor, description, url, amountRange, deadline, eligibility (array), categories (array), source, confidence (0-100), relevanceScore (0-100), discoveredAt.
 Only include grants you're confident are real and currently accepting applications.`
 
   try {
-    const result = await model.generateContent(prompt)
-    const usage = extractUsageFromResult(result)
-    const response = result.response.text()
+    const response = await ai.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: prompt,
+      config: {
+        temperature: 0.3,
+        maxOutputTokens: 4096,
+        tools: [{ googleSearch: {} }],
+      },
+    })
 
-    const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/)
-    if (jsonMatch) {
-      const grants: unknown = JSON.parse(jsonMatch[1])
+    const usage = extractUsageFromResponse(response)
+    const text = response.text
+
+    if (!text) return { grants: [], usage }
+
+    const parsed = parseGrantsJSON(text)
+    if (Array.isArray(parsed)) {
       return {
-        grants: validateAndCleanGrants(grants as DiscoveredGrant[], {
+        grants: validateAndCleanGrants(parsed as DiscoveredGrant[], {
           industryTags: [],
           entityType: profile?.entityType || 'small_business',
           state: profile?.state || undefined,
@@ -378,7 +401,7 @@ Only include grants you're confident are real and currently accepting applicatio
 
     return { grants: [], usage }
   } catch (error) {
-    console.error('Keyword search error:', error)
+    console.error('[GrantDiscovery] Keyword search error:', error)
     return { grants: [], usage: ZERO_USAGE }
   }
 }
@@ -407,8 +430,8 @@ export async function checkForNewGrants(
     return []
   }
 
-  const model = getGeminiProModel()
-  if (!model) {
+  const ai = getAIClient()
+  if (!ai) {
     return []
   }
 
@@ -418,17 +441,26 @@ export async function checkForNewGrants(
 - Industries: ${sanitizePromptArray(profile.industryTags)}
 
 Only include NEW grants announced since ${sanitizePromptInput(lastCheckDate, 50)}.
-Return JSON array with: title, sponsor, description, url, amountRange, deadline, confidence.
+Return a JSON array with objects containing: title, sponsor, description, url, amountRange, deadline, confidence (0-100), relevanceScore (0-100), discoveredAt.
 If no new grants found, return empty array [].`
 
   try {
-    const result = await model.generateContent(prompt)
-    const response = result.response.text()
+    const response = await ai.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: prompt,
+      config: {
+        temperature: 0.3,
+        maxOutputTokens: 4096,
+        tools: [{ googleSearch: {} }],
+      },
+    })
 
-    const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/)
-    if (jsonMatch) {
-      const grants: unknown = JSON.parse(jsonMatch[1])
-      return validateAndCleanGrants(grants as DiscoveredGrant[], {
+    const text = response.text
+    if (!text) return []
+
+    const parsed = parseGrantsJSON(text)
+    if (Array.isArray(parsed)) {
+      return validateAndCleanGrants(parsed as DiscoveredGrant[], {
         industryTags: profile.industryTags || [],
         entityType: profile.entityType,
         state: profile.state || undefined,
@@ -437,7 +469,7 @@ If no new grants found, return empty array [].`
 
     return []
   } catch (error) {
-    console.error('New grant check error:', error)
+    console.error('[GrantDiscovery] New grant check error:', error)
     return []
   }
 }

@@ -9,6 +9,8 @@ import { Mail, Lock, User, Building2, ArrowRight, Eye, EyeOff, Check, AlertCircl
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { AnimatedLogo } from '@/components/ui/animated-logo'
+import { BrandLogo } from '@/components/ui/brand-logo'
 import { springs } from '@/lib/motion/animations'
 
 const passwordRequirements = [
@@ -139,6 +141,15 @@ export default function RegisterPage() {
         />
 
         <CardHeader className="text-center relative z-10">
+          <motion.div
+            className="flex items-center justify-center gap-2 mb-4"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.05, duration: 0.3 }}
+          >
+            <AnimatedLogo size="md" className="text-pulse-accent" />
+            <BrandLogo size="lg" />
+          </motion.div>
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { getGeminiExtractionModel, isGeminiConfigured } from '@/lib/services/gemini-client';
+import { getAIClient, GEMINI_MODEL, isGeminiConfigured } from '@/lib/services/gemini-client';
 import { sanitizePromptInput } from '@/lib/utils/prompt-sanitizer';
 import { z } from 'zod';
 
@@ -75,8 +75,8 @@ export async function POST(
 
     const { grantTitle, grantSponsor, grantDescription, userState, deadlineDisplay, applyUrl } = parsed.data;
 
-    const model = getGeminiExtractionModel();
-    if (!model) {
+    const ai = getAIClient();
+    if (!ai) {
       return NextResponse.json({
         success: false,
         error: 'Gemini API key not configured',
@@ -136,14 +136,21 @@ Please provide the following in JSON format:
 
 Respond ONLY with valid JSON, no markdown or explanation.`;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
+    const result = await ai.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: prompt,
+      config: {
+        temperature: 0.2,
+        maxOutputTokens: 4096,
+        responseMimeType: 'application/json',
+      },
+    });
+    const text = result.text ?? '';
 
     // Parse the JSON response
     let parsedResponse;
     try {
-      // Remove any markdown code blocks if present
+      // Remove any markdown code blocks if present (fallback)
       const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       parsedResponse = JSON.parse(cleanedText);
     } catch (parseError) {

@@ -1175,7 +1175,7 @@ export default function ApplyPage({ params }: { params: Promise<{ id: string }> 
 
   if (isLoading) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-[60vh]">
+      <div className="px-4 md:px-6 lg:px-8 py-8 flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <Loader2 className="w-8 h-8 text-pulse-accent animate-spin mx-auto mb-4" />
           <p className="text-pulse-text-secondary">Loading application...</p>
@@ -1185,7 +1185,7 @@ export default function ApplyPage({ params }: { params: Promise<{ id: string }> 
   }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="px-4 md:px-6 lg:px-8 py-8 max-w-4xl mx-auto">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -1202,7 +1202,7 @@ export default function ApplyPage({ params }: { params: Promise<{ id: string }> 
 
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-pulse-text mb-2">
+            <h1 className="text-heading-lg md:text-display font-bold tracking-tight text-pulse-text mb-2">
               Grant Application
             </h1>
             {grant && (

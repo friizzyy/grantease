@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { rateLimiters, rateLimitExceededResponse } from '@/lib/rate-limit'
-import { generateTextWithUsage, isGeminiConfigured } from '@/lib/services/gemini-client'
+import { generateTextWithUsage, isGeminiConfigured, GEMINI_MODEL } from '@/lib/services/gemini-client'
 import { sanitizePromptInput } from '@/lib/utils/prompt-sanitizer'
 import { z } from 'zod'
 
@@ -168,7 +168,7 @@ Respond helpfully and concisely.`
         data: {
           userId,
           type: 'chat',
-          model: 'gemini-1.5-flash',
+          model: GEMINI_MODEL,
           promptTokens: usage.promptTokens,
           completionTokens: usage.completionTokens,
           totalTokens: usage.totalTokens,
@@ -183,8 +183,8 @@ Respond helpfully and concisely.`
 
     if (!response) {
       return NextResponse.json(
-        { error: 'Failed to generate response' },
-        { status: 500 }
+        { error: 'AI service temporarily unavailable. Please try again in a moment.' },
+        { status: 503 }
       )
     }
 
@@ -199,7 +199,7 @@ Respond helpfully and concisely.`
   } catch (error) {
     console.error('AI chat error:', error)
     return NextResponse.json(
-      { error: 'Failed to process request' },
+      { error: 'AI chat encountered an error. Please try again.' },
       { status: 500 }
     )
   }

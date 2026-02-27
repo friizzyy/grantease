@@ -1,12 +1,12 @@
 'use client'
 
 /**
- * STEP NAVIGATION - SPLIT SCREEN IMMERSIVE STYLE
- * ----------------------------------------------
- * Premium navigation with:
- * - Large prominent continue button with shadow
- * - Subtle back button
- * - Clean layout
+ * STEP NAVIGATION - PREMIUM ONBOARDING STYLE
+ * ------------------------------------------
+ * - "Next" button in mint green with shadow
+ * - "Back" as ghost button (text only)
+ * - "Skip for now" as text link, not button
+ * - Keyboard shortcut (Enter) for continue
  */
 
 import { useEffect } from 'react'
@@ -34,7 +34,7 @@ export function StepNavigation({
   isLastStep = false,
   isLoading = false,
   continueLabel,
-  skipLabel = 'Skip this step',
+  skipLabel = 'Skip for now',
 }: StepNavigationProps) {
   const defaultContinueLabel = isLastStep ? 'Complete Setup' : 'Continue'
   const label = continueLabel || defaultContinueLabel
@@ -53,14 +53,14 @@ export function StepNavigation({
 
   return (
     <div className="flex items-center justify-between mt-10">
-      {/* Left side: Back or Skip */}
+      {/* Left side: Back button (ghost) or skip-all on first step */}
       <div className="flex items-center gap-4">
         {!isFirstStep && onBack && (
           <button
             type="button"
             onClick={onBack}
             disabled={isLoading}
-            className="flex items-center gap-2 text-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 text-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors duration-150 disabled:opacity-50"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
@@ -72,32 +72,34 @@ export function StepNavigation({
             type="button"
             onClick={onSkip}
             disabled={isLoading}
-            className="text-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors disabled:opacity-50"
+            className="text-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors duration-150 disabled:opacity-50"
           >
-            {skipLabel} →
+            {skipLabel}
           </button>
         )}
       </div>
 
-      {/* Right side: Continue */}
-      <div className="flex items-center gap-4">
+      {/* Right side: Skip text link + Continue button */}
+      <div className="flex items-center gap-6">
+        {/* Skip as text link, not button */}
         {!isFirstStep && onSkip && (
           <button
             type="button"
             onClick={onSkip}
             disabled={isLoading}
-            className="text-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors disabled:opacity-50"
+            className="text-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors duration-150 disabled:opacity-50"
           >
             {skipLabel}
           </button>
         )}
 
+        {/* Next/Continue in mint */}
         <button
           type="button"
           onClick={onContinue}
           disabled={!canContinue || isLoading}
           className={cn(
-            'flex items-center gap-3 px-8 py-4 rounded-xl font-semibold text-lg transition-all',
+            'flex items-center gap-3 px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200',
             canContinue
               ? 'bg-pulse-accent text-pulse-bg hover:bg-pulse-accent/90 shadow-lg shadow-pulse-accent/25'
               : 'bg-white/[0.06] text-pulse-text-tertiary cursor-not-allowed',

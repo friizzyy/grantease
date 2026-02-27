@@ -6,8 +6,8 @@
  * Premium split-screen design inspired by Linear/Notion
  * - Visual branding panel on left with animated gradients
  * - Content panel on right
- * - Progress indicator
- * - Mobile responsive
+ * - Smooth animated progress bar (mint)
+ * - Mobile responsive with focused full-screen layout
  */
 
 import { ReactNode } from 'react'
@@ -65,8 +65,25 @@ export function OnboardingLayout({
   // Parse headline for gradient text (middle line gets gradient)
   const headlineLines = displayHeadline.split('\n')
 
+  // Progress percentage for the smooth bar
+  const progressPercent = currentStep > 0
+    ? ((currentStep) / totalSteps) * 100
+    : 0
+
   return (
-    <div className="min-h-screen bg-pulse-bg flex font-sans">
+    <div className="min-h-screen bg-pulse-bg flex flex-col lg:flex-row font-sans">
+      {/* Mobile: Top progress bar — smooth mint animated */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50">
+        <div className="h-1 bg-pulse-surface rounded-full overflow-hidden">
+          <motion.div
+            className="h-full bg-pulse-accent rounded-full"
+            initial={{ width: '0%' }}
+            animate={{ width: `${progressPercent}%` }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+          />
+        </div>
+      </div>
+
       {/* Left Panel - Visual Branding */}
       <div className="hidden lg:flex lg:w-[45%] relative overflow-hidden">
         {/* Animated gradient background */}
@@ -166,23 +183,35 @@ export function OnboardingLayout({
             </motion.div>
           </div>
 
-          {/* Progress indicator */}
-          <div className="flex items-center gap-3">
-            {Array.from({ length: totalSteps }).map((_, i) => (
-              <div
-                key={i}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i + 1 === currentStep
-                    ? 'w-8 bg-pulse-accent'
-                    : i + 1 < currentStep
-                    ? 'w-4 bg-pulse-accent/50'
-                    : 'w-3 bg-white/10'
-                }`}
+          {/* Desktop: Smooth animated progress bar at bottom */}
+          <div>
+            <div className="h-1 bg-pulse-surface rounded-full overflow-hidden mb-3">
+              <motion.div
+                className="h-full bg-pulse-accent rounded-full"
+                initial={{ width: '0%' }}
+                animate={{ width: `${progressPercent}%` }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
               />
-            ))}
-            <span className="ml-3 text-sm text-pulse-text-tertiary">
-              Step {currentStep} of {totalSteps}
-            </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {Array.from({ length: totalSteps }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      i + 1 === currentStep
+                        ? 'w-8 bg-pulse-accent'
+                        : i + 1 < currentStep
+                        ? 'w-4 bg-pulse-accent/50'
+                        : 'w-3 bg-white/10'
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-sm text-pulse-text-tertiary">
+                {currentStep > 0 ? `Step ${currentStep} of ${totalSteps}` : 'Welcome'}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -190,7 +219,7 @@ export function OnboardingLayout({
       {/* Right Panel - Content */}
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Mobile header */}
-        <div className="lg:hidden p-6 border-b border-white/[0.06]">
+        <div className="lg:hidden p-6 pt-4 border-b border-white/[0.06]">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <AnimatedLogo size="sm" className="text-pulse-accent" />
@@ -201,7 +230,7 @@ export function OnboardingLayout({
                 onClick={onSkipAll}
                 className="text-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors"
               >
-                Skip →
+                Skip for now
               </button>
             )}
           </div>
@@ -214,13 +243,13 @@ export function OnboardingLayout({
           </div>
         </div>
 
-        {/* Mobile progress */}
+        {/* Mobile progress — step dots */}
         <div className="lg:hidden p-6 border-t border-white/[0.06]">
           <div className="flex items-center justify-center gap-2">
             {Array.from({ length: totalSteps }).map((_, i) => (
               <div
                 key={i}
-                className={`h-1.5 rounded-full ${
+                className={`h-1.5 rounded-full transition-all duration-300 ${
                   i + 1 === currentStep
                     ? 'w-8 bg-pulse-accent'
                     : i + 1 < currentStep

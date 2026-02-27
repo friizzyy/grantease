@@ -1,4 +1,8 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import {
   ArrowRight,
   CheckCircle2,
@@ -19,7 +23,55 @@ import {
 import { HeroSearch } from '@/components/marketing/HeroSearch'
 import { FloatingCard, PulsingDot } from '@/components/marketing/HeroAnimations'
 
+// Animation variants
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
+}
+
+const staggerItem = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+}
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 24 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-60px' },
+  transition: { duration: 0.6, ease: 'easeOut' },
+}
+
+const hoverLift = {
+  whileHover: { y: -2, transition: { duration: 0.2 } },
+  whileTap: { scale: 0.98 },
+}
+
+// Hero-specific stagger with 150ms delay between items
+const heroContainer = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.15 } },
+}
+
+const heroItem = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+}
+
 export default function HomePage() {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setPrefersReducedMotion(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
+  // If reduced motion, disable all animations
+  const motionProps = (props: Record<string, unknown>) =>
+    prefersReducedMotion ? {} : props
+
   return (
     <main className="pt-20">
       {/* Hero - Clear value proposition */}
@@ -52,41 +104,59 @@ export default function HomePage() {
             </div>
           </FloatingCard>
 
-          <div className="text-center max-w-4xl mx-auto">
+          <motion.div
+            className="text-center max-w-4xl mx-auto"
+            variants={heroContainer}
+            initial="hidden"
+            animate="visible"
+          >
             {/* Premium badge */}
-            <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/[0.03] backdrop-blur-md border border-white/[0.08] mb-10">
-              <div className="flex items-center gap-1.5">
-                <PulsingDot />
-                <span className="text-xs font-medium text-pulse-accent uppercase tracking-wider">Now Available</span>
+            <motion.div variants={heroItem}>
+              <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/[0.03] backdrop-blur-md border border-white/[0.08] mb-10">
+                <div className="flex items-center gap-1.5">
+                  <PulsingDot />
+                  <span className="text-xs font-medium text-pulse-accent uppercase tracking-wider">Now Available</span>
+                </div>
+                <div className="w-px h-4 bg-white/10" />
+                <span className="text-sm text-pulse-text-secondary">Complete applications, not just find grants</span>
               </div>
-              <div className="w-px h-4 bg-white/10" />
-              <span className="text-sm text-pulse-text-secondary">Complete applications, not just find grants</span>
-            </div>
+            </motion.div>
 
             {/* Main headline - Focus on outcome */}
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-pulse-text leading-[1.05] tracking-tight mb-8">
+            <motion.h1
+              variants={heroItem}
+              className="text-5xl sm:text-6xl lg:text-7xl font-bold text-pulse-text leading-[1.05] tracking-tight mb-8"
+            >
               Find grants.
               <br />
               <span className="bg-gradient-to-r from-pulse-accent via-emerald-400 to-teal-400 bg-clip-text text-transparent">
                 Finish applications.
               </span>
-            </h1>
+            </motion.h1>
 
-            <p className="text-xl text-pulse-text-secondary max-w-2xl mx-auto mb-6 leading-relaxed">
+            <motion.p
+              variants={heroItem}
+              className="text-xl text-pulse-text-secondary max-w-2xl mx-auto mb-6 leading-relaxed"
+            >
               We guide you through every step of applying. See grants in plain English.
               Get writing help for each section. Your data auto-fills every application. No grant writer needed.
-            </p>
+            </motion.p>
 
             {/* Key differentiator */}
-            <p className="text-lg text-pulse-accent font-medium mb-12">
+            <motion.p variants={heroItem} className="text-lg text-pulse-accent font-medium mb-12">
               You keep 100% of every dollar you win.
-            </p>
+            </motion.p>
 
             {/* Interactive Search Component */}
-            <HeroSearch />
+            <motion.div variants={heroItem}>
+              <HeroSearch />
+            </motion.div>
 
             {/* Trust indicators - More specific */}
-            <div className="flex flex-wrap justify-center gap-8 mt-10 text-sm text-pulse-text-tertiary">
+            <motion.div
+              variants={heroItem}
+              className="flex flex-wrap justify-center gap-8 mt-10 text-sm text-pulse-text-tertiary"
+            >
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-pulse-accent" />
                 <span>Free to start</span>
@@ -99,13 +169,16 @@ export default function HomePage() {
                 <CheckCircle2 className="w-4 h-4 text-pulse-accent" />
                 <span>Works for any organization type</span>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
       {/* The Problem Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white/[0.01] border-y border-white/[0.04]">
+      <motion.section
+        className="py-20 px-4 sm:px-6 lg:px-8 bg-white/[0.01] border-y border-white/[0.04]"
+        {...motionProps(fadeInUp)}
+      >
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-pulse-text mb-6">
             Grant applications shouldn&apos;t be this hard
@@ -115,7 +188,13 @@ export default function HomePage() {
             the process is confusing, time-consuming, and overwhelming. We built this to change that.
           </p>
 
-          <div className="grid md:grid-cols-3 gap-6 text-left">
+          <motion.div
+            className="grid md:grid-cols-3 gap-6 text-left"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+          >
             {[
               {
                 problem: 'Hours spent searching across dozens of websites',
@@ -130,7 +209,12 @@ export default function HomePage() {
                 solution: 'Your vault auto-fills applications. Never retype your address, EIN, or mission statement again',
               },
             ].map((item, i) => (
-              <div key={i} className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+              <motion.div
+                key={i}
+                variants={staggerItem}
+                {...(prefersReducedMotion ? {} : hoverLift)}
+                className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-colors"
+              >
                 <div className="flex items-start gap-3 mb-4">
                   <div className="w-6 h-6 rounded-full bg-pulse-error/10 flex items-center justify-center shrink-0 mt-0.5">
                     <X className="w-3 h-3 text-pulse-error" />
@@ -143,14 +227,17 @@ export default function HomePage() {
                   </div>
                   <p className="text-pulse-text font-medium">{item.solution}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* How It Actually Works - Clear workflow */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
+      <motion.section
+        className="py-24 px-4 sm:px-6 lg:px-8"
+        {...motionProps(fadeInUp)}
+      >
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-pulse-text mb-4">
@@ -161,7 +248,13 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <motion.div
+            className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+          >
             {[
               {
                 step: '1',
@@ -192,7 +285,12 @@ export default function HomePage() {
                 detail: 'Never lose track of a deadline',
               },
             ].map((item) => (
-              <div key={item.step} className="relative">
+              <motion.div
+                key={item.step}
+                className="relative"
+                variants={staggerItem}
+                {...(prefersReducedMotion ? {} : hoverLift)}
+              >
                 {/* Step number */}
                 <div className="absolute -top-3 left-0 w-8 h-8 rounded-full bg-pulse-accent/20 flex items-center justify-center">
                   <span className="text-sm font-bold text-pulse-accent">{item.step}</span>
@@ -208,14 +306,17 @@ export default function HomePage() {
                     <p className="text-xs text-pulse-accent font-medium">{item.detail}</p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* What Makes Us Different */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white/[0.01] border-y border-white/[0.04]">
+      <motion.section
+        className="py-24 px-4 sm:px-6 lg:px-8 bg-white/[0.01] border-y border-white/[0.04]"
+        {...motionProps(fadeInUp)}
+      >
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-pulse-text mb-4">
@@ -226,7 +327,13 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+          >
             {[
               {
                 icon: Lightbulb,
@@ -259,8 +366,10 @@ export default function HomePage() {
                 description: 'No percentage fees. No success fees. Every dollar you win is yours to keep.',
               },
             ].map((feature) => (
-              <div
+              <motion.div
                 key={feature.title}
+                variants={staggerItem}
+                {...(prefersReducedMotion ? {} : hoverLift)}
                 className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-colors"
               >
                 <div className="w-12 h-12 rounded-xl bg-pulse-accent/10 flex items-center justify-center mb-4">
@@ -268,14 +377,17 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-lg font-semibold text-pulse-text mb-2">{feature.title}</h3>
                 <p className="text-sm text-pulse-text-secondary">{feature.description}</p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Who It's For */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
+      <motion.section
+        className="py-24 px-4 sm:px-6 lg:px-8"
+        {...motionProps(fadeInUp)}
+      >
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-pulse-text mb-4">
@@ -287,7 +399,13 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <motion.div
+            className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+          >
             {[
               {
                 icon: Users,
@@ -295,24 +413,26 @@ export default function HomePage() {
                 description: 'Community organizations serving their neighborhoods without a development department.',
               },
               {
-                emoji: '🌾',
+                emoji: '\u{1F33E}',
                 title: 'Farmers & Ranchers',
                 description: 'Family farms looking for USDA programs, conservation grants, and rural development funding.',
               },
               {
-                emoji: '🏪',
+                emoji: '\u{1F3EA}',
                 title: 'Small Businesses',
                 description: 'Local businesses seeking SBA grants, state programs, and small business incentives.',
               },
               {
-                emoji: '🏠',
+                emoji: '\u{1F3E0}',
                 title: 'Property Owners',
                 description: 'Homeowners and landowners applying for improvement grants and conservation programs.',
               },
             ].map((persona) => (
-              <div
+              <motion.div
                 key={persona.title}
-                className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-center"
+                variants={staggerItem}
+                {...(prefersReducedMotion ? {} : hoverLift)}
+                className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-center hover:shadow-[0_0_30px_rgba(64,255,170,0.05)] hover:border-pulse-accent/20 transition-all"
               >
                 <div className="w-16 h-16 rounded-2xl bg-pulse-accent/10 flex items-center justify-center mb-4 mx-auto">
                   {'emoji' in persona ? (
@@ -323,14 +443,17 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-lg font-semibold text-pulse-text mb-2">{persona.title}</h3>
                 <p className="text-sm text-pulse-text-secondary">{persona.description}</p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Social Proof / Stats */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 border-y border-white/[0.04] bg-white/[0.01]">
+      <motion.section
+        className="py-16 px-4 sm:px-6 lg:px-8 border-y border-white/[0.04] bg-white/[0.01]"
+        {...motionProps(fadeInUp)}
+      >
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
@@ -340,16 +463,19 @@ export default function HomePage() {
               { value: '15 min', label: 'Avg. Time to First Match' },
             ].map((stat) => (
               <div key={stat.label}>
-                <div className="text-3xl md:text-4xl font-bold text-pulse-text mb-1">{stat.value}</div>
-                <div className="text-sm text-pulse-text-tertiary">{stat.label}</div>
+                <div className="text-3xl md:text-4xl font-bold text-pulse-text mb-1 tabular-nums">{stat.value}</div>
+                <div className="text-xs text-pulse-text-tertiary uppercase tracking-wider font-medium">{stat.label}</div>
               </div>
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Final CTA */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
+      <motion.section
+        className="py-24 px-4 sm:px-6 lg:px-8"
+        {...motionProps(fadeInUp)}
+      >
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-pulse-text mb-6">
             Ready to stop searching
@@ -379,7 +505,7 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
-      </section>
+      </motion.section>
     </main>
   )
 }

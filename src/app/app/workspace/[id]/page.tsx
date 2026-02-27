@@ -36,6 +36,11 @@ import {
   Target,
   RefreshCw,
   Loader2,
+  Wand2,
+  X,
+  Copy,
+  CheckCircle,
+  AlertTriangle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -290,7 +295,10 @@ function DocumentCard({ doc, index }: { doc: WorkspaceDocument; index: number })
           {formatSize(doc.size)} • {formatDate(new Date(doc.createdAt))}
         </p>
       </div>
-      <button className="opacity-0 group-hover:opacity-100 p-2 text-pulse-text-tertiary hover:text-pulse-accent transition-all">
+      <button
+        aria-label={`Download ${doc.name}`}
+        className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-2 text-pulse-text-tertiary hover:text-pulse-accent transition-all min-h-[44px] min-w-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none"
+      >
         <Download className="w-4 h-4" />
       </button>
     </motion.div>
@@ -300,18 +308,130 @@ function DocumentCard({ doc, index }: { doc: WorkspaceDocument; index: number })
 // Loading skeleton
 function WorkspaceSkeleton() {
   return (
-    <div className="p-8 animate-pulse">
-      <div className="h-5 bg-pulse-surface rounded w-40 mb-6" />
-      <div className="h-40 bg-pulse-surface rounded-2xl mb-6" />
-      <div className="h-24 bg-pulse-surface rounded-2xl mb-6" />
+    <div className="px-4 md:px-6 lg:px-8 py-8 animate-pulse">
+      {/* Back button */}
+      <div className="flex items-center gap-2 mb-6">
+        <div className="w-4 h-4 bg-pulse-surface rounded" />
+        <div className="h-4 bg-pulse-surface rounded w-32" />
+      </div>
+
+      {/* Header Card */}
+      <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-6 mb-6">
+        <div className="flex items-start gap-6">
+          {/* Progress ring */}
+          <div className="w-20 h-20 bg-pulse-surface rounded-full shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between mb-2">
+              <div>
+                <div className="h-8 bg-pulse-surface rounded w-64 mb-2" />
+                <div className="h-4 bg-pulse-surface rounded w-80" />
+              </div>
+              <div className="h-10 bg-pulse-surface rounded-lg w-32" />
+            </div>
+            <div className="flex flex-wrap items-center gap-4 mt-4">
+              <div className="h-9 bg-pulse-surface rounded-lg w-40" />
+              <div className="h-4 bg-pulse-surface rounded w-32" />
+              <div className="h-4 bg-pulse-surface rounded w-20" />
+              <div className="h-4 bg-pulse-surface rounded w-36" />
+              <div className="h-7 bg-pulse-surface rounded-lg w-28" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* AI Assistant Card */}
+      <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-4 mb-6">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 bg-pulse-surface rounded-lg shrink-0" />
+          <div className="flex-1">
+            <div className="h-4 bg-pulse-surface rounded w-40 mb-2" />
+            <div className="h-3 bg-pulse-surface rounded w-full mb-1" />
+            <div className="h-3 bg-pulse-surface rounded w-3/4 mb-3" />
+            <div className="flex items-center gap-2">
+              <div className="h-8 bg-pulse-surface rounded-lg w-28" />
+              <div className="h-8 bg-pulse-surface rounded-lg w-36" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Grid */}
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="h-80 bg-pulse-surface rounded-2xl" />
-          <div className="h-48 bg-pulse-surface rounded-2xl" />
+          {/* Checklist Card */}
+          <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <div className="h-5 bg-pulse-surface rounded w-40 mb-1" />
+                <div className="h-3 bg-pulse-surface rounded w-32" />
+              </div>
+              <div className="h-6 bg-pulse-surface rounded-full w-20" />
+            </div>
+            <div className="space-y-2 mb-6">
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="flex items-center gap-3 p-4 rounded-xl border border-pulse-border/20 bg-pulse-surface/20">
+                  <div className="w-6 h-6 bg-pulse-surface rounded-full shrink-0" />
+                  <div className="h-4 bg-pulse-surface rounded flex-1" style={{ width: `${60 + i * 5}%` }} />
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3">
+              <div className="h-10 bg-pulse-surface rounded-lg flex-1" />
+              <div className="h-10 bg-pulse-surface rounded-lg w-28" />
+            </div>
+          </div>
+          {/* Notes Card */}
+          <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-5 bg-pulse-surface rounded w-36" />
+              <div className="h-8 bg-pulse-surface rounded-lg w-32" />
+            </div>
+            <div className="h-48 bg-pulse-surface rounded-xl" />
+          </div>
         </div>
         <div className="space-y-6">
-          <div className="h-64 bg-pulse-surface rounded-2xl" />
-          <div className="h-48 bg-pulse-surface rounded-2xl" />
+          {/* Grant Details Card */}
+          <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-6">
+            <div className="h-5 bg-pulse-surface rounded w-28 mb-4" />
+            <div className="space-y-4">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i}>
+                  <div className="h-3 bg-pulse-surface rounded w-20 mb-1" />
+                  <div className="h-4 bg-pulse-surface rounded w-full" />
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2 mt-6 pt-4 border-t border-pulse-border/30">
+              <div className="h-9 bg-pulse-surface rounded-lg flex-1" />
+              <div className="h-9 bg-pulse-surface rounded-lg flex-1" />
+            </div>
+          </div>
+          {/* Documents Card */}
+          <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-5 bg-pulse-surface rounded w-24" />
+              <div className="h-8 bg-pulse-surface rounded-lg w-20" />
+            </div>
+            <div className="space-y-2">
+              {[1, 2].map(i => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-pulse-surface/20">
+                  <div className="w-10 h-10 bg-pulse-surface rounded-lg" />
+                  <div className="flex-1">
+                    <div className="h-4 bg-pulse-surface rounded w-32 mb-1" />
+                    <div className="h-3 bg-pulse-surface rounded w-24" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Activity Card */}
+          <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-6">
+            <div className="h-4 bg-pulse-surface rounded w-16 mb-4" />
+            <div className="space-y-3">
+              <div className="h-3 bg-pulse-surface rounded w-40" />
+              <div className="h-3 bg-pulse-surface rounded w-44" />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -321,7 +441,7 @@ function WorkspaceSkeleton() {
 // Error state
 function WorkspaceError({ onRetry, error }: { onRetry: () => void; error: string }) {
   return (
-    <div className="p-8 flex items-center justify-center min-h-[60vh]">
+    <div className="px-4 md:px-6 lg:px-8 py-8 flex items-center justify-center min-h-[60vh]">
       <GlassCard className="p-8 text-center max-w-md">
         <div className="w-12 h-12 rounded-full bg-pulse-error/20 flex items-center justify-center mx-auto mb-4">
           <AlertCircle className="w-6 h-6 text-pulse-error" />
@@ -363,6 +483,21 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
   const [aiChatInput, setAiChatInput] = useState('')
   const [isAiLoading, setIsAiLoading] = useState(false)
   const [isAiSuggestionsLoading, setIsAiSuggestionsLoading] = useState(false)
+
+  // Auto-draft state
+  const [showDraftConfirm, setShowDraftConfirm] = useState(false)
+  const [draftLoading, setDraftLoading] = useState(false)
+  const [draftResult, setDraftResult] = useState<{
+    qualityScore?: number
+    sections?: Array<{
+      name: string
+      content: string
+      needsReview: boolean
+    }>
+    error?: string
+  } | null>(null)
+  const [showDraftModal, setShowDraftModal] = useState(false)
+  const [activeDraftTab, setActiveDraftTab] = useState(0)
 
   const fetchWorkspace = useCallback(async () => {
     setIsLoading(true)
@@ -605,8 +740,56 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
     }
   }
 
+  // Generate full auto-draft
+  const generateFullDraft = async () => {
+    if (draftLoading || !workspace) return
+    setShowDraftConfirm(false)
+    setDraftLoading(true)
+    setDraftResult(null)
+    setShowDraftModal(true)
+    try {
+      const response = await fetch('/api/ai/auto-draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          grantId: workspace.grant.id,
+          title: workspace.grant.title,
+          sponsor: workspace.grant.sponsor,
+          categories: workspace.grant.categories,
+          eligibility: workspace.grant.eligibility,
+          requirements: workspace.grant.requirements,
+          deadline: workspace.grant.deadlineDate,
+          amount: workspace.grant.amountMax || workspace.grant.amountMin,
+          currentNotes: notes,
+        }),
+      })
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}))
+        throw new Error(errData.error || 'Failed to generate draft')
+      }
+      const data = await response.json()
+      setDraftResult(data)
+    } catch (err) {
+      setDraftResult({ error: err instanceof Error ? err.message : 'Failed to generate draft' })
+    } finally {
+      setDraftLoading(false)
+    }
+  }
+
+  const handleCopySection = (content: string) => {
+    navigator.clipboard.writeText(content)
+    toast.success('Copied', 'Section content copied to clipboard.')
+  }
+
+  const handleUseDraftSection = (content: string) => {
+    const newNotes = notes ? `${notes}\n\n${content}` : content
+    setNotes(newNotes)
+    setHasUnsavedChanges(true)
+    toast.success('Applied', 'Draft section has been added to your notes.')
+  }
+
   return (
-    <div className="p-8">
+    <div className="px-4 md:px-6 lg:px-8 py-8">
       {/* Back Button */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
@@ -614,7 +797,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
       >
         <Link
           href="/app/workspace"
-          className="inline-flex items-center gap-2 text-sm text-pulse-text-secondary hover:text-pulse-accent transition-colors mb-6"
+          className="inline-flex items-center gap-2 text-sm text-pulse-text-secondary hover:text-pulse-accent transition-colors mb-6 min-h-[44px] focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none rounded-lg"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Workspaces
@@ -629,7 +812,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
         className="mb-6"
       >
         <GlassCard className="p-6">
-          <div className="flex items-start gap-6">
+          <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
             {/* Progress Ring */}
             <ProgressRing progress={progress} />
 
@@ -637,7 +820,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h1 className="font-serif text-2xl text-pulse-text mb-1">
+                  <h1 className="text-heading-lg md:text-display font-bold tracking-tight text-pulse-text mb-1">
                     {workspace.name}
                   </h1>
                   <Link
@@ -715,7 +898,184 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
           onGenerateOutline={generateProposalOutline}
           isLoading={isAiLoading}
         />
+        {/* Generate Full Draft Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="mt-3"
+        >
+          <Button
+            onClick={() => setShowDraftConfirm(true)}
+            disabled={draftLoading}
+            className="bg-[#40ffaa] text-[#0a0e27] hover:bg-[#40ffaa]/80 rounded-lg font-medium"
+          >
+            {draftLoading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Wand2 className="w-4 h-4 mr-2" />
+            )}
+            Generate Full Draft
+          </Button>
+        </motion.div>
       </div>
+
+      {/* Draft Confirmation Dialog */}
+      {showDraftConfirm && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowDraftConfirm(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md"
+          >
+            <GlassCard className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-pulse-accent/20 flex items-center justify-center">
+                  <Wand2 className="w-5 h-5 text-pulse-accent" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-pulse-text">Generate Full Draft?</h3>
+                  <p className="text-xs text-pulse-text-tertiary">This uses AI to create a complete application draft</p>
+                </div>
+              </div>
+              <p className="text-sm text-pulse-text-secondary mb-4">
+                This will generate a complete application draft with sections for Contact, Project Description, Narrative, Budget, and Timeline. The process may take 15-30 seconds.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button variant="ghost" onClick={() => setShowDraftConfirm(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={generateFullDraft} className="bg-[#40ffaa] text-[#0a0e27] hover:bg-[#40ffaa]/80">
+                  <Wand2 className="w-4 h-4 mr-2" />
+                  Generate Draft
+                </Button>
+              </div>
+            </GlassCard>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Draft Modal */}
+      {showDraftModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => !draftLoading && setShowDraftModal(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-3xl max-h-[85vh] flex flex-col"
+          >
+            <GlassCard className="p-6 flex flex-col max-h-full">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-4 shrink-0">
+                <div className="flex items-center gap-3">
+                  <Wand2 className="w-5 h-5 text-pulse-accent" />
+                  <h2 className="text-lg font-semibold text-pulse-text">Application Draft</h2>
+                  {draftResult?.qualityScore && (
+                    <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-pulse-accent/20 text-pulse-accent border border-pulse-accent/30">
+                      Quality: {draftResult.qualityScore}/100
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => setShowDraftModal(false)}
+                  disabled={draftLoading}
+                  className="p-2 rounded-lg hover:bg-pulse-surface text-pulse-text-tertiary hover:text-pulse-text transition-colors disabled:opacity-50"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Loading */}
+              {draftLoading && (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 text-pulse-accent animate-spin mb-4" />
+                  <p className="text-sm text-pulse-text-secondary">Generating your complete application draft...</p>
+                  <p className="text-xs text-pulse-text-tertiary mt-1">This may take 15-30 seconds</p>
+                </div>
+              )}
+
+              {/* Error */}
+              {draftResult?.error && (
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-pulse-error/10 border border-pulse-error/20">
+                  <AlertCircle className="w-5 h-5 text-pulse-error shrink-0 mt-0.5" />
+                  <p className="text-sm text-pulse-error">{draftResult.error}</p>
+                </div>
+              )}
+
+              {/* Draft Sections */}
+              {draftResult?.sections && draftResult.sections.length > 0 && (
+                <>
+                  {/* Tabs */}
+                  <div className="flex gap-1 overflow-x-auto pb-2 mb-4 border-b border-pulse-border shrink-0">
+                    {draftResult.sections.map((section, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setActiveDraftTab(i)}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                          activeDraftTab === i
+                            ? 'bg-pulse-accent text-pulse-bg'
+                            : 'text-pulse-text-secondary hover:text-pulse-text hover:bg-pulse-surface'
+                        }`}
+                      >
+                        {section.name}
+                        {section.needsReview && (
+                          <AlertTriangle className="w-3 h-3 text-yellow-400" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Active Section Content */}
+                  <div className="flex-1 overflow-y-auto min-h-0">
+                    <div className="p-4 rounded-xl bg-pulse-bg border border-pulse-border">
+                      {draftResult.sections[activeDraftTab]?.needsReview && (
+                        <div className="flex items-center gap-2 mb-3 p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                          <AlertTriangle className="w-4 h-4 text-yellow-400 shrink-0" />
+                          <p className="text-xs text-yellow-400">This section needs your review and customization</p>
+                        </div>
+                      )}
+                      <p className="text-sm text-pulse-text whitespace-pre-wrap">
+                        {draftResult.sections[activeDraftTab]?.content}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-3 mt-4 pt-4 border-t border-pulse-border shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleCopySection(draftResult.sections![activeDraftTab].content)}
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleUseDraftSection(draftResult.sections![activeDraftTab].content)}
+                      className="bg-[#40ffaa] text-[#0a0e27] hover:bg-[#40ffaa]/80"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Use This
+                    </Button>
+                  </div>
+                </>
+              )}
+            </GlassCard>
+          </motion.div>
+        </motion.div>
+      )}
 
       {/* AI Chat Panel (Slide-in) */}
       {showAIChat && (
@@ -723,7 +1083,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
           initial={{ opacity: 0, x: 400 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 400 }}
-          className="fixed right-0 top-0 h-full w-96 bg-pulse-bg border-l border-pulse-border shadow-2xl z-50 flex flex-col"
+          className="fixed right-0 top-0 h-full w-full md:w-96 bg-pulse-bg border-l border-pulse-border shadow-2xl z-50 flex flex-col"
         >
           {/* Chat Header */}
           <div className="p-4 border-b border-pulse-border flex items-center justify-between">
@@ -738,7 +1098,8 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
             </div>
             <button
               onClick={() => setShowAIChat(false)}
-              className="p-2 rounded-lg hover:bg-pulse-surface text-pulse-text-tertiary hover:text-pulse-text transition-colors"
+              aria-label="Close AI assistant panel"
+              className="p-2 rounded-lg hover:bg-pulse-surface text-pulse-text-tertiary hover:text-pulse-text transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
@@ -859,9 +1220,19 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
                   />
                 ))}
                 {workspace.checklist.length === 0 && (
-                  <div className="text-center py-8 text-pulse-text-tertiary">
-                    <p>No checklist items yet. Add your first task below.</p>
-                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center py-12"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-pulse-accent/10 border border-pulse-accent/20 flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle2 className="w-6 h-6 text-pulse-text-tertiary" />
+                    </div>
+                    <h3 className="text-heading-sm font-semibold text-pulse-text mb-1">No checklist items yet</h3>
+                    <p className="text-body-sm text-pulse-text-secondary max-w-md mx-auto">
+                      Break down your application into manageable tasks. Add your first task below to start tracking progress.
+                    </p>
+                  </motion.div>
                 )}
               </div>
 
@@ -990,14 +1361,23 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
               </div>
 
               {workspace.documents.length === 0 ? (
-                <div className="text-center py-8">
-                  <FileText className="w-12 h-12 text-pulse-text-tertiary mx-auto mb-3" />
-                  <p className="text-sm text-pulse-text-tertiary">No documents yet</p>
-                  <Button variant="outline" size="sm" className="mt-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-center py-10"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-pulse-surface border border-pulse-border flex items-center justify-center mx-auto mb-4">
+                    <FileText className="w-6 h-6 text-pulse-text-tertiary" />
+                  </div>
+                  <h3 className="text-heading-sm font-semibold text-pulse-text mb-1">No documents yet</h3>
+                  <p className="text-body-sm text-pulse-text-secondary max-w-xs mx-auto mb-4">
+                    Upload supporting documents like budgets, letters of support, or past proposals.
+                  </p>
+                  <Button variant="outline" size="sm">
                     <Plus className="w-4 h-4 mr-1" />
                     Add Document
                   </Button>
-                </div>
+                </motion.div>
               ) : (
                 <div className="space-y-2">
                   {workspace.documents.map((doc, index) => (

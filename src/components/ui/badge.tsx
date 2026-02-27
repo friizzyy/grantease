@@ -19,6 +19,8 @@ const badgeVariants = cva(
           'bg-pulse-warning/10 border border-pulse-warning/20 text-pulse-warning',
         error:
           'bg-pulse-error/10 border border-pulse-error/20 text-pulse-error',
+        info:
+          'bg-blue-500/10 border border-blue-500/20 text-blue-400',
         outline:
           'border border-pulse-border text-pulse-text-secondary hover:border-pulse-accent/30 hover:text-pulse-accent',
       },

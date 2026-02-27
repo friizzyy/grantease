@@ -104,7 +104,9 @@ function AnimatedToggle({
     <motion.button
       onClick={onChange}
       disabled={disabled}
-      className={`relative w-12 h-7 rounded-full transition-colors ${
+      role="switch"
+      aria-checked={checked}
+      className={`relative w-12 h-7 rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none ${
         checked ? 'bg-pulse-accent' : 'bg-white/10'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       whileTap={disabled ? {} : { scale: 0.95 }}
@@ -135,7 +137,7 @@ function SettingRow({
   disabled?: boolean
 }) {
   return (
-    <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.1] transition-all">
+    <div className="flex items-center justify-between p-4 rounded-xl bg-pulse-surface border border-pulse-border/40 hover:border-pulse-border transition-all duration-200">
       <div className="flex items-center gap-4">
         {Icon && (
           <div className="w-10 h-10 rounded-lg bg-pulse-accent/10 flex items-center justify-center">
@@ -167,10 +169,10 @@ const InfoCard = React.forwardRef<
   return (
     <div
       ref={ref}
-      className={`p-4 rounded-xl bg-white/[0.02] border transition-all group ${
+      className={`p-4 rounded-xl bg-pulse-surface border transition-all duration-200 group ${
         isHighlighted
           ? 'border-pulse-accent ring-2 ring-pulse-accent/30 animate-pulse'
-          : 'border-white/[0.06] hover:border-pulse-accent/20'
+          : 'border-pulse-border/40 hover:border-pulse-border'
       }`}
     >
       <div className="flex items-center gap-2 mb-2">
@@ -196,12 +198,66 @@ const InfoCard = React.forwardRef<
 // Loading skeleton
 function SettingsSkeleton() {
   return (
-    <div className="space-y-6">
-      <div className="animate-pulse">
-        <div className="h-48 bg-pulse-surface rounded-xl" />
+    <div className="flex flex-col lg:flex-row gap-8 animate-pulse">
+      <div className="lg:w-72 shrink-0 space-y-6">
+        <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-6">
+          <div className="flex flex-col items-center text-center mb-6">
+            <div className="w-20 h-20 bg-pulse-surface rounded-full mb-3" />
+            <div className="h-5 bg-pulse-surface rounded w-32 mb-1" />
+            <div className="h-4 bg-pulse-surface rounded w-24" />
+          </div>
+          <div className="space-y-3 pt-4 border-t border-pulse-border/30">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="flex items-center justify-between">
+                <div className="h-3 bg-pulse-surface rounded w-20" />
+                <div className="h-3 bg-pulse-surface rounded w-16" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-2">
+          <div className="space-y-1">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className={`flex items-center gap-3 px-4 py-3 rounded-xl ${i === 1 ? 'bg-pulse-surface/50' : ''}`}>
+                <div className="w-5 h-5 bg-pulse-surface rounded" />
+                <div className="h-4 bg-pulse-surface rounded w-20" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-4">
+          <div className="h-3 bg-pulse-surface rounded w-24 mb-3 mx-2" />
+          <div className="space-y-1">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="flex items-center gap-3 px-3 py-2.5">
+                <div className="w-4 h-4 bg-pulse-surface rounded" />
+                <div className="h-3 bg-pulse-surface rounded w-20" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
-      <div className="animate-pulse">
-        <div className="h-64 bg-pulse-surface rounded-xl" />
+      <div className="flex-1 min-w-0">
+        <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-pulse-surface rounded-xl" />
+              <div>
+                <div className="h-5 bg-pulse-surface rounded w-44 mb-1" />
+                <div className="h-3 bg-pulse-surface rounded w-36" />
+              </div>
+            </div>
+            <div className="h-8 bg-pulse-surface rounded-lg w-16" />
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className={i === 3 ? 'md:col-span-2' : ''}>
+                <div className="h-3 bg-pulse-surface rounded w-20 mb-2" />
+                <div className="h-10 bg-pulse-surface rounded-lg" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -474,18 +530,18 @@ function SettingsPageContent() {
         <div className="absolute bottom-1/4 left-0 w-[400px] h-[400px] rounded-full bg-violet-500/[0.02] blur-[100px]" />
       </div>
 
-      <div className="relative z-10 p-8 max-w-6xl mx-auto">
+      <div className="relative z-10 px-4 md:px-6 lg:px-8 py-8 max-w-6xl mx-auto">
         {/* Header */}
         <motion.div
           className="mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-pulse-surface/60 border border-pulse-border/40 mb-4">
             <SettingsIcon className="w-4 h-4 text-pulse-accent" />
             <span className="text-sm text-pulse-text-secondary">Account Settings</span>
           </div>
-          <h1 className="text-4xl font-bold text-pulse-text mb-2">Settings</h1>
+          <h1 className="text-heading-lg md:text-display font-bold tracking-tight text-pulse-text mb-2">Settings</h1>
           <p className="text-pulse-text-secondary">
             Manage your profile, AI matching preferences, and account settings
           </p>
@@ -862,7 +918,7 @@ function SettingsPageContent() {
                                 }
                               }}
                             >
-                              <SelectTrigger className="w-auto h-auto px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-sm text-pulse-text-tertiary hover:border-pulse-accent/30 hover:text-pulse-text transition-all">
+                              <SelectTrigger className="w-auto h-auto px-3 py-1.5 rounded-lg bg-pulse-surface border border-pulse-border/40 text-sm text-pulse-text-tertiary hover:border-pulse-border hover:text-pulse-text transition-all duration-200">
                                 <Plus className="w-3 h-3 mr-1" />
                                 Add more
                               </SelectTrigger>
@@ -1017,7 +1073,7 @@ function SettingsPageContent() {
                       </div>
 
                       {/* Profile Completeness */}
-                      <div className="p-4 rounded-xl bg-pulse-surface/30 border border-pulse-border/50 mb-6">
+                      <div className="p-4 rounded-xl bg-pulse-surface border border-pulse-border/40 mb-6">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-pulse-text">Profile Completeness</span>
                           <span className="text-sm font-semibold text-pulse-accent">
@@ -1176,7 +1232,7 @@ function SettingsPageContent() {
                       </div>
 
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between p-4 rounded-xl bg-pulse-surface/30 border border-pulse-border/50 hover:border-pulse-accent/30 transition-colors">
+                        <div className="flex items-center justify-between p-4 rounded-xl bg-pulse-surface border border-pulse-border/40 hover:border-pulse-border hover:shadow-lg hover:shadow-pulse-accent/5 transition-all duration-200">
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-lg bg-pulse-accent/10 border border-pulse-accent/30 flex items-center justify-center">
                               <Key className="w-5 h-5 text-pulse-accent" />
@@ -1191,7 +1247,7 @@ function SettingsPageContent() {
                           </Button>
                         </div>
 
-                        <div className="flex items-center justify-between p-4 rounded-xl bg-pulse-surface/30 border border-pulse-border/50 hover:border-pulse-accent/30 transition-colors">
+                        <div className="flex items-center justify-between p-4 rounded-xl bg-pulse-surface border border-pulse-border/40 hover:border-pulse-border hover:shadow-lg hover:shadow-pulse-accent/5 transition-all duration-200">
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-lg bg-pulse-elevated border border-pulse-border flex items-center justify-center">
                               <Smartphone className="w-5 h-5 text-pulse-text-secondary" />
@@ -1252,15 +1308,15 @@ function SettingsPageContent() {
                       </div>
 
                       <div className="grid md:grid-cols-3 gap-4 mb-6">
-                        <div className="p-4 rounded-xl bg-pulse-surface/30 border border-pulse-border/50 text-center">
+                        <div className="p-4 rounded-xl bg-pulse-surface border border-pulse-border/40 text-center">
                           <p className="text-2xl font-bold text-pulse-text">Unlimited</p>
                           <p className="text-sm text-pulse-text-tertiary">Saved Grants</p>
                         </div>
-                        <div className="p-4 rounded-xl bg-pulse-surface/30 border border-pulse-border/50 text-center">
+                        <div className="p-4 rounded-xl bg-pulse-surface border border-pulse-border/40 text-center">
                           <p className="text-2xl font-bold text-pulse-text">Unlimited</p>
                           <p className="text-sm text-pulse-text-tertiary">Saved Searches</p>
                         </div>
-                        <div className="p-4 rounded-xl bg-pulse-surface/30 border border-pulse-border/50 text-center">
+                        <div className="p-4 rounded-xl bg-pulse-surface border border-pulse-border/40 text-center">
                           <p className="text-2xl font-bold text-pulse-accent">Basic</p>
                           <p className="text-sm text-pulse-text-tertiary">AI Matching</p>
                         </div>
@@ -1294,7 +1350,7 @@ function SettingsPageContent() {
                         ].map((feature, i) => (
                           <motion.div
                             key={feature}
-                            className="flex items-center gap-3 p-3 rounded-lg bg-pulse-surface/30 border border-pulse-border/50"
+                            className="flex items-center gap-3 p-3 rounded-xl bg-pulse-surface border border-pulse-border/40"
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.03 * i }}
@@ -1321,13 +1377,42 @@ function SettingsPageContent() {
 // Loading fallback for Suspense
 function SettingsLoading() {
   return (
-    <div className="min-h-screen relative p-8 max-w-6xl mx-auto">
-      <div className="animate-pulse">
-        <div className="h-10 bg-pulse-surface rounded w-1/4 mb-4" />
-        <div className="h-6 bg-pulse-surface rounded w-1/2 mb-8" />
-        <div className="flex gap-8">
-          <div className="w-72 h-96 bg-pulse-surface rounded-xl" />
-          <div className="flex-1 h-96 bg-pulse-surface rounded-xl" />
+    <div className="min-h-screen relative px-4 md:px-6 lg:px-8 py-8 max-w-6xl mx-auto animate-pulse">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="h-8 bg-pulse-surface rounded-full w-40 mb-4" />
+        <div className="h-10 bg-pulse-surface rounded w-32 mb-2" />
+        <div className="h-5 bg-pulse-surface rounded w-80" />
+      </div>
+      {/* Layout */}
+      <div className="flex flex-col lg:flex-row gap-8">
+        <div className="lg:w-72 shrink-0 space-y-6">
+          <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-6">
+            <div className="flex flex-col items-center mb-6">
+              <div className="w-20 h-20 bg-pulse-surface rounded-full mb-3" />
+              <div className="h-5 bg-pulse-surface rounded w-32 mb-1" />
+              <div className="h-4 bg-pulse-surface rounded w-24" />
+            </div>
+            <div className="space-y-3 pt-4 border-t border-pulse-border/30">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex justify-between">
+                  <div className="h-3 bg-pulse-surface rounded w-20" />
+                  <div className="h-3 bg-pulse-surface rounded w-16" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-2 space-y-1">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="flex items-center gap-3 px-4 py-3">
+                <div className="w-5 h-5 bg-pulse-surface rounded" />
+                <div className="h-4 bg-pulse-surface rounded w-20" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-6 h-96" />
         </div>
       </div>
     </div>
