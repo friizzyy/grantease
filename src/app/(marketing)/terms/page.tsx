@@ -1,10 +1,15 @@
-import { Metadata } from 'next'
-import Link from 'next/link'
-import { ArrowRight, FileText, CheckCircle2, AlertTriangle, Scale, BookOpen, Shield, Users, ArrowLeft } from 'lucide-react'
+'use client'
 
-export const metadata: Metadata = {
-  title: 'Terms of Service | Grants By AI',
-  description: 'Grants By AI terms of service and usage agreement.',
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { ArrowRight, FileText, CheckCircle2, Scale, BookOpen, Shield, Users } from 'lucide-react'
+
+const fadeIn = {
+  initial: { opacity: 0, y: 14 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-60px' },
+  transition: { duration: 0.55, ease: [0.25, 0.1, 0.25, 1] },
 }
 
 const keyTerms = [
@@ -37,138 +42,131 @@ const userResponsibilities = [
 const restrictions = [
   { title: 'No Automated Access', description: 'Scraping, bots, or automated data collection is prohibited' },
   { title: 'No Reselling', description: 'You may not resell or redistribute our data commercially' },
-  { title: 'No Misrepresentation', description: 'Don\'t impersonate others or misrepresent your eligibility' },
-  { title: 'No Interference', description: 'Don\'t attempt to disrupt or compromise our systems' },
+  { title: 'No Misrepresentation', description: "Don't impersonate others or misrepresent your eligibility" },
+  { title: 'No Interference', description: "Don't attempt to disrupt or compromise our systems" },
 ]
 
 export default function TermsPage() {
+  const [reduced, setReduced] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(mq.matches)
+    const h = (e: MediaQueryListEvent) => setReduced(e.matches)
+    mq.addEventListener('change', h)
+    return () => mq.removeEventListener('change', h)
+  }, [])
+
+  const m = (props: Record<string, unknown>) => (reduced ? {} : props)
+
   return (
-    <main className="pt-20">
-      {/* Hero */}
-      <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        {/* Ambient backgrounds */}
+    <main className="pt-[60px]">
+      {/* ─── HERO ─── */}
+      <section className="relative px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 lg:pt-24 pb-16 sm:pb-20 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-[800px] h-[800px] rounded-full bg-pulse-accent/[0.06] blur-[150px]" />
-          <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] rounded-full bg-violet-500/[0.04] blur-[120px]" />
+          <div className="absolute top-[-20%] right-[10%] w-[700px] h-[500px] rounded-full bg-pulse-accent/[0.035] blur-[160px]" />
         </div>
 
-        <div className="max-w-4xl mx-auto relative z-10">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-sm text-pulse-text-secondary hover:text-pulse-accent transition-colors mb-8"
+        <div className="max-w-5xl mx-auto relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
-          </Link>
+            <span className="text-label text-pulse-accent mb-6 block">Terms of Service</span>
 
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-6">
-            <Scale className="w-4 h-4 text-pulse-accent" />
-            <span className="text-sm text-pulse-text-secondary">Legal Agreement</span>
-          </div>
+            <h1 className="text-display-hero text-pulse-text mb-5 max-w-[680px]">
+              Fair terms,{' '}
+              <span className="text-pulse-text-secondary italic">clear expectations.</span>
+            </h1>
 
-          <h1 className="text-display-lg font-bold text-pulse-text mb-6 tracking-tight">
-            Terms of <span className="text-pulse-accent">Service</span>
-          </h1>
+            <p className="text-body-lg text-pulse-text-secondary max-w-lg mb-3">
+              These terms govern your use of Grants By AI. By accessing our platform,
+              you agree to be bound by these terms.
+            </p>
 
-          <p className="text-body-lg text-pulse-text-secondary leading-relaxed mb-4 max-w-2xl">
-            These terms govern your use of Grants By AI. By accessing our platform, you agree to be bound by
-            these terms. Please read them carefully.
-          </p>
-
-          <p className="text-caption text-pulse-text-tertiary">
-            Last updated: February 2026
-          </p>
+            <p className="text-label-sm text-pulse-text-tertiary">
+              Last updated: February 2026
+            </p>
+          </motion.div>
         </div>
       </section>
 
-      {/* What You Get */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 border-y border-pulse-border/30">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
-              <span className="text-sm text-pulse-accent">Our Services</span>
-            </div>
-            <h2 className="text-heading-lg font-bold text-pulse-text mb-4 tracking-tight">
-              What we provide
-            </h2>
-            <p className="text-body text-pulse-text-secondary leading-relaxed">
-              Grants By AI offers a comprehensive platform for discovering and managing grant opportunities.
-            </p>
-          </div>
+      {/* ─── WHAT YOU GET ─── */}
+      <motion.section
+        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-24 border-t border-white/[0.04]"
+        {...m(fadeIn)}
+      >
+        <div className="max-w-5xl mx-auto">
+          <span className="text-label-sm text-pulse-accent mb-4 block">Our Services</span>
+          <h2 className="text-display-section text-pulse-text mb-3">What we provide</h2>
+          <p className="text-body text-pulse-text-secondary mb-10 max-w-lg">
+            Grants By AI offers a comprehensive platform for discovering and managing grant opportunities.
+          </p>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-3 gap-6">
             {keyTerms.map((term) => {
               const Icon = term.icon
               return (
                 <div
                   key={term.title}
-                  className="group p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all duration-200"
+                  className="group relative p-5 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-pulse-accent/10 flex items-center justify-center mb-4 group-hover:bg-pulse-accent/20 transition-colors duration-200">
-                    <Icon className="w-6 h-6 text-pulse-accent" />
+                  <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-pulse-accent/20 to-pulse-accent/5" />
+                  <div className="w-10 h-10 rounded-lg bg-pulse-accent/10 flex items-center justify-center mb-4">
+                    <Icon className="w-5 h-5 text-pulse-accent" />
                   </div>
-                  <h3 className="text-heading-sm font-semibold text-pulse-text mb-2 group-hover:text-pulse-accent transition-colors duration-200">
-                    {term.title}
-                  </h3>
-                  <p className="text-body-sm text-pulse-text-secondary leading-relaxed">
-                    {term.description}
-                  </p>
+                  <h3 className="text-heading-sm text-pulse-text mb-2">{term.title}</h3>
+                  <p className="text-body-sm text-pulse-text-tertiary leading-relaxed">{term.description}</p>
                 </div>
               )
             })}
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* User Responsibilities */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
-              <span className="text-sm text-pulse-accent">Your Responsibilities</span>
-            </div>
-            <h2 className="text-heading-lg font-bold text-pulse-text mb-4 tracking-tight">
-              What we expect from you
-            </h2>
-          </div>
+      {/* ─── USER RESPONSIBILITIES ─── */}
+      <motion.section
+        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-24 border-t border-white/[0.04]"
+        {...m(fadeIn)}
+      >
+        <div className="max-w-5xl mx-auto">
+          <span className="text-label-sm text-pulse-accent mb-4 block">Your Responsibilities</span>
+          <h2 className="text-display-section text-pulse-text mb-10">What we expect from you</h2>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-3">
             {userResponsibilities.map((responsibility, i) => (
               <div
                 key={i}
-                className="flex items-start gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all duration-200"
+                className="flex items-start gap-3 p-5 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300"
               >
-                <CheckCircle2 className="w-5 h-5 text-pulse-accent shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-4 h-4 text-pulse-accent shrink-0 mt-0.5" />
                 <span className="text-body-sm text-pulse-text-secondary leading-relaxed">{responsibility}</span>
               </div>
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Restrictions */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 border-y border-pulse-border/30">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
-              <AlertTriangle className="w-4 h-4 text-amber-400" />
-              <span className="text-sm text-amber-400">Restrictions</span>
-            </div>
-            <h2 className="text-heading-lg font-bold text-pulse-text mb-4 tracking-tight">
-              Prohibited activities
-            </h2>
-            <p className="text-body text-pulse-text-secondary leading-relaxed">
-              To maintain a fair and secure platform for everyone, certain activities are not permitted.
-            </p>
-          </div>
+      {/* ─── RESTRICTIONS ─── */}
+      <motion.section
+        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-24 border-t border-white/[0.04]"
+        {...m(fadeIn)}
+      >
+        <div className="max-w-5xl mx-auto">
+          <span className="text-label-sm text-pulse-text-tertiary mb-4 block">Restrictions</span>
+          <h2 className="text-display-section text-pulse-text mb-3">Prohibited activities</h2>
+          <p className="text-body text-pulse-text-secondary mb-10 max-w-lg">
+            To maintain a fair and secure platform for everyone, certain activities are not permitted.
+          </p>
 
           <div className="grid md:grid-cols-2 gap-4">
             {restrictions.map((restriction) => (
               <div
                 key={restriction.title}
-                className="group p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-amber-400/20 transition-all duration-200"
+                className="group p-5 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300"
               >
-                <h3 className="font-semibold text-pulse-text mb-1 group-hover:text-amber-400 transition-colors duration-200">
+                <h3 className="text-heading-sm text-pulse-text mb-1 group-hover:text-pulse-accent transition-colors">
                   {restriction.title}
                 </h3>
                 <p className="text-body-sm text-pulse-text-tertiary leading-relaxed">
@@ -178,21 +176,18 @@ export default function TermsPage() {
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Important Disclaimers */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
-              <span className="text-sm text-pulse-accent">Disclaimers</span>
-            </div>
-            <h2 className="text-heading-lg font-bold text-pulse-text mb-4 tracking-tight">
-              Important notices
-            </h2>
-          </div>
+      {/* ─── DISCLAIMERS ─── */}
+      <motion.section
+        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-24 border-t border-white/[0.04]"
+        {...m(fadeIn)}
+      >
+        <div className="max-w-5xl mx-auto">
+          <span className="text-label-sm text-pulse-accent mb-4 block">Disclaimers</span>
+          <h2 className="text-display-section text-pulse-text mb-10">Important notices</h2>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {[
               {
                 title: 'Information Accuracy',
@@ -210,35 +205,32 @@ export default function TermsPage() {
                 title: 'Third-Party Links',
                 description: 'Our platform may contain links to external grant sources. We are not responsible for the content or practices of these third-party sites.',
               },
-            ].map((item) => (
+            ].map((item, i) => (
               <div
                 key={item.title}
-                className="flex items-start gap-4 p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all duration-200"
+                className="flex items-start gap-4 p-5 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300"
               >
-                <div className="w-8 h-8 rounded-lg bg-pulse-accent/10 flex items-center justify-center shrink-0">
-                  <FileText className="w-4 h-4 text-pulse-accent" />
-                </div>
+                <span className="text-label-sm text-pulse-accent mt-0.5">0{i + 1}</span>
                 <div>
-                  <h3 className="font-semibold text-pulse-text mb-1">{item.title}</h3>
-                  <p className="text-body-sm text-pulse-text-secondary leading-relaxed">{item.description}</p>
+                  <h3 className="text-heading-sm text-pulse-text mb-1">{item.title}</h3>
+                  <p className="text-body-sm text-pulse-text-tertiary leading-relaxed">{item.description}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Intellectual Property */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 border-y border-pulse-border/30">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+      {/* ─── INTELLECTUAL PROPERTY ─── */}
+      <motion.section
+        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-24 border-t border-white/[0.04]"
+        {...m(fadeIn)}
+      >
+        <div className="max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 items-start">
             <div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
-                <span className="text-sm text-pulse-accent">Intellectual Property</span>
-              </div>
-              <h2 className="text-heading-lg font-bold text-pulse-text mb-4 tracking-tight">
-                Ownership & licensing
-              </h2>
+              <span className="text-label-sm text-pulse-accent mb-4 block">Intellectual Property</span>
+              <h2 className="text-display-section text-pulse-text mb-3">Ownership &amp; licensing</h2>
               <p className="text-body text-pulse-text-secondary leading-relaxed">
                 The Grants By AI platform, including its design, features, code, and content, is protected
                 by intellectual property laws. You retain ownership of any data you submit, but grant
@@ -254,53 +246,56 @@ export default function TermsPage() {
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.06]"
+                  className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.05]"
                 >
-                  <div className="text-caption text-pulse-text-tertiary mb-1">{item.label}</div>
-                  <div className="font-semibold text-pulse-text">{item.value}</div>
+                  <div className="text-label-sm text-pulse-text-tertiary mb-1">{item.label}</div>
+                  <div className="text-heading-sm text-pulse-text">{item.value}</div>
                 </div>
               ))}
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Contact CTA */}
-      <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      {/* ─── CTA ─── */}
+      <motion.section
+        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-28 border-t border-white/[0.04] relative overflow-hidden"
+        {...m(fadeIn)}
+      >
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-pulse-accent/[0.06] blur-[150px]" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-pulse-accent/[0.03] blur-[180px] rounded-full" />
         </div>
 
-        <div className="max-w-3xl mx-auto text-center relative z-10">
-          <div className="w-16 h-16 rounded-2xl bg-pulse-accent/10 flex items-center justify-center mx-auto mb-6">
-            <Users className="w-8 h-8 text-pulse-accent" />
-          </div>
-
-          <h2 className="text-heading-lg font-bold text-pulse-text mb-4 tracking-tight">
-            Questions about our terms?
-          </h2>
-
-          <p className="text-body-lg text-pulse-text-secondary mb-8">
-            Our legal team is happy to clarify any part of this agreement.
-          </p>
-
-          <div className="flex flex-wrap justify-center gap-4">
-            <a
-              href="mailto:legal@grantsby.ai"
-              className="group inline-flex items-center gap-2 px-8 py-4 bg-pulse-accent text-pulse-bg font-semibold rounded-xl hover:bg-pulse-accent/90 transition-all duration-200"
-            >
-              Contact Legal Team
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
-            </a>
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white/[0.03] border border-white/[0.08] text-pulse-text font-semibold rounded-xl hover:border-pulse-accent/30 transition-all duration-200"
-            >
-              Return Home
-            </Link>
+        <div className="max-w-5xl mx-auto relative z-10">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+            <div>
+              <h2 className="text-display-section text-pulse-text mb-3 max-w-md">
+                Questions about{' '}
+                <span className="text-pulse-accent">our terms?</span>
+              </h2>
+              <p className="text-body text-pulse-text-tertiary">
+                Our legal team is happy to clarify any part of this agreement.
+              </p>
+            </div>
+            <div className="flex items-center gap-4 shrink-0 self-start lg:self-auto">
+              <a
+                href="mailto:legal@grantsby.ai"
+                className="group inline-flex items-center gap-2.5 px-8 py-4 bg-pulse-accent text-pulse-bg font-semibold text-[15px] rounded-lg hover:bg-pulse-accent/90 transition-all duration-200"
+              >
+                Contact Legal Team
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </a>
+              <Link
+                href="/"
+                className="text-body-sm text-pulse-text-secondary hover:text-pulse-accent inline-flex items-center gap-2 transition-colors duration-200"
+              >
+                Return Home
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
           </div>
         </div>
-      </section>
+      </motion.section>
     </main>
   )
 }

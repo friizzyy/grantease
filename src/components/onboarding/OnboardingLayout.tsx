@@ -4,7 +4,7 @@
  * ONBOARDING LAYOUT - SPLIT SCREEN IMMERSIVE
  * ------------------------------------------
  * Premium split-screen design inspired by Linear/Notion
- * - Visual branding panel on left with animated gradients
+ * - Visual branding panel on left with subtle ambient background
  * - Content panel on right
  * - Smooth animated progress bar (mint)
  * - Mobile responsive with focused full-screen layout
@@ -62,7 +62,7 @@ export function OnboardingLayout({
   const displayHeadline = headline || stepContent.headline
   const displaySubheadline = subheadline || stepContent.subheadline
 
-  // Parse headline for gradient text (middle line gets gradient)
+  // Parse headline for accent text (middle line gets accent color)
   const headlineLines = displayHeadline.split('\n')
 
   // Progress percentage for the smooth bar
@@ -72,7 +72,7 @@ export function OnboardingLayout({
 
   return (
     <div className="min-h-screen bg-pulse-bg flex flex-col lg:flex-row font-sans">
-      {/* Mobile: Top progress bar — smooth mint animated */}
+      {/* Mobile: Top progress bar */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50">
         <div className="h-1 bg-pulse-surface rounded-full overflow-hidden">
           <motion.div
@@ -86,34 +86,10 @@ export function OnboardingLayout({
 
       {/* Left Panel - Visual Branding */}
       <div className="hidden lg:flex lg:w-[45%] relative overflow-hidden">
-        {/* Animated gradient background */}
-        <div className="absolute inset-0">
-          <motion.div
-            className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-pulse-accent/20 blur-[100px]"
-            animate={{
-              scale: [1, 1.2, 1],
-              x: [0, 50, 0],
-              y: [0, 30, 0],
-            }}
-            transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.div
-            className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-emerald-500/15 blur-[80px]"
-            animate={{
-              scale: [1, 1.3, 1],
-              x: [0, -30, 0],
-              y: [0, -40, 0],
-            }}
-            transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.div
-            className="absolute top-1/2 left-1/2 w-[300px] h-[300px] rounded-full bg-violet-500/10 blur-[60px]"
-            animate={{
-              scale: [1, 1.1, 1],
-              rotate: [0, 180, 360],
-            }}
-            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-          />
+        {/* Subtle ambient background -- no floating orbs */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-[-10%] left-[10%] w-[700px] h-[500px] rounded-full bg-pulse-accent/[0.04] blur-[160px]" />
+          <div className="absolute bottom-[-10%] right-[5%] w-[500px] h-[400px] rounded-full bg-emerald-500/[0.025] blur-[130px]" />
         </div>
 
         {/* Grid overlay */}
@@ -140,13 +116,13 @@ export function OnboardingLayout({
               key={currentStep}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.2, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
             >
-              <h2 className="font-serif text-5xl text-pulse-text leading-tight mb-6">
+              <h2 className="text-display-section text-pulse-text leading-tight mb-6">
                 {headlineLines.map((line, i) => (
                   <span key={i}>
                     {i === 1 ? (
-                      <span className="bg-gradient-to-r from-pulse-accent via-emerald-400 to-teal-400 bg-clip-text text-transparent">
+                      <span className="text-pulse-text-secondary italic">
                         {line}
                       </span>
                     ) : (
@@ -156,7 +132,7 @@ export function OnboardingLayout({
                   </span>
                 ))}
               </h2>
-              <p className="text-lg text-pulse-text-secondary max-w-md">
+              <p className="text-body-lg text-pulse-text-secondary max-w-md">
                 {displaySubheadline}
               </p>
             </motion.div>
@@ -166,19 +142,19 @@ export function OnboardingLayout({
               className="flex gap-8 mt-12"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
             >
               <div>
-                <div className="text-3xl font-bold text-pulse-text">20K+</div>
-                <div className="text-sm text-pulse-text-tertiary">Active grants</div>
+                <div className="text-stat-sm text-pulse-accent tabular-nums">20K+</div>
+                <div className="text-label-sm text-pulse-text-tertiary mt-1">Active grants</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-pulse-accent">$12B+</div>
-                <div className="text-sm text-pulse-text-tertiary">Total funding</div>
+                <div className="text-stat-sm text-pulse-accent tabular-nums">$12B+</div>
+                <div className="text-label-sm text-pulse-text-tertiary mt-1">Total funding</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-pulse-text">94%</div>
-                <div className="text-sm text-pulse-text-tertiary">Match accuracy</div>
+                <div className="text-stat-sm text-pulse-text tabular-nums">94%</div>
+                <div className="text-label-sm text-pulse-text-tertiary mt-1">Match accuracy</div>
               </div>
             </motion.div>
           </div>
@@ -208,7 +184,7 @@ export function OnboardingLayout({
                   />
                 ))}
               </div>
-              <span className="text-sm text-pulse-text-tertiary">
+              <span className="text-label-sm text-pulse-text-tertiary">
                 {currentStep > 0 ? `Step ${currentStep} of ${totalSteps}` : 'Welcome'}
               </span>
             </div>
@@ -219,7 +195,7 @@ export function OnboardingLayout({
       {/* Right Panel - Content */}
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Mobile header */}
-        <div className="lg:hidden p-6 pt-4 border-b border-white/[0.06]">
+        <div className="lg:hidden p-6 pt-4 border-b border-white/[0.04]">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <AnimatedLogo size="sm" className="text-pulse-accent" />
@@ -228,7 +204,7 @@ export function OnboardingLayout({
             {showSkipAll && onSkipAll && (
               <button
                 onClick={onSkipAll}
-                className="text-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors"
+                className="text-body-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors"
               >
                 Skip for now
               </button>
@@ -243,8 +219,8 @@ export function OnboardingLayout({
           </div>
         </div>
 
-        {/* Mobile progress — step dots */}
-        <div className="lg:hidden p-6 border-t border-white/[0.06]">
+        {/* Mobile progress -- step dots */}
+        <div className="lg:hidden p-6 border-t border-white/[0.04]">
           <div className="flex items-center justify-center gap-2">
             {Array.from({ length: totalSteps }).map((_, i) => (
               <div

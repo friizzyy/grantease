@@ -25,22 +25,11 @@ const contactMethods = [
   },
 ]
 
-// Animation variants
-const fadeInUp = {
-  initial: { opacity: 0, y: 24 },
+const fadeIn = {
+  initial: { opacity: 0, y: 14 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, margin: '-60px' },
-  transition: { duration: 0.6, ease: 'easeOut' },
-}
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
-}
-
-const staggerItem = {
-  hidden: { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+  transition: { duration: 0.55, ease: [0.25, 0.1, 0.25, 1] },
 }
 
 export default function ContactPage() {
@@ -52,18 +41,17 @@ export default function ContactPage() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const [reduced, setReduced] = useState(false)
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setPrefersReducedMotion(mq.matches)
-    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
+    setReduced(mq.matches)
+    const h = (e: MediaQueryListEvent) => setReduced(e.matches)
+    mq.addEventListener('change', h)
+    return () => mq.removeEventListener('change', h)
   }, [])
 
-  const motionProps = (props: Record<string, unknown>) =>
-    prefersReducedMotion ? {} : props
+  const m = (props: Record<string, unknown>) => (reduced ? {} : props)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -77,63 +65,63 @@ export default function ContactPage() {
   }
 
   return (
-    <main className="pt-20">
-      {/* Hero */}
-      <motion.section
-        className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden"
-        {...motionProps(fadeInUp)}
-      >
-        {/* Ambient background */}
+    <main className="pt-[60px]">
+      {/* ---- HERO ---- */}
+      <section className="relative px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 lg:pt-24 pb-16 sm:pb-20 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-pulse-accent/[0.05] blur-[150px]" />
+          <div className="absolute top-[-20%] left-[10%] w-[700px] h-[500px] rounded-full bg-pulse-accent/[0.035] blur-[160px]" />
         </div>
 
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] backdrop-blur-md border border-white/[0.08] mb-8">
-            <span className="text-sm text-pulse-text-secondary">Contact</span>
-          </div>
-          <h1 className="text-5xl md:text-6xl font-bold text-pulse-text mb-6 tracking-tight leading-[1.1]">
-            Get in <span className="text-pulse-accent">touch</span>
-          </h1>
-          <p className="text-xl text-pulse-text-secondary max-w-2xl mx-auto leading-relaxed">
-            Have a question, feedback, or need help? We&apos;d love to hear from you.
-          </p>
-        </div>
-      </motion.section>
+        <div className="max-w-5xl mx-auto relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <span className="text-label text-pulse-accent mb-6 block">Contact</span>
 
-      {/* Two-column layout: Form + Contact Info */}
-      <section className="py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-5 gap-12">
+            <h1 className="text-display-hero text-pulse-text mb-5 max-w-[540px]">
+              Get in{' '}
+              <span className="text-pulse-text-secondary italic">touch</span>
+            </h1>
+
+            <p className="text-body-lg text-pulse-text-secondary max-w-lg">
+              Have a question, feedback, or need help? We&apos;d love to hear from you.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ---- FORM + CONTACT INFO ---- */}
+      <motion.section
+        className="px-4 sm:px-6 lg:px-8 py-12 sm:py-16 border-t border-white/[0.04]"
+        {...m(fadeIn)}
+      >
+        <div className="max-w-5xl mx-auto">
+          <div className="grid lg:grid-cols-5 gap-10">
             {/* Left: Form (3 cols) */}
-            <motion.div
-              className="lg:col-span-3"
-              {...motionProps({
-                initial: { opacity: 0, x: -24 },
-                whileInView: { opacity: 1, x: 0 },
-                viewport: { once: true, margin: '-60px' },
-                transition: { duration: 0.6, ease: 'easeOut' },
-              })}
-            >
-              <div className="p-8 md:p-10 rounded-2xl bg-white/[0.02] backdrop-blur-xl border border-white/[0.08]">
+            <div className="lg:col-span-3">
+              <div className="relative p-6 sm:p-8 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+                <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-pulse-accent/20 to-pulse-accent/5" />
+
                 <AnimatePresence mode="wait">
                   {submitted ? (
                     <motion.div
                       key="success"
-                      initial={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.95 }}
+                      initial={reduced ? undefined : { opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       className="text-center py-12"
                     >
                       <motion.div
-                        className="w-20 h-20 rounded-full bg-pulse-accent/10 border border-pulse-accent/30 flex items-center justify-center mx-auto mb-6"
-                        initial={prefersReducedMotion ? undefined : { scale: 0 }}
+                        className="w-16 h-16 rounded-xl bg-pulse-accent/10 border border-pulse-accent/20 flex items-center justify-center mx-auto mb-6"
+                        initial={reduced ? undefined : { scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
                       >
-                        <CheckCircle2 className="w-10 h-10 text-pulse-accent" />
+                        <CheckCircle2 className="w-8 h-8 text-pulse-accent" />
                       </motion.div>
-                      <h3 className="text-3xl font-bold text-pulse-text mb-3">Message sent!</h3>
-                      <p className="text-lg text-pulse-text-secondary mb-8 max-w-md mx-auto">
+                      <h3 className="text-display-section text-pulse-text mb-3">Message sent!</h3>
+                      <p className="text-body text-pulse-text-secondary mb-8 max-w-md mx-auto">
                         Thanks for reaching out. We&apos;ll get back to you within 24 hours.
                       </p>
                       <button
@@ -141,7 +129,7 @@ export default function ContactPage() {
                           setSubmitted(false)
                           setFormState({ name: '', email: '', subject: '', message: '' })
                         }}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-white/[0.03] border border-white/[0.08] text-pulse-text font-semibold rounded-xl hover:border-pulse-accent/30 transition-colors"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-white/[0.03] border border-white/[0.08] text-pulse-text font-semibold text-[14px] rounded-lg hover:border-white/[0.15] transition-colors"
                       >
                         Send Another Message
                       </button>
@@ -149,20 +137,20 @@ export default function ContactPage() {
                   ) : (
                     <motion.div
                       key="form"
-                      initial={prefersReducedMotion ? undefined : { opacity: 0 }}
+                      initial={reduced ? undefined : { opacity: 0 }}
                       animate={{ opacity: 1 }}
                     >
-                      <div className="mb-8">
-                        <h2 className="text-2xl font-bold text-pulse-text mb-2">Send us a message</h2>
-                        <p className="text-pulse-text-secondary">
+                      <div className="mb-6">
+                        <h2 className="text-heading-lg text-pulse-text mb-1">Send us a message</h2>
+                        <p className="text-body-sm text-pulse-text-tertiary">
                           Fill out the form below and we&apos;ll get back to you soon.
                         </p>
                       </div>
 
-                      <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="grid sm:grid-cols-2 gap-6">
+                      <form onSubmit={handleSubmit} className="space-y-5">
+                        <div className="grid sm:grid-cols-2 gap-5">
                           <div>
-                            <label className="block text-sm font-medium text-pulse-text mb-2">
+                            <label className="block text-label-sm text-pulse-text-secondary mb-2">
                               Name
                             </label>
                             <input
@@ -170,11 +158,11 @@ export default function ContactPage() {
                               value={formState.name}
                               onChange={(e) => setFormState(s => ({ ...s, name: e.target.value }))}
                               placeholder="Your name"
-                              className="w-full h-12 px-4 rounded-xl bg-white/[0.03] border border-white/[0.08] text-pulse-text placeholder:text-pulse-text-tertiary focus:outline-none focus:ring-2 focus:ring-pulse-accent/30 focus:border-pulse-accent transition-all"
+                              className="w-full h-11 px-4 rounded-lg bg-white/[0.03] border border-white/[0.08] text-pulse-text text-body-sm placeholder:text-pulse-text-tertiary focus:outline-none focus:ring-2 focus:ring-pulse-accent/30 focus:border-pulse-accent/40 transition-all"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-pulse-text mb-2">
+                            <label className="block text-label-sm text-pulse-text-secondary mb-2">
                               Email
                             </label>
                             <input
@@ -183,13 +171,13 @@ export default function ContactPage() {
                               value={formState.email}
                               onChange={(e) => setFormState(s => ({ ...s, email: e.target.value }))}
                               placeholder="you@example.com"
-                              className="w-full h-12 px-4 rounded-xl bg-white/[0.03] border border-white/[0.08] text-pulse-text placeholder:text-pulse-text-tertiary focus:outline-none focus:ring-2 focus:ring-pulse-accent/30 focus:border-pulse-accent transition-all"
+                              className="w-full h-11 px-4 rounded-lg bg-white/[0.03] border border-white/[0.08] text-pulse-text text-body-sm placeholder:text-pulse-text-tertiary focus:outline-none focus:ring-2 focus:ring-pulse-accent/30 focus:border-pulse-accent/40 transition-all"
                             />
                           </div>
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-pulse-text mb-2">
+                          <label className="block text-label-sm text-pulse-text-secondary mb-2">
                             Subject
                           </label>
                           <input
@@ -197,86 +185,85 @@ export default function ContactPage() {
                             value={formState.subject}
                             onChange={(e) => setFormState(s => ({ ...s, subject: e.target.value }))}
                             placeholder="How can we help?"
-                            className="w-full h-12 px-4 rounded-xl bg-white/[0.03] border border-white/[0.08] text-pulse-text placeholder:text-pulse-text-tertiary focus:outline-none focus:ring-2 focus:ring-pulse-accent/30 focus:border-pulse-accent transition-all"
+                            className="w-full h-11 px-4 rounded-lg bg-white/[0.03] border border-white/[0.08] text-pulse-text text-body-sm placeholder:text-pulse-text-tertiary focus:outline-none focus:ring-2 focus:ring-pulse-accent/30 focus:border-pulse-accent/40 transition-all"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-pulse-text mb-2">
+                          <label className="block text-label-sm text-pulse-text-secondary mb-2">
                             Message
                           </label>
                           <textarea
                             required
-                            rows={6}
+                            rows={5}
                             value={formState.message}
                             onChange={(e) => setFormState(s => ({ ...s, message: e.target.value }))}
                             placeholder="Tell us more..."
-                            className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-pulse-text placeholder:text-pulse-text-tertiary focus:outline-none focus:ring-2 focus:ring-pulse-accent/30 focus:border-pulse-accent transition-all resize-none"
+                            className="w-full px-4 py-3 rounded-lg bg-white/[0.03] border border-white/[0.08] text-pulse-text text-body-sm placeholder:text-pulse-text-tertiary focus:outline-none focus:ring-2 focus:ring-pulse-accent/30 focus:border-pulse-accent/40 transition-all resize-none"
                           />
                         </div>
 
                         <button
                           type="submit"
                           disabled={isSubmitting}
-                          className="w-full inline-flex items-center justify-center gap-2 px-8 py-4 bg-pulse-accent text-pulse-bg font-semibold rounded-xl hover:bg-pulse-accent/90 transition-colors disabled:opacity-50"
+                          className="w-full inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-pulse-accent text-pulse-bg font-semibold text-[15px] rounded-lg hover:bg-pulse-accent/90 transition-all duration-200 shadow-[0_0_30px_rgba(64,255,170,0.15)] hover:shadow-[0_0_40px_rgba(64,255,170,0.25)] disabled:opacity-50"
                         >
                           {isSubmitting ? 'Sending...' : 'Send Message'}
-                          <ArrowRight className="w-5 h-5" />
+                          <ArrowRight className="w-4 h-4" />
                         </button>
                       </form>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
-            </motion.div>
+            </div>
 
-            {/* Right: Contact Info (2 cols) */}
-            <motion.div
-              className="lg:col-span-2"
-              {...motionProps({
-                initial: { opacity: 0, x: 24 },
-                whileInView: { opacity: 1, x: 0 },
-                viewport: { once: true, margin: '-60px' },
-                transition: { duration: 0.6, ease: 'easeOut', delay: 0.15 },
-              })}
-            >
-              <div className="space-y-6">
-                {contactMethods.map((method) => {
-                  const Icon = method.icon
-                  return (
-                    <div
-                      key={method.title}
-                      className="group p-6 rounded-2xl bg-white/[0.02] backdrop-blur border border-white/[0.06] hover:border-pulse-accent/20 transition-colors"
-                    >
-                      <div className="w-12 h-12 rounded-xl bg-pulse-accent/10 flex items-center justify-center mb-4 group-hover:bg-pulse-accent/20 transition-colors">
-                        <Icon className="w-6 h-6 text-pulse-accent" />
+            {/* Right: Contact info (2 cols) */}
+            <div className="lg:col-span-2 space-y-4">
+              {contactMethods.map((method) => {
+                const Icon = method.icon
+                return (
+                  <div
+                    key={method.title}
+                    className="relative group p-5 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300"
+                  >
+                    <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-pulse-accent/20 to-pulse-accent/5" />
+
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 rounded-lg bg-pulse-accent/10 flex items-center justify-center shrink-0">
+                        <Icon className="w-5 h-5 text-pulse-accent" />
                       </div>
-                      <h3 className="text-lg font-semibold text-pulse-text mb-1 group-hover:text-pulse-accent transition-colors">{method.title}</h3>
-                      <p className="text-pulse-text-secondary">{method.info}</p>
-                      <p className="text-sm text-pulse-text-tertiary mt-1">{method.detail}</p>
+                      <div>
+                        <h3 className="text-heading-sm text-pulse-text mb-0.5">{method.title}</h3>
+                        <p className="text-body-sm text-pulse-text-secondary">{method.info}</p>
+                        <p className="text-body-sm text-pulse-text-tertiary">{method.detail}</p>
+                      </div>
                     </div>
-                  )
-                })}
-
-                {/* Response time card */}
-                <div className="p-6 rounded-2xl bg-pulse-accent/5 border border-pulse-accent/10">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Send className="w-5 h-5 text-pulse-accent" />
-                    <h3 className="font-semibold text-pulse-text">Response Time</h3>
                   </div>
-                  <p className="text-sm text-pulse-text-secondary">
-                    We typically respond within <span className="text-pulse-accent font-medium">24 hours</span> on weekdays.
-                    Pro and Team users get priority support.
-                  </p>
+                )
+              })}
+
+              {/* Response time card */}
+              <div className="relative p-5 rounded-xl bg-pulse-accent/[0.04] border border-pulse-accent/20">
+                <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-pulse-accent/30 to-pulse-accent/5" />
+
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-pulse-accent/10 flex items-center justify-center shrink-0">
+                    <Send className="w-5 h-5 text-pulse-accent" />
+                  </div>
+                  <div>
+                    <h3 className="text-heading-sm text-pulse-text mb-0.5">Response time</h3>
+                    <p className="text-body-sm text-pulse-text-secondary">
+                      We typically respond within <span className="text-pulse-accent font-medium">24 hours</span> on weekdays.
+                      Pro and Team users get priority support.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
-      </section>
-
-      {/* Spacer */}
-      <div className="h-24" />
+      </motion.section>
     </main>
   )
 }

@@ -116,7 +116,7 @@ function formatAmount(min: number | null, max: number | null): string {
   return `$${amount.toLocaleString()}`
 }
 
-// Progress Ring Component
+// Clean progress ring without glow filters
 function ProgressRing({ progress, size = 80, strokeWidth = 6 }: {
   progress: number; size?: number; strokeWidth?: number
 }) {
@@ -126,9 +126,9 @@ function ProgressRing({ progress, size = 80, strokeWidth = 6 }: {
 
   const getColor = () => {
     if (progress >= 75) return '#40ffaa'
-    if (progress >= 50) return '#40a0ff'
-    if (progress >= 25) return '#ffb340'
-    return '#ff4040'
+    if (progress >= 50) return '#34d399'
+    if (progress >= 25) return '#fbbf24'
+    return 'rgba(255,255,255,0.25)'
   }
 
   return (
@@ -139,7 +139,7 @@ function ProgressRing({ progress, size = 80, strokeWidth = 6 }: {
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="rgba(255,255,255,0.1)"
+          stroke="rgba(255,255,255,0.06)"
           strokeWidth={strokeWidth}
         />
         <motion.circle
@@ -156,8 +156,8 @@ function ProgressRing({ progress, size = 80, strokeWidth = 6 }: {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-xl font-bold text-pulse-text">{progress}%</span>
-        <span className="text-xs text-pulse-text-tertiary">Complete</span>
+        <span className="text-stat-sm text-pulse-text">{progress}%</span>
+        <span className="text-label-sm text-pulse-text-tertiary normal-case">Complete</span>
       </div>
     </div>
   )
@@ -181,11 +181,11 @@ function AIAssistantCard({
     >
       <GlassCard variant="accent" className="p-4">
         <div className="flex items-start gap-4">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-pulse-accent to-pulse-accent/50 flex items-center justify-center shrink-0">
-            <Sparkles className="w-5 h-5 text-pulse-bg" />
+          <div className="w-10 h-10 rounded-lg bg-pulse-accent/10 border border-pulse-accent/20 flex items-center justify-center shrink-0">
+            <Sparkles className="w-5 h-5 text-pulse-accent" />
           </div>
           <div className="flex-1">
-            <h3 className="text-sm font-semibold text-pulse-text mb-1">AI Writing Assistant</h3>
+            <h3 className="text-heading-sm text-pulse-text mb-1">AI Writing Assistant</h3>
             <p className="text-sm text-pulse-text-secondary mb-3">
               Need help with your technical proposal? I can help you draft sections, improve clarity, and ensure compliance with requirements.
             </p>
@@ -234,10 +234,16 @@ function ChecklistItemRow({
         role="checkbox"
         aria-checked={item.completed}
         aria-label={`Mark "${item.text}" as ${item.completed ? 'incomplete' : 'complete'}`}
-        className="shrink-0 transition-transform hover:scale-110"
+        className="shrink-0 transition-all duration-200 hover:scale-110"
       >
         {item.completed ? (
-          <CheckCircle2 className="w-6 h-6 text-pulse-accent" aria-hidden="true" />
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0.5 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+          >
+            <CheckCircle2 className="w-6 h-6 text-pulse-accent" aria-hidden="true" />
+          </motion.div>
         ) : (
           <Circle className="w-6 h-6 text-pulse-text-tertiary hover:text-pulse-accent transition-colors" aria-hidden="true" />
         )}
@@ -820,7 +826,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h1 className="text-heading-lg md:text-display font-bold tracking-tight text-pulse-text mb-1">
+                  <h1 className="text-display-page text-pulse-text mb-1">
                     {workspace.name}
                   </h1>
                   <Link
@@ -1276,7 +1282,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
                 onChange={(e) => updateNotes(e.target.value)}
                 placeholder="Add notes about your strategy, key points to highlight, or reminders..."
                 rows={8}
-                className="w-full rounded-xl bg-pulse-bg border border-pulse-border px-4 py-3 text-sm text-pulse-text placeholder:text-pulse-text-tertiary transition-all focus:outline-none focus:border-pulse-accent/40 focus:ring-2 focus:ring-pulse-accent/10 resize-none"
+                className="w-full rounded-xl bg-pulse-surface/50 border border-pulse-border px-4 py-3 text-sm text-pulse-text placeholder:text-pulse-text-tertiary transition-all focus:outline-none focus:border-pulse-accent/40 focus:ring-2 focus:ring-pulse-accent/10 resize-none"
               />
             </GlassCard>
           </motion.div>

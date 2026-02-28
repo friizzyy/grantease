@@ -132,31 +132,31 @@ function VaultSection({
   const [isOpen, setIsOpen] = useState(defaultOpen)
 
   return (
-    <GlassCard className="overflow-hidden">
+    <div className="rounded-xl bg-white/[0.02] border border-white/[0.05] overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
-        className="w-full p-4 flex items-center justify-between hover:bg-pulse-surface/50 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none"
+        className="w-full p-5 flex items-center justify-between hover:bg-white/[0.02] transition-all duration-200 focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none"
       >
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-pulse-accent/10 border border-pulse-accent/20 flex items-center justify-center">
             <Icon className="w-5 h-5 text-pulse-accent" />
           </div>
           <div className="text-left">
-            <h3 className="font-medium text-pulse-text">{title}</h3>
+            <h3 className="text-heading-sm text-pulse-text">{title}</h3>
             {completeness !== undefined && (
-              <div className="flex items-center gap-2 mt-1">
-                <div className="w-24 h-1.5 bg-pulse-border rounded-full overflow-hidden">
+              <div className="flex items-center gap-2 mt-1.5">
+                <div className="w-24 h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all ${
-                      completeness >= 80 ? 'bg-green-500' :
-                      completeness >= 50 ? 'bg-yellow-500' :
-                      'bg-pulse-error'
+                      completeness >= 80 ? 'bg-pulse-accent' :
+                      completeness >= 50 ? 'bg-emerald-400' :
+                      'bg-pulse-text-tertiary'
                     }`}
                     style={{ width: `${completeness}%` }}
                   />
                 </div>
-                <span className="text-xs text-pulse-text-tertiary">{completeness}%</span>
+                <span className="text-label-sm text-pulse-text-tertiary normal-case">{completeness}%</span>
               </div>
             )}
           </div>
@@ -176,13 +176,13 @@ function VaultSection({
             exit={{ height: 0 }}
             className="overflow-hidden"
           >
-            <div className="p-4 pt-0 border-t border-pulse-border">
+            <div className="px-5 pb-5 pt-0 border-t border-white/[0.05]">
               {children}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </GlassCard>
+    </div>
   )
 }
 
@@ -282,15 +282,15 @@ function EditableField({
 // Completeness card
 function CompletenessCard({ completeness }: { completeness: VaultCompleteness }) {
   return (
-    <GlassCard variant="accent" className="p-5">
+    <div className="rounded-xl bg-white/[0.02] border border-pulse-accent/20 p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-pulse-accent/20 border border-pulse-accent/30 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-pulse-accent/10 border border-pulse-accent/20 flex items-center justify-center">
             <Shield className="w-6 h-6 text-pulse-accent" />
           </div>
           <div>
-            <h3 className="font-semibold text-pulse-text">Vault Completeness</h3>
-            <p className="text-sm text-pulse-text-secondary">
+            <h3 className="text-heading-sm text-pulse-text">Vault Completeness</h3>
+            <p className="text-body-sm text-pulse-text-secondary">
               {completeness.overall >= 80 ? 'Ready for most applications' :
                completeness.overall >= 50 ? 'Good progress, keep going' :
                'Fill in more details to speed up applications'}
@@ -298,11 +298,11 @@ function CompletenessCard({ completeness }: { completeness: VaultCompleteness })
           </div>
         </div>
         <div className="text-right">
-          <span className="text-3xl font-bold text-pulse-accent">{completeness.overall}%</span>
+          <span className="text-stat text-pulse-accent">{completeness.overall}%</span>
         </div>
       </div>
 
-      <div className="h-2 bg-pulse-border rounded-full overflow-hidden mb-4">
+      <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden mb-4">
         <motion.div
           className="h-full bg-pulse-accent rounded-full"
           initial={{ width: 0 }}
@@ -312,12 +312,12 @@ function CompletenessCard({ completeness }: { completeness: VaultCompleteness })
       </div>
 
       {/* Why This Matters */}
-      <div className="mb-4 p-3 rounded-xl bg-pulse-accent/5 border border-pulse-accent/20">
-        <p className="text-xs font-medium text-pulse-accent mb-1.5">Why complete your vault?</p>
-        <p className="text-xs text-pulse-text-secondary mb-2">
+      <div className="mb-4 p-3 rounded-lg bg-pulse-accent/5 border border-pulse-accent/10">
+        <p className="text-label-sm text-pulse-accent mb-1.5 normal-case">Why complete your vault?</p>
+        <p className="text-body-sm text-pulse-text-secondary mb-2">
           Your vault can auto-fill approximately <span className="font-semibold text-pulse-text">{completeness.overall}%</span> of the average grant application.
         </p>
-        <p className="text-xs text-pulse-text-tertiary">
+        <p className="text-body-sm text-pulse-text-tertiary">
           Complete your vault to save ~15-20 hours per grant application.
         </p>
       </div>
@@ -348,7 +348,7 @@ function CompletenessCard({ completeness }: { completeness: VaultCompleteness })
           </ul>
         </div>
       )}
-    </GlassCard>
+    </div>
   )
 }
 
@@ -1264,9 +1264,9 @@ export default function VaultPage() {
                             <div className="flex items-center justify-between mb-1">
                               <p className="text-xs font-medium text-pulse-text-secondary">{field.name}</p>
                               <span className={`text-xs px-1.5 py-0.5 rounded ${
-                                field.confidence >= 0.8 ? 'bg-green-500/20 text-green-400' :
-                                field.confidence >= 0.5 ? 'bg-yellow-500/20 text-yellow-400' :
-                                'bg-orange-500/20 text-orange-400'
+                                field.confidence >= 0.8 ? 'bg-pulse-accent/10 text-pulse-accent' :
+                                field.confidence >= 0.5 ? 'bg-emerald-500/10 text-emerald-400' :
+                                'bg-white/[0.05] text-pulse-text-secondary'
                               }`}>
                                 {Math.round(field.confidence * 100)}% conf.
                               </span>

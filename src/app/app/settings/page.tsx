@@ -171,7 +171,7 @@ const InfoCard = React.forwardRef<
       ref={ref}
       className={`p-4 rounded-xl bg-pulse-surface border transition-all duration-200 group ${
         isHighlighted
-          ? 'border-pulse-accent ring-2 ring-pulse-accent/30 animate-pulse'
+          ? 'border-pulse-accent ring-2 ring-pulse-accent/30'
           : 'border-pulse-border/40 hover:border-pulse-border'
       }`}
     >
@@ -524,10 +524,9 @@ function SettingsPageContent() {
 
   return (
     <div className="min-h-screen relative">
-      {/* Ambient backgrounds */}
+      {/* Subtle background warmth */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-1/4 w-[600px] h-[600px] rounded-full bg-pulse-accent/[0.03] blur-[120px]" />
-        <div className="absolute bottom-1/4 left-0 w-[400px] h-[400px] rounded-full bg-violet-500/[0.02] blur-[100px]" />
+        <div className="absolute top-0 right-1/4 w-[600px] h-[600px] rounded-full bg-pulse-accent/[0.02] blur-[160px]" />
       </div>
 
       <div className="relative z-10 px-4 md:px-6 lg:px-8 py-8 max-w-6xl mx-auto">
@@ -537,12 +536,12 @@ function SettingsPageContent() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-pulse-surface/60 border border-pulse-border/40 mb-4">
-            <SettingsIcon className="w-4 h-4 text-pulse-accent" />
-            <span className="text-sm text-pulse-text-secondary">Account Settings</span>
+          <div className="flex items-center gap-2 mb-2">
+            <SettingsIcon className="w-5 h-5 text-pulse-accent" />
+            <span className="text-label text-pulse-text-tertiary">Account Settings</span>
           </div>
-          <h1 className="text-heading-lg md:text-display font-bold tracking-tight text-pulse-text mb-2">Settings</h1>
-          <p className="text-pulse-text-secondary">
+          <h1 className="text-display-page text-pulse-text">Settings</h1>
+          <p className="text-body text-pulse-text-secondary mt-2">
             Manage your profile, AI matching preferences, and account settings
           </p>
         </motion.div>
@@ -1232,7 +1231,7 @@ function SettingsPageContent() {
                       </div>
 
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between p-4 rounded-xl bg-pulse-surface border border-pulse-border/40 hover:border-pulse-border hover:shadow-lg hover:shadow-pulse-accent/5 transition-all duration-200">
+                        <div className="flex items-center justify-between p-4 rounded-xl bg-pulse-surface border border-pulse-border/40 hover:border-pulse-border hover:border-white/[0.1] transition-all duration-200">
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-lg bg-pulse-accent/10 border border-pulse-accent/30 flex items-center justify-center">
                               <Key className="w-5 h-5 text-pulse-accent" />
@@ -1247,7 +1246,7 @@ function SettingsPageContent() {
                           </Button>
                         </div>
 
-                        <div className="flex items-center justify-between p-4 rounded-xl bg-pulse-surface border border-pulse-border/40 hover:border-pulse-border hover:shadow-lg hover:shadow-pulse-accent/5 transition-all duration-200">
+                        <div className="flex items-center justify-between p-4 rounded-xl bg-pulse-surface border border-pulse-border/40 hover:border-pulse-border hover:border-white/[0.1] transition-all duration-200">
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-lg bg-pulse-elevated border border-pulse-border flex items-center justify-center">
                               <Smartphone className="w-5 h-5 text-pulse-text-secondary" />

@@ -3,16 +3,16 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Plus, Minus, Search, Bell, FolderOpen, CreditCard, HelpCircle, MessageCircle } from 'lucide-react'
+import { ArrowRight, Plus, Minus } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 const faqs = [
   {
     category: 'General',
-    icon: HelpCircle,
     questions: [
       {
         q: 'What is Grants By AI?',
-        a: 'Grants By AI is an intelligent grant discovery platform that aggregates funding opportunities from federal, state, local, nonprofit, and private sources.',
+        a: 'Grants By AI is an intelligent grant discovery platform that aggregates funding opportunities from federal, state, local, nonprofit, and private sources. We help you find, match, and apply to grants faster.',
       },
       {
         q: 'What types of grants can I find?',
@@ -24,31 +24,29 @@ const faqs = [
       },
       {
         q: 'Is Grants By AI free to use?',
-        a: 'Yes! Our Starter plan is free forever with unlimited searches, basic filters, and up to 10 saved grants. Paid plans offer additional features.',
+        a: 'Yes! Our Starter plan is free forever with unlimited searches, basic filters, and up to 10 saved grants. Paid plans unlock additional features like AI writing assistance and team collaboration.',
       },
     ],
   },
   {
-    category: 'Search',
-    icon: Search,
+    category: 'Search & Matching',
     questions: [
       {
         q: 'How does the search work?',
-        a: 'Our search uses full-text matching across grant titles, descriptions, sponsors, and eligibility criteria. Use filters to narrow by category, funding amount, and deadline.',
+        a: 'Our search uses full-text matching across grant titles, descriptions, sponsors, and eligibility criteria. Use filters to narrow by category, funding amount, deadline, and location.',
       },
       {
         q: 'Can I search by location?',
-        a: 'Yes! Filter grants by country, state, or region. Many grants are location-specific, so this helps you find opportunities you qualify for.',
+        a: 'Yes — filter grants by country, state, or region. Many grants are location-specific, so this helps you find opportunities you qualify for.',
       },
       {
         q: 'What does the match score mean?',
-        a: 'Match scores indicate how well a grant aligns with your profile. Higher scores suggest better compatibility, though always review eligibility requirements.',
+        a: 'Match scores indicate how well a grant aligns with your profile. Higher scores suggest better compatibility based on your organization type, focus areas, and eligibility criteria.',
       },
     ],
   },
   {
-    category: 'Alerts',
-    icon: Bell,
+    category: 'Alerts & Saved Searches',
     questions: [
       {
         q: 'How do saved searches work?',
@@ -56,7 +54,7 @@ const faqs = [
       },
       {
         q: 'How often are alerts sent?',
-        a: 'Choose daily or weekly frequency for each saved search. Alerts are sent only when new matching grants are found.',
+        a: 'Choose daily or weekly frequency for each saved search. Alerts are sent only when new matching grants are found — no spam.',
       },
       {
         q: 'Can I export my saved grants?',
@@ -65,26 +63,24 @@ const faqs = [
     ],
   },
   {
-    category: 'Workspaces',
-    icon: FolderOpen,
+    category: 'Workspaces & Applications',
     questions: [
       {
         q: 'What is an application workspace?',
-        a: 'Workspaces help you organize grant applications with checklists, notes, deadline tracking, and status management.',
+        a: 'Workspaces help you organize grant applications with checklists, notes, deadline tracking, and status management — all in one place.',
       },
       {
         q: 'Can I collaborate with my team?',
         a: 'Team plan users can share workspaces, assign tasks, and track activity across the organization.',
       },
       {
-        q: 'Does Grants By AI submit applications?',
-        a: "No, we're a discovery and organization tool. You submit applications through the official grant portal directly.",
+        q: 'Does Grants By AI submit applications for me?',
+        a: "No — we're a discovery and organization tool. You submit applications through the official grant portal. Our AI can help you draft application content.",
       },
     ],
   },
   {
     category: 'Billing',
-    icon: CreditCard,
     questions: [
       {
         q: 'How do I upgrade my plan?',
@@ -92,7 +88,7 @@ const faqs = [
       },
       {
         q: 'Can I cancel my subscription?',
-        a: 'Yes, cancel anytime. You keep paid features until the end of your billing period, then revert to free Starter plan.',
+        a: 'Yes, cancel anytime. You keep paid features until the end of your billing period, then revert to the free Starter plan.',
       },
       {
         q: 'Do you offer refunds?',
@@ -102,22 +98,11 @@ const faqs = [
   },
 ]
 
-// Animation variants
-const fadeInUp = {
-  initial: { opacity: 0, y: 24 },
+const fadeIn = {
+  initial: { opacity: 0, y: 14 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, margin: '-60px' },
-  transition: { duration: 0.6, ease: 'easeOut' },
-}
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
-}
-
-const staggerItem = {
-  hidden: { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+  transition: { duration: 0.55, ease: [0.25, 0.1, 0.25, 1] },
 }
 
 function FAQItem({
@@ -125,51 +110,52 @@ function FAQItem({
   answer,
   isOpen,
   onToggle,
-  prefersReducedMotion,
 }: {
   question: string
   answer: string
   isOpen: boolean
   onToggle: () => void
-  prefersReducedMotion: boolean
 }) {
   return (
     <div
-      className={`group rounded-xl transition-all duration-200 ${
+      className={cn(
+        'rounded-xl transition-all duration-200',
         isOpen
-          ? 'bg-white/[0.03] border border-pulse-accent/20'
-          : 'bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.1]'
-      }`}
+          ? 'bg-white/[0.04] border border-pulse-accent/15'
+          : 'bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.1]'
+      )}
     >
       <button
         onClick={onToggle}
-        className="w-full p-5 flex items-center justify-between gap-4 text-left"
+        className="w-full px-5 py-4 flex items-center justify-between gap-4 text-left"
         aria-expanded={isOpen}
       >
-        <span className={`font-medium transition-colors ${
+        <span className={cn(
+          'text-[15px] font-medium transition-colors',
           isOpen ? 'text-pulse-accent' : 'text-pulse-text'
-        }`}>
+        )}>
           {question}
         </span>
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all ${
+        <div className={cn(
+          'w-6 h-6 rounded-md flex items-center justify-center shrink-0 transition-all',
           isOpen
             ? 'bg-pulse-accent text-pulse-bg'
-            : 'bg-white/[0.03] border border-white/[0.08] text-pulse-text-tertiary'
-        }`}>
-          {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+            : 'bg-white/[0.04] text-pulse-text-tertiary'
+        )}>
+          {isOpen ? <Minus className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
         </div>
       </button>
 
       <AnimatePresence initial={false}>
         {isOpen && (
           <motion.div
-            initial={prefersReducedMotion ? { height: 'auto', opacity: 1 } : { height: 0, opacity: 0 }}
+            initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
-            exit={prefersReducedMotion ? { height: 0, opacity: 0 } : { height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
             className="overflow-hidden"
           >
-            <div className="px-5 pb-5 text-pulse-text-secondary leading-relaxed">
+            <div className="px-5 pb-4 text-body-sm text-pulse-text-secondary leading-relaxed">
               {answer}
             </div>
           </motion.div>
@@ -180,145 +166,115 @@ function FAQItem({
 }
 
 export default function FAQPage() {
-  const [activeCategory, setActiveCategory] = useState('General')
   const [openQuestion, setOpenQuestion] = useState<string | null>(null)
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const [reduced, setReduced] = useState(false)
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setPrefersReducedMotion(mq.matches)
-    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
+    setReduced(mq.matches)
+    const h = (e: MediaQueryListEvent) => setReduced(e.matches)
+    mq.addEventListener('change', h)
+    return () => mq.removeEventListener('change', h)
   }, [])
 
-  const motionProps = (props: Record<string, unknown>) =>
-    prefersReducedMotion ? {} : props
+  const m = (props: Record<string, unknown>) => (reduced ? {} : props)
 
   const handleToggle = (question: string) => {
     setOpenQuestion(openQuestion === question ? null : question)
   }
 
-  const activeSection = faqs.find(f => f.category === activeCategory)
-
   return (
-    <main className="pt-20">
-      {/* Hero */}
+    <main className="pt-[60px]">
+      {/* ─── HERO ─── */}
+      <section className="relative px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 lg:pt-24 pb-16 sm:pb-20 overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-[-20%] left-[10%] w-[700px] h-[500px] rounded-full bg-pulse-accent/[0.035] blur-[160px]" />
+        </div>
+
+        <div className="max-w-5xl mx-auto relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <span className="text-label text-pulse-accent mb-6 block">Help Center</span>
+
+            <h1 className="text-display-hero text-pulse-text mb-5 max-w-[680px]">
+              Frequently asked{' '}
+              <span className="text-pulse-text-secondary italic">questions</span>
+            </h1>
+
+            <p className="text-body-lg text-pulse-text-secondary max-w-lg">
+              Everything you need to know about Grants By AI.
+              Can&apos;t find what you&apos;re looking for?{' '}
+              <Link href="/contact" className="text-pulse-accent hover:underline underline-offset-2">Contact us</Link>.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ─── FAQ SECTIONS ─── */}
+      {faqs.map((section, sectionIndex) => (
+        <motion.section
+          key={section.category}
+          className="px-4 sm:px-6 lg:px-8 py-14 sm:py-16 border-t border-white/[0.04]"
+          {...m(fadeIn)}
+        >
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center gap-4 mb-6">
+              <span className="text-label-sm text-pulse-accent">0{sectionIndex + 1}</span>
+              <h2 className="text-heading text-pulse-text">{section.category}</h2>
+            </div>
+
+            <div className="space-y-2">
+              {section.questions.map((faq) => (
+                <FAQItem
+                  key={faq.q}
+                  question={faq.q}
+                  answer={faq.a}
+                  isOpen={openQuestion === faq.q}
+                  onToggle={() => handleToggle(faq.q)}
+                />
+              ))}
+            </div>
+          </div>
+        </motion.section>
+      ))}
+
+      {/* ─── CTA ─── */}
       <motion.section
-        className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden"
-        {...motionProps(fadeInUp)}
+        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-28 border-t border-white/[0.04] relative overflow-hidden"
+        {...m(fadeIn)}
       >
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/3 w-[600px] h-[600px] rounded-full bg-pulse-accent/[0.05] blur-[120px]" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-pulse-accent/[0.03] blur-[180px] rounded-full" />
         </div>
 
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-6">
-            <MessageCircle className="w-4 h-4 text-pulse-accent" />
-            <span className="text-sm text-pulse-text-secondary">Help Center</span>
-          </div>
-
-          <h1 className="text-4xl md:text-5xl font-bold text-pulse-text mb-4 tracking-tight">
-            Frequently asked <span className="text-pulse-accent">questions</span>
-          </h1>
-
-          <p className="text-lg text-pulse-text-secondary max-w-xl mx-auto">
-            Everything you need to know about Grants By AI.{' '}
-            <Link href="/contact" className="text-pulse-accent hover:underline">Contact us</Link> if you need more help.
-          </p>
-        </div>
-      </motion.section>
-
-      {/* Category tabs */}
-      <section className="py-6 px-4 sm:px-6 lg:px-8 border-y border-white/[0.04]">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex flex-wrap justify-center gap-2">
-            {faqs.map((section) => {
-              const Icon = section.icon
-              const isActive = activeCategory === section.category
-              return (
-                <button
-                  key={section.category}
-                  onClick={() => {
-                    setActiveCategory(section.category)
-                    setOpenQuestion(null)
-                  }}
-                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all text-sm ${
-                    isActive
-                      ? 'bg-pulse-accent text-pulse-bg font-medium'
-                      : 'bg-white/[0.02] border border-white/[0.06] text-pulse-text-secondary hover:border-white/[0.12]'
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-pulse-bg' : 'text-pulse-accent'}`} />
-                  {section.category}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Content */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto">
-          <AnimatePresence mode="wait">
-            {activeSection && (
-              <motion.div
-                key={activeSection.category}
-                initial={prefersReducedMotion ? undefined : { opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={prefersReducedMotion ? undefined : { opacity: 0, y: -8 }}
-                transition={{ duration: 0.25, ease: 'easeOut' }}
-              >
-                <motion.div
-                  className="space-y-3"
-                  variants={staggerContainer}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  {activeSection.questions.map((faq) => (
-                    <motion.div key={faq.q} variants={staggerItem}>
-                      <FAQItem
-                        question={faq.q}
-                        answer={faq.a}
-                        isOpen={openQuestion === faq.q}
-                        onToggle={() => handleToggle(faq.q)}
-                        prefersReducedMotion={prefersReducedMotion}
-                      />
-                    </motion.div>
-                  ))}
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <motion.section
-        className="py-20 px-4 sm:px-6 lg:px-8 border-t border-white/[0.04]"
-        {...motionProps(fadeInUp)}
-      >
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto relative z-10">
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
-              <MessageCircle className="w-10 h-10 text-pulse-accent mb-4" />
-              <h3 className="text-xl font-semibold text-pulse-text mb-2">Still have questions?</h3>
-              <p className="text-pulse-text-secondary mb-4">Our team responds within 24 hours.</p>
-              <Link href="/contact" className="text-pulse-accent font-medium hover:underline inline-flex items-center gap-1">
-                Contact Support <ArrowRight className="w-4 h-4" />
+            {/* Support card */}
+            <div className="relative p-6 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300">
+              <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-pulse-accent/20 to-pulse-accent/5" />
+              <h3 className="text-heading text-pulse-text mb-2">Still have questions?</h3>
+              <p className="text-body-sm text-pulse-text-tertiary mb-4">Our team responds within 24 hours.</p>
+              <Link
+                href="/contact"
+                className="text-body-sm text-pulse-accent hover:underline underline-offset-2 inline-flex items-center gap-1.5 transition-colors"
+              >
+                Contact Support <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
 
-            <div className="p-8 rounded-2xl bg-pulse-accent/10 border border-pulse-accent/20">
-              <ArrowRight className="w-10 h-10 text-pulse-accent mb-4" />
-              <h3 className="text-xl font-semibold text-pulse-text mb-2">Ready to get started?</h3>
-              <p className="text-pulse-text-secondary mb-4">Join 15,000+ organizations finding grants.</p>
+            {/* Get started card */}
+            <div className="relative p-6 rounded-xl bg-pulse-accent/[0.04] border border-pulse-accent/15 hover:border-pulse-accent/25 transition-all duration-300">
+              <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-pulse-accent/30 to-pulse-accent/5" />
+              <h3 className="text-heading text-pulse-text mb-2">Ready to get started?</h3>
+              <p className="text-body-sm text-pulse-text-tertiary mb-4">Join 15,000+ organizations finding grants.</p>
               <Link
                 href="/register"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-pulse-accent text-pulse-bg font-medium rounded-lg hover:bg-pulse-accent/90 transition-all"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-pulse-accent text-pulse-bg font-semibold text-[14px] rounded-lg hover:bg-pulse-accent/90 transition-all duration-200"
               >
-                Start Free <ArrowRight className="w-4 h-4" />
+                Start Free <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           </div>

@@ -1,16 +1,16 @@
 'use client'
 
 /**
- * ONBOARDING STEP 1 - SPLIT SCREEN IMMERSIVE
- * ------------------------------------------
+ * ONBOARDING STEP 1
+ * -----------------
  * "What best describes you or your organization?"
- * Premium split-screen design with gradient icons
+ * Entity type selection + geography
  */
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Globe, MapPin, Sparkles } from 'lucide-react'
+import { Globe, MapPin } from 'lucide-react'
 import { useOnboarding } from '@/lib/contexts/OnboardingContext'
 import { OnboardingLayout, OptionCard, StepNavigation } from '@/components/onboarding'
 import { ENTITY_TYPES, US_STATES, EntityType } from '@/lib/types/onboarding'
@@ -60,11 +60,8 @@ export default function OnboardingStep1() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-10"
       >
-        <div className="flex items-center gap-2 text-pulse-accent mb-4">
-          <Sparkles className="w-5 h-5" />
-          <span className="text-sm font-medium uppercase tracking-wider">Getting Started</span>
-        </div>
-        <h1 className="text-heading-lg font-bold tracking-tight text-pulse-text mb-3">
+        <span className="text-label text-pulse-accent mb-4 block">Step 01</span>
+        <h1 className="text-display-section text-pulse-text mb-3">
           What best describes you?
         </h1>
         <p className="text-body text-pulse-text-secondary">
@@ -102,7 +99,7 @@ export default function OnboardingStep1() {
             exit={{ opacity: 0, height: 0 }}
             className="mb-10 overflow-hidden"
           >
-            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-[1px]">
                   <div className="w-full h-full rounded-xl bg-pulse-bg flex items-center justify-center">
@@ -110,15 +107,15 @@ export default function OnboardingStep1() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-medium text-pulse-text">Where are you based?</h3>
-                  <p className="text-sm text-pulse-text-tertiary">Many grants are region-specific</p>
+                  <h3 className="text-heading-sm text-pulse-text">Where are you based?</h3>
+                  <p className="text-body-sm text-pulse-text-tertiary">Many grants are region-specific</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 {/* Country */}
                 <div>
-                  <label className="flex items-center gap-2 text-xs text-pulse-text-tertiary mb-2">
+                  <label className="flex items-center gap-2 text-label-sm text-pulse-text-tertiary mb-2">
                     <Globe className="w-3 h-3" />
                     Country
                   </label>
@@ -130,9 +127,9 @@ export default function OnboardingStep1() {
                       <SelectValue placeholder="Select country" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="US">🇺🇸 United States</SelectItem>
-                      <SelectItem value="CA">🇨🇦 Canada</SelectItem>
-                      <SelectItem value="OTHER">🌍 Other</SelectItem>
+                      <SelectItem value="US">United States</SelectItem>
+                      <SelectItem value="CA">Canada</SelectItem>
+                      <SelectItem value="OTHER">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -145,7 +142,7 @@ export default function OnboardingStep1() {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 10 }}
                     >
-                      <label className="flex items-center gap-2 text-xs text-pulse-text-tertiary mb-2">
+                      <label className="flex items-center gap-2 text-label-sm text-pulse-text-tertiary mb-2">
                         <MapPin className="w-3 h-3" />
                         State
                       </label>

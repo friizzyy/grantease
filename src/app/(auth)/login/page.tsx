@@ -54,51 +54,37 @@ function LoginForm() {
   return (
     <motion.div
       className="w-full max-w-md"
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{
-        duration: 0.4,
-        type: 'spring',
-        stiffness: 300,
-        damping: 30,
-      }}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
     >
-      <Card className="border-pulse-border/50 overflow-hidden relative">
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-pulse-accent/5 to-transparent"
-          initial={{ x: '-100%' }}
-          animate={{ x: '200%' }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            repeatDelay: 5,
-            ease: 'linear',
-          }}
-        />
-
-        <CardHeader className="text-center relative z-10">
+      {/* Card with subtle border */}
+      <Card className="overflow-hidden relative bg-white/[0.02] border border-white/[0.06] backdrop-blur-sm">
+        <CardHeader className="text-center relative z-10 pb-2">
           <motion.div
-            className="flex items-center justify-center gap-2 mb-4"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.05, duration: 0.3 }}
+            className="flex items-center justify-center gap-2 mb-5"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.05, duration: 0.4 }}
           >
             <AnimatedLogo size="md" className="text-pulse-accent" />
             <BrandLogo size="lg" />
           </motion.div>
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <CardTitle className="font-serif text-heading-md">Welcome back</CardTitle>
+            <CardTitle className="text-display-section text-pulse-text">Welcome back</CardTitle>
           </motion.div>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <CardDescription>Sign in to access your grant dashboard</CardDescription>
+            <CardDescription className="text-body-sm text-pulse-text-secondary">
+              Sign in to access your grant dashboard
+            </CardDescription>
           </motion.div>
         </CardHeader>
 
@@ -123,11 +109,11 @@ function LoginForm() {
             </AnimatePresence>
 
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.25 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
             >
-              <label htmlFor="email" className="text-sm text-pulse-text-secondary mb-2 block">
+              <label htmlFor="email" className="text-body-sm text-pulse-text-secondary mb-2 block">
                 Email Address
               </label>
               <Input
@@ -138,16 +124,17 @@ function LoginForm() {
                 placeholder="you@example.com"
                 icon={<Mail className="w-4 h-4" />}
                 required
+                className="placeholder:text-pulse-text-tertiary/70"
               />
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
             >
               <div className="flex items-center justify-between mb-2">
-                <label htmlFor="password" className="text-sm text-pulse-text-secondary">
+                <label htmlFor="password" className="text-body-sm text-pulse-text-secondary">
                   Password
                 </label>
                 <Link
@@ -163,31 +150,30 @@ function LoginForm() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   icon={<Lock className="w-4 h-4" />}
                   required
+                  className="placeholder:text-pulse-text-tertiary/70"
                 />
-                <motion.button
+                <button
                   type="button"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-pulse-text-tertiary hover:text-pulse-text"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-pulse-text-tertiary hover:text-pulse-text transition-colors"
                 >
                   {showPassword ? (
                     <EyeOff className="w-4 h-4" />
                   ) : (
                     <Eye className="w-4 h-4" />
                   )}
-                </motion.button>
+                </button>
               </div>
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35 }}
+              transition={{ delay: 0.3 }}
             >
               <Button type="submit" className="w-full" loading={isLoading}>
                 Sign In
@@ -200,13 +186,13 @@ function LoginForm() {
             className="relative my-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.35 }}
           >
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-pulse-border" />
+              <div className="w-full border-t border-white/[0.06]" />
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="px-2 bg-pulse-elevated text-pulse-text-tertiary">
+              <span className="px-3 bg-pulse-bg text-pulse-text-tertiary">
                 or continue with
               </span>
             </div>
@@ -214,9 +200,9 @@ function LoginForm() {
 
           <motion.div
             className="grid grid-cols-2 gap-3"
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.45 }}
+            transition={{ delay: 0.4 }}
           >
             <Button
               variant="outline"
@@ -246,10 +232,10 @@ function LoginForm() {
           </motion.div>
 
           <motion.p
-            className="mt-6 text-center text-sm text-pulse-text-secondary"
+            className="mt-6 text-center text-body-sm text-pulse-text-secondary"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.45 }}
           >
             Don&apos;t have an account?{' '}
             <Link href="/register" className="text-pulse-accent hover:underline">

@@ -62,7 +62,7 @@ interface Workspace {
 const statusConfig = {
   not_started: { label: 'Not Started', variant: 'default' as const, icon: Pause, color: 'text-pulse-text-tertiary' },
   in_progress: { label: 'In Progress', variant: 'warning' as const, icon: Play, color: 'text-pulse-warning' },
-  submitted: { label: 'Submitted', variant: 'success' as const, icon: Send, color: 'text-blue-400' },
+  submitted: { label: 'Submitted', variant: 'success' as const, icon: Send, color: 'text-emerald-400' },
   awarded: { label: 'Awarded', variant: 'accent' as const, icon: Award, color: 'text-pulse-accent' },
   rejected: { label: 'Not Selected', variant: 'error' as const, icon: XCircle, color: 'text-pulse-error' },
 }
@@ -76,7 +76,7 @@ function formatAmount(min: number | null, max: number | null): string {
   return `$${amount.toLocaleString()}`
 }
 
-// Animated progress ring
+// Clean progress ring without glow filters
 function ProgressRing({ progress, size = 56, strokeWidth = 5, color }: {
   progress: number; size?: number; strokeWidth?: number; color: string
 }) {
@@ -92,7 +92,7 @@ function ProgressRing({ progress, size = 56, strokeWidth = 5, color }: {
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="rgba(255,255,255,0.1)"
+          stroke="rgba(255,255,255,0.06)"
           strokeWidth={strokeWidth}
         />
         <motion.circle
@@ -109,7 +109,7 @@ function ProgressRing({ progress, size = 56, strokeWidth = 5, color }: {
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-sm font-semibold text-pulse-text">{progress}%</span>
+        <span className="text-label-sm text-pulse-text">{progress}%</span>
       </div>
     </div>
   )
@@ -135,33 +135,33 @@ function WorkspaceStats({ workspaces }: { workspaces: Workspace[] }) {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4 sm:gap-6 flex-wrap">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-pulse-accent/20 border border-pulse-accent/30 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-pulse-accent/10 border border-pulse-accent/20 flex items-center justify-center">
                 <FolderOpen className="w-5 h-5 text-pulse-accent" />
               </div>
               <div>
-                <p className="text-3xl font-bold tabular-nums text-pulse-text">{workspaces.length}</p>
-                <p className="text-xs text-pulse-text-tertiary">Total applications</p>
+                <p className="text-stat-sm text-pulse-text">{workspaces.length}</p>
+                <p className="text-label-sm text-pulse-text-tertiary normal-case">Total applications</p>
               </div>
             </div>
             <div className="w-px h-10 bg-pulse-border hidden sm:block" />
             <div>
-              <p className="text-3xl font-bold tabular-nums text-pulse-warning">{inProgress}</p>
-              <p className="text-xs text-pulse-text-tertiary">In progress</p>
+              <p className="text-stat-sm text-pulse-warning">{inProgress}</p>
+              <p className="text-label-sm text-pulse-text-tertiary normal-case">In progress</p>
             </div>
             <div className="w-px h-10 bg-pulse-border hidden sm:block" />
             <div>
-              <p className="text-3xl font-bold tabular-nums text-blue-400">{submitted}</p>
-              <p className="text-xs text-pulse-text-tertiary">Submitted</p>
+              <p className="text-stat-sm text-emerald-400">{submitted}</p>
+              <p className="text-label-sm text-pulse-text-tertiary normal-case">Submitted</p>
             </div>
             <div className="w-px h-10 bg-pulse-border hidden sm:block" />
             <div>
-              <p className="text-3xl font-bold tabular-nums text-pulse-accent">
+              <p className="text-stat-sm text-pulse-accent">
                 {totalPipeline >= 1000000
                   ? `$${(totalPipeline / 1000000).toFixed(1)}M`
                   : `$${Math.round(totalPipeline / 1000)}K`
                 }
               </p>
-              <p className="text-xs text-pulse-text-tertiary">Pipeline value</p>
+              <p className="text-label-sm text-pulse-text-tertiary normal-case">Pipeline value</p>
             </div>
           </div>
           <Button size="sm" asChild>
@@ -250,9 +250,9 @@ function WorkspaceCard({ workspace, index }: { workspace: Workspace; index: numb
 
   const getProgressColor = () => {
     if (progress >= 75) return '#40ffaa'
-    if (progress >= 50) return '#40a0ff'
-    if (progress >= 25) return '#ffb340'
-    return '#ff4040'
+    if (progress >= 50) return '#34d399'
+    if (progress >= 25) return '#fbbf24'
+    return 'rgba(255,255,255,0.25)'
   }
 
   const isUrgent = daysUntilDeadline !== null && daysUntilDeadline <= 14 && daysUntilDeadline > 0 && workspace.status !== 'submitted'
@@ -265,7 +265,7 @@ function WorkspaceCard({ workspace, index }: { workspace: Workspace; index: numb
       transition={{ delay: 0.25 + index * 0.05 }}
     >
       <Link href={`/app/workspace/${workspace.id}`}>
-        <GlassCard className={`p-5 md:p-6 hover:border-pulse-border hover:shadow-lg hover:shadow-pulse-accent/5 hover:-translate-y-0.5 transition-all duration-200 group cursor-pointer ${
+        <GlassCard className={`p-5 md:p-6 hover:border-white/[0.1] transition-all duration-200 group cursor-pointer ${
           isUrgent ? 'border-pulse-warning/30' : ''
         }`}>
           <div className="flex items-start gap-5">
@@ -331,7 +331,7 @@ function WorkspaceCard({ workspace, index }: { workspace: Workspace; index: numb
                       </span>
                     )}
                     {workspace.status === 'submitted' && (
-                      <span className="text-sm text-blue-400">
+                      <span className="text-sm text-emerald-400">
                         Submitted
                       </span>
                     )}
@@ -343,7 +343,7 @@ function WorkspaceCard({ workspace, index }: { workspace: Workspace; index: numb
 
                 {/* Next Step */}
                 {nextStep && workspace.status !== 'submitted' && (
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-pulse-surface border border-pulse-border/40">
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-pulse-accent/5 to-pulse-surface border border-pulse-accent/20">
                     <Zap className="w-4 h-4 text-pulse-accent shrink-0" />
                     <span className="text-sm text-pulse-text-secondary">
                       Next: <span className="text-pulse-text">{nextStep}</span>
@@ -554,14 +554,14 @@ export default function WorkspacesPage() {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <FileText className="w-5 h-5 text-pulse-accent" />
-              <span className="text-pulse-text-tertiary font-mono text-micro uppercase tracking-wider">
+              <span className="text-label text-pulse-text-tertiary">
                 Application Manager
               </span>
             </div>
-            <h1 className="text-heading-lg md:text-display font-bold tracking-tight text-pulse-text">
+            <h1 className="text-display-page text-pulse-text">
               Your Workspaces
             </h1>
-            <p className="text-pulse-text-secondary mt-2">
+            <p className="text-body text-pulse-text-secondary mt-2">
               Track progress, manage tasks, and submit winning applications
             </p>
           </div>

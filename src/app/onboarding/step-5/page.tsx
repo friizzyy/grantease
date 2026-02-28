@@ -1,18 +1,18 @@
 'use client'
 
 /**
- * ONBOARDING STEP 5 - SPLIT SCREEN IMMERSIVE
- * ------------------------------------------
+ * ONBOARDING STEP 5
+ * -----------------
  * "Last step: Your preferences"
- * Premium split-screen design with preferences
+ * Grant size, timeline, complexity preferences
  */
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { DollarSign, Calendar, Layers, ArrowRight, Loader2, Zap } from 'lucide-react'
+import { DollarSign, Calendar, Layers, ArrowRight, Loader2 } from 'lucide-react'
 import { useOnboarding } from '@/lib/contexts/OnboardingContext'
-import { OnboardingLayout, OptionCard} from '@/components/onboarding'
+import { OnboardingLayout, OptionCard } from '@/components/onboarding'
 import {
   GRANT_SIZE_PREFERENCES,
   TIMELINE_PREFERENCES,
@@ -63,11 +63,8 @@ export default function OnboardingStep5() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-10"
       >
-        <div className="flex items-center gap-2 text-pulse-accent mb-4">
-          <Zap className="w-5 h-5" />
-          <span className="text-sm font-medium uppercase tracking-wider">Final Step</span>
-        </div>
-        <h1 className="text-heading-lg font-bold tracking-tight text-pulse-text mb-3">
+        <span className="text-label text-pulse-accent mb-4 block">Step 05</span>
+        <h1 className="text-display-section text-pulse-text mb-3">
           Your preferences
         </h1>
         <p className="text-body text-pulse-text-secondary">
@@ -89,7 +86,7 @@ export default function OnboardingStep5() {
               </div>
             </div>
             <div>
-              <h3 className="font-semibold text-pulse-text">What grant sizes interest you most?</h3>
+              <h3 className="text-heading-sm text-pulse-text">What grant sizes interest you most?</h3>
             </div>
           </div>
 
@@ -114,13 +111,13 @@ export default function OnboardingStep5() {
           transition={{ delay: 0.2 }}
         >
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 p-[1px]">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-500 p-[1px]">
               <div className="w-full h-full rounded-xl bg-pulse-bg flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-blue-400" />
+                <Calendar className="w-5 h-5 text-teal-400" />
               </div>
             </div>
             <div>
-              <h3 className="font-semibold text-pulse-text">When do you need funding?</h3>
+              <h3 className="text-heading-sm text-pulse-text">When do you need funding?</h3>
             </div>
           </div>
 
@@ -145,13 +142,13 @@ export default function OnboardingStep5() {
           transition={{ delay: 0.3 }}
         >
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 p-[1px]">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pulse-accent to-emerald-500 p-[1px]">
               <div className="w-full h-full rounded-xl bg-pulse-bg flex items-center justify-center">
-                <Layers className="w-5 h-5 text-violet-400" />
+                <Layers className="w-5 h-5 text-pulse-accent" />
               </div>
             </div>
             <div>
-              <h3 className="font-semibold text-pulse-text">Application complexity preference</h3>
+              <h3 className="text-heading-sm text-pulse-text">Application complexity preference</h3>
             </div>
           </div>
 
@@ -175,10 +172,10 @@ export default function OnboardingStep5() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="mt-10 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]"
+        className="mt-10 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05]"
       >
-        <p className="text-sm text-pulse-text-secondary text-center">
-          After completing setup, we'll show you grants tailored to your profile.
+        <p className="text-body-sm text-pulse-text-secondary text-center">
+          After completing setup, we&apos;ll show you grants tailored to your profile.
           You can adjust these preferences anytime in Settings.
         </p>
       </motion.div>
@@ -225,14 +222,14 @@ export default function OnboardingStep5() {
         <div className="flex items-center justify-between">
           <button
             onClick={handleBack}
-            className="text-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors"
+            className="text-body-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors"
           >
-            ← Back
+            Back
           </button>
           <button
             onClick={handleSkip}
             disabled={isLoading}
-            className="text-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors disabled:opacity-50"
+            className="text-body-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors disabled:opacity-50"
           >
             Skip & Finish
           </button>

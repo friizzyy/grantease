@@ -3,302 +3,227 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowRight, Target, Users, Lightbulb, Heart, Sparkles, Shield, Globe, Zap, Award } from 'lucide-react'
+import { ArrowRight, Target, Users, Lightbulb, Heart } from 'lucide-react'
+
+const fadeIn = {
+  initial: { opacity: 0, y: 14 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-60px' },
+  transition: { duration: 0.55, ease: [0.25, 0.1, 0.25, 1] },
+}
 
 const values = [
   {
     icon: Target,
-    title: 'Precision First',
+    title: 'Precision first',
     description: 'Quality over quantity. Every feature helps you find the right grants.',
   },
   {
     icon: Users,
-    title: 'Universal Access',
+    title: 'Universal access',
     description: 'Tools that work for first-time applicants and experts alike.',
   },
   {
     icon: Lightbulb,
-    title: 'Radical Transparency',
+    title: 'Radical transparency',
     description: 'Clear information, honest pricing, no hidden catches.',
   },
   {
     icon: Heart,
-    title: 'Real Impact',
+    title: 'Real impact',
     description: 'Every grant won means a project funded, a mission advanced.',
   },
 ]
 
 const timeline = [
-  { year: '2022', title: 'The Problem', description: 'Founders spent 100+ hours searching fragmented databases.' },
-  { year: '2023', title: 'The Solution', description: 'Built Grants By AI, aggregating 20+ sources into one platform.' },
-  { year: '2024', title: 'The Growth', description: 'Expanded to 50+ sources, launched AI matching, 10K users.' },
-  { year: 'Now', title: 'The Mission', description: '15,000+ organizations trust Grants By AI for funding.' },
+  { year: '2022', title: 'The problem', desc: 'Founders spent 100+ hours searching fragmented databases.' },
+  { year: '2023', title: 'The solution', desc: 'Built Grants By AI, aggregating 20+ sources into one platform.' },
+  { year: '2024', title: 'The growth', desc: 'Expanded to 50+ sources, launched AI matching, 10K users.' },
+  { year: 'Now', title: 'The mission', desc: '15,000+ organizations trust Grants By AI for funding.' },
 ]
-
-const stats = [
-  { value: '$12B+', label: 'Available Funding' },
-  { value: '20K+', label: 'Grant Programs' },
-  { value: '15K+', label: 'Organizations' },
-  { value: '94%', label: 'Match Accuracy' },
-]
-
-// Animation variants
-const fadeInUp = {
-  initial: { opacity: 0, y: 24 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-60px' },
-  transition: { duration: 0.6, ease: 'easeOut' },
-}
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
-}
-
-const staggerItem = {
-  hidden: { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
-}
-
-const hoverLift = {
-  whileHover: { y: -2, transition: { duration: 0.2 } },
-  whileTap: { scale: 0.98 },
-}
 
 export default function AboutPage() {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const [reduced, setReduced] = useState(false)
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setPrefersReducedMotion(mq.matches)
-    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
+    setReduced(mq.matches)
+    const h = (e: MediaQueryListEvent) => setReduced(e.matches)
+    mq.addEventListener('change', h)
+    return () => mq.removeEventListener('change', h)
   }, [])
 
-  const motionProps = (props: Record<string, unknown>) =>
-    prefersReducedMotion ? {} : props
+  const m = (props: Record<string, unknown>) => (reduced ? {} : props)
 
   return (
-    <main className="pt-20">
-      {/* Hero */}
-      <motion.section
-        className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden"
-        {...motionProps(fadeInUp)}
-      >
-        {/* Ambient backgrounds */}
+    <main className="pt-[60px]">
+      {/* ---- HERO ---- */}
+      <section className="relative px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 lg:pt-24 pb-20 sm:pb-28 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-1/4 w-[800px] h-[800px] rounded-full bg-pulse-accent/[0.06] blur-[150px]" />
-          <div className="absolute bottom-0 left-1/4 w-[600px] h-[600px] rounded-full bg-violet-500/[0.04] blur-[120px]" />
+          <div className="absolute top-[-20%] left-[10%] w-[700px] h-[500px] rounded-full bg-pulse-accent/[0.035] blur-[160px]" />
         </div>
 
-        <div className="max-w-6xl mx-auto relative z-10">
-          {/* Mission statement - centered, prominent */}
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-8">
-              <Sparkles className="w-4 h-4 text-pulse-accent" />
-              <span className="text-sm text-pulse-text-secondary">About Grants By AI</span>
-            </div>
+        <div className="max-w-5xl mx-auto relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <span className="text-label text-pulse-accent mb-6 block">About Grants By AI</span>
 
-            <h1 className="text-display font-bold text-pulse-text mb-6 tracking-tight">
-              Democratizing access to <span className="text-pulse-accent">funding</span>
+            <h1 className="text-display-hero text-pulse-text mb-5 max-w-[680px]">
+              Democratizing access to{' '}
+              <span className="text-pulse-text-secondary italic">funding</span>
             </h1>
 
-            <p className="text-lg text-pulse-text-secondary leading-relaxed max-w-2xl mx-auto mb-8">
-              We believe finding grants shouldn&apos;t require a dedicated staff member or expensive consultants.
-              Our mission is to make funding accessible to every organization that deserves it.
+            <p className="text-body-lg text-pulse-text-secondary max-w-lg mb-10">
+              Finding grants shouldn&apos;t require a dedicated staff member or expensive consultants.
+              We make funding accessible to every organization that deserves it.
             </p>
 
             <Link
               href="/register"
-              className="group inline-flex items-center gap-2 px-6 py-3 bg-pulse-accent text-pulse-bg font-semibold rounded-xl hover:bg-pulse-accent/90 transition-all"
+              className="group inline-flex items-center gap-2.5 px-8 py-4 bg-pulse-accent text-pulse-bg font-semibold text-[15px] rounded-lg hover:bg-pulse-accent/90 transition-all duration-200 shadow-[0_0_30px_rgba(64,255,170,0.15)] hover:shadow-[0_0_40px_rgba(64,255,170,0.25)]"
             >
               Join 15K+ Organizations
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
-          </div>
-
-          {/* Stats grid */}
-          <motion.div
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-40px' }}
-          >
-            {stats.map((stat) => (
-              <motion.div
-                key={stat.label}
-                variants={staggerItem}
-                className="group p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all text-center"
-              >
-                <div className="text-3xl font-bold text-pulse-accent mb-1 tabular-nums">{stat.value}</div>
-                <div className="text-xs text-pulse-text-tertiary uppercase tracking-wider font-medium">{stat.label}</div>
-              </motion.div>
-            ))}
           </motion.div>
+        </div>
+      </section>
+
+      {/* ---- STATS ---- */}
+      <motion.section
+        className="px-4 sm:px-6 lg:px-8 py-14 sm:py-16 border-t border-white/[0.04]"
+        {...m(fadeIn)}
+      >
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12">
+            {[
+              { value: '$12B+', label: 'Available funding' },
+              { value: '20K+', label: 'Grant programs' },
+              { value: '15K+', label: 'Organizations' },
+              { value: '94%', label: 'Match accuracy' },
+            ].map((s) => (
+              <div key={s.label}>
+                <div className="text-stat text-pulse-accent tabular-nums">{s.value}</div>
+                <div className="text-label-sm text-pulse-text-tertiary mt-1">{s.label}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </motion.section>
 
-      {/* Timeline */}
+      {/* ---- TIMELINE ---- */}
       <motion.section
-        className="py-20 px-4 sm:px-6 lg:px-8 border-y border-white/[0.04]"
-        {...motionProps(fadeInUp)}
+        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-24 border-t border-white/[0.04] relative"
+        {...m(fadeIn)}
       >
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
-              <span className="text-sm text-pulse-accent">Our Journey</span>
-            </div>
-            <h2 className="text-3xl font-bold text-pulse-text">
+        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.01] to-transparent pointer-events-none" />
+
+        <div className="max-w-5xl mx-auto relative z-10">
+          <div className="mb-14">
+            <span className="text-label text-pulse-accent mb-4 block">Our Journey</span>
+            <h2 className="text-display-section text-pulse-text max-w-md">
               Born from frustration, built with purpose
             </h2>
           </div>
 
-          <motion.div
-            className="grid md:grid-cols-4 gap-6"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-40px' }}
-          >
-            {timeline.map((item) => (
-              <motion.div
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {timeline.map((item, i) => (
+              <div
                 key={item.year}
-                variants={staggerItem}
-                {...(prefersReducedMotion ? {} : hoverLift)}
-                className="group p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all"
+                className="group relative p-5 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300"
               >
-                <span className="text-3xl font-bold text-pulse-accent/30 block mb-4 group-hover:text-pulse-accent/50 transition-colors tabular-nums">
-                  {item.year}
-                </span>
-                <h3 className="text-lg font-semibold text-pulse-text mb-2 group-hover:text-pulse-accent transition-colors">
-                  {item.title}
-                </h3>
-                <p className="text-sm text-pulse-text-secondary leading-relaxed">
-                  {item.description}
-                </p>
-              </motion.div>
+                {/* Accent top bar */}
+                <div className={`absolute top-0 left-4 right-4 h-px bg-gradient-to-r ${
+                  i === timeline.length - 1
+                    ? 'from-pulse-accent/30 to-pulse-accent/5'
+                    : 'from-pulse-accent/20 to-pulse-accent/5'
+                }`} />
+
+                <span className="text-label-sm text-pulse-accent mb-3 block">{item.year}</span>
+                <h3 className="text-heading-sm text-pulse-text mb-2">{item.title}</h3>
+                <p className="text-body-sm text-pulse-text-tertiary leading-relaxed">{item.desc}</p>
+              </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </motion.section>
 
-      {/* Values */}
+      {/* ---- VALUES ---- */}
       <motion.section
-        className="py-20 px-4 sm:px-6 lg:px-8"
-        {...motionProps(fadeInUp)}
+        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-24 border-t border-white/[0.04]"
+        {...m(fadeIn)}
       >
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.08] mb-4">
-              <span className="text-sm text-pulse-accent">Our Values</span>
-            </div>
-            <h2 className="text-3xl font-bold text-pulse-text">
-              What drives us
-            </h2>
+        <div className="max-w-5xl mx-auto">
+          <div className="mb-14">
+            <span className="text-label text-pulse-accent mb-4 block">Our Values</span>
+            <h2 className="text-display-section text-pulse-text max-w-sm">What drives us</h2>
           </div>
 
-          <motion.div
-            className="grid md:grid-cols-2 gap-6"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-40px' }}
-          >
+          <div className="grid sm:grid-cols-2 gap-6">
             {values.map((value) => {
               const Icon = value.icon
               return (
-                <motion.div
+                <div
                   key={value.title}
-                  variants={staggerItem}
-                  {...(prefersReducedMotion ? {} : hoverLift)}
-                  className="group flex gap-5 p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-pulse-accent/20 transition-all"
+                  className="group relative p-6 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-pulse-accent/10 flex items-center justify-center shrink-0 group-hover:bg-pulse-accent/20 transition-colors">
-                    <Icon className="w-6 h-6 text-pulse-accent" />
+                  <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-pulse-accent/20 to-pulse-accent/5" />
+
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-pulse-accent/10 flex items-center justify-center shrink-0">
+                      <Icon className="w-5 h-5 text-pulse-accent" />
+                    </div>
+                    <div>
+                      <h3 className="text-heading-sm text-pulse-text mb-1">{value.title}</h3>
+                      <p className="text-body-sm text-pulse-text-tertiary">{value.description}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-pulse-text mb-1 group-hover:text-pulse-accent transition-colors">
-                      {value.title}
-                    </h3>
-                    <p className="text-pulse-text-secondary">
-                      {value.description}
-                    </p>
-                  </div>
-                </motion.div>
+                </div>
               )
             })}
-          </motion.div>
+          </div>
         </div>
       </motion.section>
 
-      {/* Features bar */}
+      {/* ---- CTA ---- */}
       <motion.section
-        className="py-16 px-4 sm:px-6 lg:px-8 border-y border-white/[0.04]"
-        {...motionProps(fadeInUp)}
-      >
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-40px' }}
-          >
-            {[
-              { icon: Zap, title: 'Lightning Fast', desc: '< 1 second search' },
-              { icon: Shield, title: 'Secure', desc: 'SOC 2 compliant' },
-              { icon: Globe, title: 'Always Current', desc: 'Daily updates' },
-              { icon: Award, title: 'Top Rated', desc: '4.9/5 stars' },
-            ].map((feature) => {
-              const Icon = feature.icon
-              return (
-                <motion.div key={feature.title} className="group" variants={staggerItem}>
-                  <div className="w-12 h-12 rounded-xl bg-pulse-accent/10 flex items-center justify-center mx-auto mb-4 group-hover:bg-pulse-accent/20 transition-colors">
-                    <Icon className="w-6 h-6 text-pulse-accent" />
-                  </div>
-                  <h3 className="font-semibold text-pulse-text mb-1">{feature.title}</h3>
-                  <p className="text-sm text-pulse-text-tertiary">{feature.desc}</p>
-                </motion.div>
-              )
-            })}
-          </motion.div>
-        </div>
-      </motion.section>
-
-      {/* CTA */}
-      <motion.section
-        className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden"
-        {...motionProps(fadeInUp)}
+        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-28 border-t border-white/[0.04] relative overflow-hidden"
+        {...m(fadeIn)}
       >
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-pulse-accent/[0.06] blur-[150px]" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-pulse-accent/[0.03] blur-[180px] rounded-full" />
         </div>
 
-        <div className="max-w-3xl mx-auto text-center relative z-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-pulse-text mb-4">
-            Ready to find your <span className="text-pulse-accent">funding</span>?
-          </h2>
-
-          <p className="text-lg text-pulse-text-secondary mb-8">
-            Start discovering grants today and see why 15,000+ organizations trust Grants By AI.
-          </p>
-
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              href="/register"
-              className="group inline-flex items-center gap-2 px-8 py-4 bg-pulse-accent text-pulse-bg font-semibold rounded-xl hover:bg-pulse-accent/90 transition-all"
-            >
-              Get Started Free
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white/[0.03] border border-white/[0.08] text-pulse-text font-semibold rounded-xl hover:border-pulse-accent/30 transition-all"
-            >
-              Contact Us
-            </Link>
+        <div className="max-w-5xl mx-auto relative z-10">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+            <div>
+              <h2 className="text-display-section text-pulse-text mb-3 max-w-md">
+                Ready to find your{' '}
+                <span className="text-pulse-accent">funding?</span>
+              </h2>
+              <p className="text-body text-pulse-text-tertiary">
+                Join 15,000+ organizations discovering grants with Grants By AI.
+              </p>
+            </div>
+            <div className="flex items-center gap-4 shrink-0 self-start lg:self-auto">
+              <Link
+                href="/register"
+                className="group inline-flex items-center gap-2.5 px-8 py-4 bg-pulse-accent text-pulse-bg font-semibold text-[15px] rounded-lg hover:bg-pulse-accent/90 transition-all duration-200 shadow-[0_0_30px_rgba(64,255,170,0.15)] hover:shadow-[0_0_40px_rgba(64,255,170,0.25)]"
+              >
+                Get Started Free
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+              <Link
+                href="/contact"
+                className="text-body-sm text-pulse-text-secondary hover:text-pulse-accent inline-flex items-center gap-2 transition-colors duration-200"
+              >
+                Contact us
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
           </div>
         </div>
       </motion.section>

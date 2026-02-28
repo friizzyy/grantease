@@ -133,27 +133,25 @@ function MatchScoreCard({ aiMatch }: { aiMatch: AIMatchData | null }) {
   const hasMatch = aiMatch !== null && score > 0
 
   const getScoreColor = (s: number) => {
-    if (s >= 90) return 'text-pulse-accent'
-    if (s >= 80) return 'text-blue-400'
-    if (s >= 70) return 'text-yellow-400'
-    if (s >= 50) return 'text-orange-400'
-    return 'text-pulse-error'
+    if (s >= 80) return 'text-pulse-accent'
+    if (s >= 60) return 'text-emerald-400'
+    if (s >= 40) return 'text-pulse-text-secondary'
+    return 'text-pulse-text-tertiary'
   }
 
   const getScoreBg = (s: number) => {
-    if (s >= 90) return 'bg-pulse-accent'
-    if (s >= 80) return 'bg-blue-400'
-    if (s >= 70) return 'bg-yellow-400'
-    if (s >= 50) return 'bg-orange-400'
-    return 'bg-pulse-error'
+    if (s >= 80) return 'bg-pulse-accent'
+    if (s >= 60) return 'bg-emerald-400'
+    if (s >= 40) return 'bg-pulse-text-secondary'
+    return 'bg-pulse-text-tertiary'
   }
 
   const getEligibilityLabel = (status?: string) => {
     switch (status) {
-      case 'eligible': return { label: 'Eligible', color: 'text-green-400 bg-green-500/20 border-green-500/30' }
-      case 'likely_eligible': return { label: 'Likely Eligible', color: 'text-blue-400 bg-blue-500/20 border-blue-500/30' }
-      case 'check_requirements': return { label: 'Check Requirements', color: 'text-yellow-400 bg-yellow-500/20 border-yellow-500/30' }
-      case 'not_eligible': return { label: 'Not Eligible', color: 'text-red-400 bg-red-500/20 border-red-500/30' }
+      case 'eligible': return { label: 'Eligible', color: 'text-pulse-accent bg-pulse-accent/10 border-pulse-accent/20' }
+      case 'likely_eligible': return { label: 'Likely Eligible', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' }
+      case 'check_requirements': return { label: 'Check Requirements', color: 'text-pulse-text-secondary bg-white/[0.05] border-white/[0.1]' }
+      case 'not_eligible': return { label: 'Not Eligible', color: 'text-pulse-error bg-pulse-error/10 border-pulse-error/20' }
       default: return null
     }
   }
@@ -174,16 +172,16 @@ function MatchScoreCard({ aiMatch }: { aiMatch: AIMatchData | null }) {
               <span className="text-sm font-medium text-pulse-text-secondary">AI Match Score</span>
             </div>
             {hasMatch ? (
-              <div className={`text-4xl font-bold ${getScoreColor(score)}`}>
+              <div className={`text-stat text-pulse-accent ${getScoreColor(score)}`}>
                 {score}%
               </div>
             ) : (
-              <div className="text-2xl font-bold text-pulse-text-tertiary">
+              <div className="text-stat-sm text-pulse-text-tertiary">
                 Not analyzed
               </div>
             )}
           </div>
-          <div className="w-12 h-12 rounded-full bg-pulse-accent/20 border-2 border-pulse-accent flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-pulse-accent/10 border border-pulse-accent/20 flex items-center justify-center">
             <Sparkles className="w-6 h-6 text-pulse-accent" />
           </div>
         </div>
@@ -804,14 +802,17 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
         transition={{ delay: 0.1 }}
         className="mb-6"
       >
-        <GlassCard className="p-6">
+        <GlassCard className="p-6 relative overflow-hidden">
+          {/* Subtle gradient wash behind header */}
+          <div className="absolute inset-0 bg-gradient-to-br from-pulse-accent/5 via-transparent to-transparent pointer-events-none" />
+          <div className="relative z-10">
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
                 <Building2 className="w-4 h-4 text-pulse-accent" />
                 <span className="text-sm font-medium text-pulse-accent">{grant.sponsor}</span>
               </div>
-              <h1 className="text-heading-lg md:text-display font-bold tracking-tight text-pulse-text mb-3">
+              <h1 className="text-display-section text-pulse-text mb-3">
                 {grant.title}
               </h1>
               <div className="flex flex-wrap items-center gap-2">
@@ -826,9 +827,9 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
 
             {/* Match Score Badge */}
             {aiMatch && aiMatch.score > 0 && (
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-pulse-accent/10 border border-pulse-accent/30 shrink-0">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-pulse-accent/10 border border-pulse-accent/20 shrink-0">
                 <Target className="w-5 h-5 text-pulse-accent" />
-                <span className="text-xl font-bold text-pulse-accent">{aiMatch.score}%</span>
+                <span className="text-stat-sm text-pulse-accent">{aiMatch.score}%</span>
                 <span className="text-sm text-pulse-text-tertiary">match</span>
               </div>
             )}
@@ -864,7 +865,7 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
           >
             <Button
               size="lg"
-              className="w-full sm:w-auto px-8 py-6 text-lg font-semibold bg-gradient-to-r from-pulse-accent to-pulse-accent/80 hover:from-pulse-accent/90 hover:to-pulse-accent/70 shadow-lg shadow-pulse-accent/25"
+              className="w-full sm:w-auto px-8 py-6 text-lg font-semibold bg-pulse-accent text-pulse-bg hover:bg-pulse-accent/90 transition-colors"
               asChild
             >
               <Link href={`/app/apply/${encodeURIComponent(id)}`}>
@@ -927,7 +928,7 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
             <Button
               onClick={handleEligibilityCheck}
               disabled={eligibilityLoading}
-              className="bg-[#40ffaa] text-[#0a0e27] hover:bg-[#40ffaa]/80 rounded-lg font-medium"
+              className="bg-pulse-accent text-pulse-bg hover:bg-pulse-accent/90 rounded-lg font-medium transition-colors"
             >
               {eligibilityLoading ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -939,7 +940,7 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
             <Button
               onClick={handleSuccessPrediction}
               disabled={successLoading}
-              className="bg-[#40ffaa] text-[#0a0e27] hover:bg-[#40ffaa]/80 rounded-lg font-medium"
+              className="bg-pulse-accent text-pulse-bg hover:bg-pulse-accent/90 rounded-lg font-medium transition-colors"
             >
               {successLoading ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -949,6 +950,7 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
               Predict My Success
             </Button>
           </div>
+          </div>{/* close relative z-10 */}
         </GlassCard>
       </motion.div>
 
@@ -994,10 +996,10 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
                 <div className="flex items-center gap-4">
                   {(() => {
                     const verdictStyles = {
-                      eligible: 'bg-green-500/20 text-green-400 border-green-500/30',
-                      likely: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-                      unclear: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-                      ineligible: 'bg-red-500/20 text-red-400 border-red-500/30',
+                      eligible: 'bg-pulse-accent/10 text-pulse-accent border-pulse-accent/20',
+                      likely: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+                      unclear: 'bg-white/[0.05] text-pulse-text-secondary border-white/[0.1]',
+                      ineligible: 'bg-pulse-error/10 text-pulse-error border-pulse-error/20',
                     }
                     const verdictLabels = {
                       eligible: 'Eligible',
@@ -1156,10 +1158,10 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
               <div className="space-y-5">
                 {/* Score and Confidence */}
                 <div className="flex items-center gap-6">
-                  {/* Circular progress */}
+                  {/* Circular progress with glow */}
                   <div className="relative w-24 h-24 shrink-0">
                     <svg width={96} height={96} className="transform -rotate-90">
-                      <circle cx={48} cy={48} r={40} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={6} />
+                      <circle cx={48} cy={48} r={40} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={6} />
                       <motion.circle
                         cx={48} cy={48} r={40} fill="none"
                         stroke="#40ffaa"
@@ -1171,7 +1173,7 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
                       />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-2xl font-bold text-pulse-accent">{successResult.overallScore}</span>
+                      <span className="text-stat-sm text-pulse-accent">{successResult.overallScore}</span>
                       <span className="text-xs text-pulse-text-tertiary">/ 100</span>
                     </div>
                   </div>
@@ -1179,9 +1181,9 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-pulse-text-secondary">Confidence:</span>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${
-                        successResult.confidence === 'high' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
-                        successResult.confidence === 'medium' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' :
-                        'bg-orange-500/20 text-orange-400 border-orange-500/30'
+                        successResult.confidence === 'high' ? 'bg-pulse-accent/10 text-pulse-accent border-pulse-accent/20' :
+                        successResult.confidence === 'medium' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                        'bg-white/[0.05] text-pulse-text-secondary border-white/[0.1]'
                       }`}>
                         {successResult.confidence}
                       </span>
@@ -1208,23 +1210,29 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
                   <div>
                     <p className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-3">Factor Breakdown</p>
                     <div className="space-y-2.5">
-                      {successResult.factors.map((factor, i) => (
-                        <div key={i}>
-                          <div className="flex items-center justify-between text-sm mb-1">
-                            <span className="text-pulse-text-secondary">{factor.name}</span>
-                            <span className="text-pulse-text font-medium">{factor.score}%</span>
+                      {successResult.factors.map((factor, i) => {
+                        const gradientColor = factor.score >= 70
+                          ? 'from-pulse-accent to-emerald-400'
+                          : factor.score >= 40
+                            ? 'from-emerald-400 to-teal-400'
+                            : 'from-pulse-text-tertiary to-pulse-text-secondary'
+                        return (
+                          <div key={i}>
+                            <div className="flex items-center justify-between text-sm mb-1">
+                              <span className="text-pulse-text-secondary">{factor.name}</span>
+                              <span className={`font-medium ${factor.score >= 70 ? 'text-pulse-accent' : factor.score >= 40 ? 'text-emerald-400' : 'text-pulse-text-tertiary'}`}>{factor.score}%</span>
+                            </div>
+                            <div className="h-2 bg-pulse-border rounded-full overflow-hidden">
+                              <motion.div
+                                className={`h-full rounded-full bg-gradient-to-r ${gradientColor}`}
+                                initial={{ width: 0 }}
+                                animate={{ width: `${factor.score}%` }}
+                                transition={{ duration: 0.6, delay: i * 0.1 }}
+                              />
+                            </div>
                           </div>
-                          <div className="h-2 bg-pulse-border rounded-full overflow-hidden">
-                            <motion.div
-                              className="h-full rounded-full"
-                              style={{ backgroundColor: factor.color || '#40ffaa' }}
-                              initial={{ width: 0 }}
-                              animate={{ width: `${factor.score}%` }}
-                              transition={{ duration: 0.6, delay: i * 0.1 }}
-                            />
-                          </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 )}
@@ -1235,7 +1243,7 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
                     <p className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-2">Improvement Plan</p>
                     <div className="grid sm:grid-cols-2 gap-2">
                       {successResult.improvements.map((imp, i) => (
-                        <div key={i} className="p-3 rounded-lg bg-pulse-surface/50 border border-pulse-border">
+                        <div key={i} className="p-3 rounded-lg bg-pulse-surface/50 border border-pulse-border border-l-2 border-l-pulse-accent/40">
                           <p className="text-sm text-pulse-text mb-1">{imp.action}</p>
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-pulse-accent">Impact: {imp.impact}</span>
@@ -1651,7 +1659,7 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
             <div className="flex items-center justify-center gap-4">
               <Button
                 size="lg"
-                className="px-8 bg-gradient-to-r from-pulse-accent to-pulse-accent/80"
+                className="px-8 bg-pulse-accent text-pulse-bg hover:bg-pulse-accent/90 transition-colors"
                 asChild
               >
                 <a href={grant.url} target="_blank" rel="noopener noreferrer">

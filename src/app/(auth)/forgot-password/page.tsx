@@ -53,35 +53,30 @@ export default function ForgotPasswordPage() {
     return (
       <motion.div
         className="w-full max-w-md"
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{
-          duration: 0.4,
-          type: 'spring',
-          stiffness: 300,
-          damping: 30,
-        }}
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
       >
-        <Card className="border-pulse-border/50 overflow-hidden relative">
+        <Card className="overflow-hidden relative bg-white/[0.02] border border-white/[0.06] backdrop-blur-sm">
           <CardHeader className="text-center relative z-10">
             <motion.div
-              className="w-16 h-16 rounded-full bg-pulse-accent/20 border border-pulse-accent/30 flex items-center justify-center mx-auto mb-4"
+              className="w-16 h-16 rounded-full bg-pulse-accent/[0.1] border border-pulse-accent/[0.15] flex items-center justify-center mx-auto mb-4"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
             >
               <CheckCircle2 className="w-8 h-8 text-pulse-accent" />
             </motion.div>
-            <CardTitle className="font-serif text-heading-md">Check your email</CardTitle>
-            <CardDescription className="mt-2">
-              We've sent password reset instructions to{' '}
+            <CardTitle className="text-display-section text-pulse-text">Check your email</CardTitle>
+            <CardDescription className="text-body-sm text-pulse-text-secondary mt-2">
+              We&apos;ve sent password reset instructions to{' '}
               <span className="text-pulse-text font-medium">{email}</span>
             </CardDescription>
           </CardHeader>
 
           <CardContent className="relative z-10 space-y-4">
-            <p className="text-sm text-pulse-text-secondary text-center">
-              If you don't see the email, check your spam folder. The link will expire in 1 hour.
+            <p className="text-body-sm text-pulse-text-secondary text-center">
+              If you don&apos;t see the email, check your spam folder. The link will expire in 1 hour.
             </p>
 
             <div className="space-y-3">
@@ -112,52 +107,35 @@ export default function ForgotPasswordPage() {
   return (
     <motion.div
       className="w-full max-w-md"
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{
-        duration: 0.4,
-        type: 'spring',
-        stiffness: 300,
-        damping: 30,
-      }}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
     >
-      <Card className="border-pulse-border/50 overflow-hidden relative">
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-pulse-accent/5 to-transparent"
-          initial={{ x: '-100%' }}
-          animate={{ x: '200%' }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            repeatDelay: 5,
-            ease: 'linear',
-          }}
-        />
-
+      <Card className="overflow-hidden relative bg-white/[0.02] border border-white/[0.06] backdrop-blur-sm">
         <CardHeader className="text-center relative z-10">
           <motion.div
-            className="flex items-center justify-center gap-2 mb-4"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.05, duration: 0.3 }}
+            className="flex items-center justify-center gap-2 mb-5"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.05, duration: 0.4 }}
           >
             <AnimatedLogo size="md" className="text-pulse-accent" />
             <BrandLogo size="lg" />
           </motion.div>
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <CardTitle className="font-serif text-heading-md">Forgot password?</CardTitle>
+            <CardTitle className="text-display-section text-pulse-text">Forgot password?</CardTitle>
           </motion.div>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <CardDescription>
-              Enter your email and we'll send you a reset link
+            <CardDescription className="text-body-sm text-pulse-text-secondary">
+              Enter your email and we&apos;ll send you a reset link
             </CardDescription>
           </motion.div>
         </CardHeader>
@@ -179,11 +157,11 @@ export default function ForgotPasswordPage() {
             )}
 
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.25 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
             >
-              <label htmlFor="email" className="text-sm text-pulse-text-secondary mb-2 block">
+              <label htmlFor="email" className="text-body-sm text-pulse-text-secondary mb-2 block">
                 Email Address
               </label>
               <Input
@@ -195,13 +173,14 @@ export default function ForgotPasswordPage() {
                 icon={<Mail className="w-4 h-4" />}
                 required
                 autoFocus
+                className="placeholder:text-pulse-text-tertiary/70"
               />
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.25 }}
             >
               <Button type="submit" className="w-full" loading={isLoading}>
                 Send Reset Link
@@ -211,10 +190,10 @@ export default function ForgotPasswordPage() {
           </form>
 
           <motion.p
-            className="mt-6 text-center text-sm text-pulse-text-secondary"
+            className="mt-6 text-center text-body-sm text-pulse-text-secondary"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.35 }}
           >
             Remember your password?{' '}
             <Link href="/login" className="text-pulse-accent hover:underline">

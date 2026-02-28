@@ -1,15 +1,15 @@
 'use client'
 
 /**
- * ONBOARDING STEP 3 - SPLIT SCREEN IMMERSIVE
- * ------------------------------------------
+ * ONBOARDING STEP 3
+ * -----------------
  * "Tell us about your organization"
- * Premium split-screen design with organization details
+ * Organization size, stage, budget details
  */
 
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Users, TrendingUp, DollarSign, Check, Building2 } from 'lucide-react'
+import { Users, TrendingUp, DollarSign, Check } from 'lucide-react'
 import { useOnboarding } from '@/lib/contexts/OnboardingContext'
 import { OnboardingLayout, OptionCard, StepNavigation } from '@/components/onboarding'
 import {
@@ -61,11 +61,8 @@ export default function OnboardingStep3() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-10"
       >
-        <div className="flex items-center gap-2 text-pulse-accent mb-4">
-          <Building2 className="w-5 h-5" />
-          <span className="text-sm font-medium uppercase tracking-wider">Organization Profile</span>
-        </div>
-        <h1 className="text-heading-lg font-bold tracking-tight text-pulse-text mb-3">
+        <span className="text-label text-pulse-accent mb-4 block">Step 03</span>
+        <h1 className="text-display-section text-pulse-text mb-3">
           {isIndividual ? 'Tell us about your work' : 'Tell us about your organization'}
         </h1>
         <p className="text-body text-pulse-text-secondary">
@@ -84,16 +81,16 @@ export default function OnboardingStep3() {
               transition={{ delay: 0.1 }}
             >
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 p-[1px]">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-500 p-[1px]">
                   <div className="w-full h-full rounded-xl bg-pulse-bg flex items-center justify-center">
-                    <Users className="w-5 h-5 text-blue-400" />
+                    <Users className="w-5 h-5 text-teal-400" />
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-pulse-text">
+                  <h3 className="text-heading-sm text-pulse-text">
                     {isIndividual ? 'Do you work with a team?' : 'Organization size'}
                   </h3>
-                  <p className="text-sm text-pulse-text-tertiary">Size affects grant eligibility</p>
+                  <p className="text-body-sm text-pulse-text-tertiary">Size affects grant eligibility</p>
                 </div>
               </div>
 
@@ -129,10 +126,10 @@ export default function OnboardingStep3() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-pulse-text">
+                  <h3 className="text-heading-sm text-pulse-text">
                     {isIndividual ? 'Where are you in your journey?' : 'Organization stage'}
                   </h3>
-                  <p className="text-sm text-pulse-text-tertiary">Some grants target specific stages</p>
+                  <p className="text-body-sm text-pulse-text-tertiary">Some grants target specific stages</p>
                 </div>
               </div>
 
@@ -162,14 +159,14 @@ export default function OnboardingStep3() {
               transition={{ delay: 0.3 }}
             >
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 p-[1px]">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pulse-accent to-emerald-500 p-[1px]">
                   <div className="w-full h-full rounded-xl bg-pulse-bg flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-amber-400" />
+                    <DollarSign className="w-5 h-5 text-pulse-accent" />
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-pulse-text">Annual operating budget</h3>
-                  <p className="text-sm text-pulse-text-tertiary">Helps match grant award sizes</p>
+                  <h3 className="text-heading-sm text-pulse-text">Annual operating budget</h3>
+                  <p className="text-body-sm text-pulse-text-tertiary">Helps match grant award sizes</p>
                 </div>
               </div>
 
@@ -179,14 +176,14 @@ export default function OnboardingStep3() {
                     key={budget.value}
                     type="button"
                     onClick={() => setBudget(budget.value)}
-                    className={`w-full text-left px-5 py-4 rounded-xl border-2 transition-all duration-300 ${
+                    className={`w-full text-left px-5 py-4 rounded-xl border transition-all duration-300 ${
                       state.annualBudget === budget.value
-                        ? 'bg-pulse-accent/[0.08] border-pulse-accent/40'
-                        : 'bg-white/[0.02] border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.04]'
+                        ? 'bg-pulse-accent/[0.06] border-pulse-accent/30'
+                        : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.04]'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className={`font-medium ${
+                      <span className={`text-body font-medium ${
                         state.annualBudget === budget.value
                           ? 'text-pulse-text'
                           : 'text-pulse-text-secondary'
@@ -217,14 +214,14 @@ export default function OnboardingStep3() {
               transition={{ delay: 0.3 }}
             >
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 p-[1px]">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pulse-accent to-emerald-500 p-[1px]">
                   <div className="w-full h-full rounded-xl bg-pulse-bg flex items-center justify-center">
-                    <Users className="w-5 h-5 text-violet-400" />
+                    <Users className="w-5 h-5 text-pulse-accent" />
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-pulse-text">Are you affiliated with an institution?</h3>
-                  <p className="text-sm text-pulse-text-tertiary">Institutional backing affects eligibility</p>
+                  <h3 className="text-heading-sm text-pulse-text">Are you affiliated with an institution?</h3>
+                  <p className="text-body-sm text-pulse-text-tertiary">Institutional backing affects eligibility</p>
                 </div>
               </div>
 

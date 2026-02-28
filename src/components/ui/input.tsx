@@ -62,10 +62,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             'flex h-10 w-full rounded-lg bg-pulse-surface border border-pulse-border px-4 py-2.5 text-sm text-pulse-text-primary placeholder:text-pulse-text-tertiary',
             'transition-all duration-150',
             'hover:border-pulse-border-hover hover:bg-pulse-surface',
-            'focus:outline-none focus:ring-2 focus:ring-pulse-accent/30 focus:border-pulse-accent',
+            'focus:outline-none focus:ring-2 focus:ring-pulse-accent/30 focus:border-pulse-accent focus:shadow-[0_0_15px_rgba(64,255,170,0.1)]',
             'disabled:cursor-not-allowed disabled:opacity-50',
+            'placeholder:text-pulse-text-tertiary/60',
             icon && 'pl-10',
-            error && 'border-pulse-error focus:border-pulse-error',
+            error && 'border-pulse-error focus:border-pulse-error focus:shadow-[0_0_15px_rgba(255,64,64,0.1)]',
             className
           )}
           ref={ref}
@@ -132,10 +133,11 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
             'flex min-h-[80px] w-full rounded-lg bg-pulse-surface border border-pulse-border px-4 py-2.5 text-sm text-pulse-text-primary placeholder:text-pulse-text-tertiary',
             'transition-all duration-150',
             'hover:border-pulse-border-hover hover:bg-pulse-surface',
-            'focus:outline-none focus:ring-2 focus:ring-pulse-accent/30 focus:border-pulse-accent',
+            'focus:outline-none focus:ring-2 focus:ring-pulse-accent/30 focus:border-pulse-accent focus:shadow-[0_0_15px_rgba(64,255,170,0.1)]',
             'disabled:cursor-not-allowed disabled:opacity-50',
             'resize-none',
-            error && 'border-pulse-error focus:border-pulse-error',
+            'placeholder:text-pulse-text-tertiary/60',
+            error && 'border-pulse-error focus:border-pulse-error focus:shadow-[0_0_15px_rgba(255,64,64,0.1)]',
             className
           )}
           ref={ref}

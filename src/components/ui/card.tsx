@@ -4,7 +4,7 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'elevated' | 'outline'
+  variant?: 'default' | 'elevated' | 'outline' | 'gradient' | 'glow'
   interactive?: boolean
 }
 
@@ -14,6 +14,8 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       default: 'bg-pulse-surface border border-pulse-border/40',
       elevated: 'bg-pulse-elevated border border-pulse-border/40 shadow-lg',
       outline: 'bg-transparent border border-pulse-border/40',
+      gradient: 'bg-gradient-to-br from-pulse-accent/5 via-pulse-surface to-pulse-elevated border border-pulse-accent/10',
+      glow: 'bg-pulse-surface border border-pulse-accent/20 shadow-[0_0_20px_rgba(64,255,170,0.08)]',
     }
 
     return (
@@ -22,7 +24,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         className={cn(
           'rounded-xl backdrop-blur-sm transition-all duration-200',
           variantStyles[variant],
-          interactive && 'hover:border-pulse-border hover:shadow-lg hover:shadow-pulse-accent/5 hover:-translate-y-0.5',
+          interactive && 'hover:border-pulse-border hover:shadow-[0_8px_30px_rgba(0,0,0,0.3),0_0_20px_rgba(64,255,170,0.08)] hover:-translate-y-0.5',
           className
         )}
         {...props}

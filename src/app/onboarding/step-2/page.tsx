@@ -1,15 +1,15 @@
 'use client'
 
 /**
- * ONBOARDING STEP 2 - SPLIT SCREEN IMMERSIVE
- * ------------------------------------------
+ * ONBOARDING STEP 2
+ * -----------------
  * "What areas does your work focus on?"
- * Premium split-screen design with industry chips
+ * Industry tag selection with chip UI
  */
 
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { AlertCircle, Lightbulb, Target } from 'lucide-react'
+import { AlertCircle, Lightbulb } from 'lucide-react'
 import { useOnboarding } from '@/lib/contexts/OnboardingContext'
 import { OnboardingLayout, OptionChip, StepNavigation } from '@/components/onboarding'
 import { INDUSTRY_CATEGORIES } from '@/lib/types/onboarding'
@@ -82,11 +82,8 @@ export default function OnboardingStep2() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-10"
       >
-        <div className="flex items-center gap-2 text-pulse-accent mb-4">
-          <Target className="w-5 h-5" />
-          <span className="text-sm font-medium uppercase tracking-wider">Focus Areas</span>
-        </div>
-        <h1 className="text-heading-lg font-bold tracking-tight text-pulse-text mb-3">
+        <span className="text-label text-pulse-accent mb-4 block">Step 02</span>
+        <h1 className="text-display-section text-pulse-text mb-3">
           What areas does your work focus on?
         </h1>
         <p className="text-body text-pulse-text-secondary">
@@ -99,7 +96,7 @@ export default function OnboardingStep2() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="mb-8 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06]"
+        className="mb-8 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -115,7 +112,7 @@ export default function OnboardingStep2() {
                 />
               ))}
             </div>
-            <span className="text-sm text-pulse-text-secondary">
+            <span className="text-body-sm text-pulse-text-secondary">
               <span className="text-pulse-text font-semibold">{selectionCount}</span> of {MAX_SELECTIONS} selected
             </span>
           </div>
@@ -123,7 +120,7 @@ export default function OnboardingStep2() {
           <AnimatePresence>
             {isMaxSelected && (
               <motion.span
-                className="flex items-center gap-1.5 text-sm text-amber-400"
+                className="flex items-center gap-1.5 text-body-sm text-pulse-accent"
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
@@ -166,7 +163,7 @@ export default function OnboardingStep2() {
         })}
       </motion.div>
 
-      {/* Contextual tip */}
+      {/* Contextual tip -- standardized to brand colors */}
       <AnimatePresence>
         {state.entityType && (
           <motion.div
@@ -176,16 +173,16 @@ export default function OnboardingStep2() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ delay: 0.3 }}
           >
-            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 p-[1px] shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pulse-accent to-emerald-500 p-[1px] shrink-0">
                   <div className="w-full h-full rounded-xl bg-pulse-bg flex items-center justify-center">
-                    <Lightbulb className="w-5 h-5 text-amber-400" />
+                    <Lightbulb className="w-5 h-5 text-pulse-accent" />
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-amber-400 mb-1">Pro Tip</p>
-                  <p className="text-sm text-pulse-text-secondary leading-relaxed">
+                  <p className="text-label-sm text-pulse-accent mb-1">Pro Tip</p>
+                  <p className="text-body-sm text-pulse-text-secondary leading-relaxed">
                     {getEntityTip()}
                   </p>
                 </div>

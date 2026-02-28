@@ -60,7 +60,7 @@ export function StepNavigation({
             type="button"
             onClick={onBack}
             disabled={isLoading}
-            className="flex items-center gap-2 text-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors duration-150 disabled:opacity-50"
+            className="flex items-center gap-2 text-body-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors duration-150 disabled:opacity-50"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
@@ -72,7 +72,7 @@ export function StepNavigation({
             type="button"
             onClick={onSkip}
             disabled={isLoading}
-            className="text-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors duration-150 disabled:opacity-50"
+            className="text-body-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors duration-150 disabled:opacity-50"
           >
             {skipLabel}
           </button>
@@ -87,7 +87,7 @@ export function StepNavigation({
             type="button"
             onClick={onSkip}
             disabled={isLoading}
-            className="text-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors duration-150 disabled:opacity-50"
+            className="text-body-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors duration-150 disabled:opacity-50"
           >
             {skipLabel}
           </button>
@@ -101,7 +101,7 @@ export function StepNavigation({
           className={cn(
             'flex items-center gap-3 px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200',
             canContinue
-              ? 'bg-pulse-accent text-pulse-bg hover:bg-pulse-accent/90 shadow-lg shadow-pulse-accent/25'
+              ? 'bg-pulse-accent text-pulse-bg hover:bg-pulse-accent/90 shadow-[0_0_30px_rgba(64,255,170,0.15)] hover:shadow-[0_0_40px_rgba(64,255,170,0.25)]'
               : 'bg-white/[0.06] text-pulse-text-tertiary cursor-not-allowed',
             isLoading && 'opacity-70'
           )}

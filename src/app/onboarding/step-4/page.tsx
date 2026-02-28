@@ -1,16 +1,16 @@
 'use client'
 
 /**
- * ONBOARDING STEP 4 - SPLIT SCREEN IMMERSIVE
- * ------------------------------------------
+ * ONBOARDING STEP 4
+ * -----------------
  * "A few more details"
- * Premium split-screen design with dynamic questions
+ * Dynamic questions based on selected industries
  */
 
 import { useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, Check, ChevronRight, HelpCircle } from 'lucide-react'
+import { Sparkles, Check, ChevronRight } from 'lucide-react'
 import { useOnboarding } from '@/lib/contexts/OnboardingContext'
 import { OnboardingLayout, OptionChip, StepNavigation } from '@/components/onboarding'
 import { INDUSTRY_QUESTIONS } from '@/lib/types/onboarding'
@@ -97,7 +97,7 @@ export default function OnboardingStep4() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-heading-lg font-bold tracking-tight text-pulse-text mb-4"
+            className="text-display-section text-pulse-text mb-4"
           >
             Looking good!
           </motion.h1>
@@ -106,9 +106,9 @@ export default function OnboardingStep4() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-lg text-pulse-text-secondary max-w-md mx-auto mb-10"
+            className="text-body-lg text-pulse-text-secondary max-w-md mx-auto mb-10"
           >
-            We have enough information to find great grants for you. Let's finish up with a few preferences.
+            We have enough information to find great grants for you. Let&apos;s finish up with a few preferences.
           </motion.p>
 
           <motion.div
@@ -126,7 +126,7 @@ export default function OnboardingStep4() {
 
             <button
               onClick={handleBack}
-              className="block mx-auto mt-6 text-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors"
+              className="block mx-auto mt-6 text-body-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors"
             >
               Go back
             </button>
@@ -148,11 +148,8 @@ export default function OnboardingStep4() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-10"
       >
-        <div className="flex items-center gap-2 text-pulse-accent mb-4">
-          <HelpCircle className="w-5 h-5" />
-          <span className="text-sm font-medium uppercase tracking-wider">Additional Details</span>
-        </div>
-        <h1 className="text-heading-lg font-bold tracking-tight text-pulse-text mb-3">
+        <span className="text-label text-pulse-accent mb-4 block">Step 04</span>
+        <h1 className="text-display-section text-pulse-text mb-3">
           A few more details
         </h1>
         <p className="text-body text-pulse-text-secondary">
@@ -168,9 +165,9 @@ export default function OnboardingStep4() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 + index * 0.1 }}
-            className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06]"
+            className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05]"
           >
-            <h3 className="text-lg font-semibold text-pulse-text mb-5">
+            <h3 className="text-heading-sm text-pulse-text mb-5">
               {question.question}
             </h3>
 
@@ -180,10 +177,10 @@ export default function OnboardingStep4() {
                 <button
                   type="button"
                   onClick={() => handleBooleanToggle(question.id, true)}
-                  className={`flex-1 px-5 py-4 rounded-xl border-2 transition-all duration-300 ${
+                  className={`flex-1 px-5 py-4 rounded-xl border transition-all duration-300 ${
                     state.industryAttributes[question.id] === true
-                      ? 'bg-pulse-accent/[0.08] border-pulse-accent/40'
-                      : 'bg-white/[0.02] border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.04]'
+                      ? 'bg-pulse-accent/[0.06] border-pulse-accent/30'
+                      : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.04]'
                   }`}
                 >
                   <span className="flex items-center justify-center gap-2">
@@ -201,10 +198,10 @@ export default function OnboardingStep4() {
                 <button
                   type="button"
                   onClick={() => handleBooleanToggle(question.id, false)}
-                  className={`flex-1 px-5 py-4 rounded-xl border-2 transition-all duration-300 ${
+                  className={`flex-1 px-5 py-4 rounded-xl border transition-all duration-300 ${
                     state.industryAttributes[question.id] === false
-                      ? 'bg-pulse-accent/[0.08] border-pulse-accent/40'
-                      : 'bg-white/[0.02] border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.04]'
+                      ? 'bg-pulse-accent/[0.06] border-pulse-accent/30'
+                      : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.04]'
                   }`}
                 >
                   <span className="flex items-center justify-center gap-2">
@@ -243,7 +240,7 @@ export default function OnboardingStep4() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="mt-8 text-center text-sm text-pulse-text-tertiary"
+        className="mt-8 text-center text-body-sm text-pulse-text-tertiary"
       >
         All questions are optional. Skip if none apply to you.
       </motion.p>

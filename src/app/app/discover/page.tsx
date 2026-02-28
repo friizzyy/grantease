@@ -38,7 +38,6 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { GlassCard } from '@/components/ui/glass-card'
 import { ProfileCompletenessBanner } from '@/components/grants/ProfileCompletenessBanner'
 import { EligibilityBadge } from '@/components/grants/EligibilityTooltip'
 import { DeadlineBadge } from '@/components/grants/DeadlineBadge'
@@ -102,7 +101,7 @@ interface SourceInfo {
   isConfigured: boolean
 }
 
-// Quick search suggestions - capitalized and clean
+// Quick search suggestions -- consistent accent styling
 const quickSuggestions = [
   { label: 'Agriculture', value: 'agriculture' },
   { label: 'Small Business', value: 'small business' },
@@ -141,15 +140,15 @@ function getTypeIcon(type?: string) {
   }
 }
 
-// Get source color
+// Get source color -- toned down, no heavy saturation
 function getSourceColor(sourceName: string): string {
   const colors: Record<string, string> = {
-    'grants-gov': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    'sam-gov': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-    'usaspending': 'bg-green-500/20 text-green-400 border-green-500/30',
-    'california-grants': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    'grants-gov': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    'sam-gov': 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+    'usaspending': 'bg-green-500/10 text-green-400 border-green-500/20',
+    'california-grants': 'bg-orange-500/10 text-orange-400 border-orange-500/20',
   }
-  return colors[sourceName] || 'bg-gray-500/20 text-gray-400 border-gray-500/30'
+  return colors[sourceName] || 'bg-gray-500/10 text-gray-400 border-gray-500/20'
 }
 
 // Grant Card Component
@@ -195,10 +194,8 @@ function GrantCard({
     e.stopPropagation()
 
     // Store the grant data in sessionStorage so the detail page can access it
-    // This allows us to show details for both database grants AND live API grants
     const grantDataForDetail = {
       ...grant,
-      // Include AI match data if available
       aiMatch: aiMatch ? {
         score: aiMatch.score,
         reasons: aiMatch.reasons,
@@ -217,7 +214,6 @@ function GrantCard({
       console.warn('Failed to cache grant data:', err)
     }
 
-    // Always navigate to the internal detail page
     router.push(`/app/grants/${encodeURIComponent(grant.id)}`)
   }
 
@@ -230,48 +226,18 @@ function GrantCard({
           ? `From ${formatCurrency(grant.amountMin)}`
           : 'Amount varies')
 
-  // Get eligibility status styling
-  const getEligibilityStyle = (status?: string) => {
-    switch (status) {
-      case 'eligible':
-        return 'bg-green-500/20 text-green-400 border-green-500/30'
-      case 'likely_eligible':
-        return 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-      case 'check_requirements':
-        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-      case 'not_eligible':
-        return 'bg-red-500/20 text-red-400 border-red-500/30'
-      default:
-        return 'bg-pulse-surface text-pulse-text-tertiary'
-    }
-  }
-
-  const getEligibilityLabel = (status?: string) => {
-    switch (status) {
-      case 'eligible': return 'Eligible'
-      case 'likely_eligible': return 'Likely Eligible'
-      case 'check_requirements': return 'Check Requirements'
-      case 'not_eligible': return 'Not Eligible'
-      default: return 'Unknown'
-    }
-  }
-
-  const getUrgencyStyle = (urgency?: string) => {
-    switch (urgency) {
-      case 'high': return 'text-red-400'
-      case 'medium': return 'text-yellow-400'
-      default: return 'text-pulse-text-tertiary'
-    }
-  }
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03 }}
     >
-      <GlassCard
-        className="p-5 transition-all cursor-pointer hover:border-pulse-accent/30 hover:shadow-pulse"
+      <div
+        className={`p-5 rounded-xl border transition-all duration-200 cursor-pointer hover:border-white/[0.1] ${
+          aiMatch && aiMatch.score >= 80
+            ? 'border-pulse-accent/15 bg-pulse-accent/[0.02]'
+            : 'border-white/[0.05] bg-white/[0.02]'
+        }`}
         onClick={handleCardClick}
       >
           {/* Top Row - Source & Type */}
@@ -282,20 +248,20 @@ function GrantCard({
                 <span className="ml-1">{grant.sourceLabel || grant.sourceName}</span>
               </Badge>
               {grant.status === 'open' && (
-                <Badge variant="default" className="text-xs bg-green-500/20 text-green-400 border-green-500/30">
+                <Badge variant="default" className="text-xs bg-green-500/10 text-green-400 border-green-500/20">
                   Open
                 </Badge>
               )}
               {grant.status === 'forecasted' && (
-                <Badge variant="outline" className="text-xs bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+                <Badge variant="outline" className="text-xs bg-yellow-500/10 text-yellow-400 border-yellow-500/20">
                   Forecasted
                 </Badge>
               )}
               {aiMatch && (
                 <>
-                  <Badge variant="default" className="text-xs bg-pulse-accent/20 text-pulse-accent border-pulse-accent/30">
+                  <Badge variant="default" className="text-xs bg-pulse-accent/10 text-pulse-accent border-pulse-accent/20">
                     <Sparkles className="w-3 h-3 mr-1" />
-                    {Math.min(100, Math.max(0, aiMatch.score))}/100 match
+                    {Math.min(100, Math.max(0, aiMatch.score))}/100
                   </Badge>
                   {aiMatch.eligibilityStatus && (
                     <EligibilityBadge
@@ -306,7 +272,6 @@ function GrantCard({
                   )}
                 </>
               )}
-              {/* Show deadline urgency badge for urgent grants */}
               {daysLeft !== null && daysLeft > 0 && daysLeft <= 14 && (
                 <DeadlineBadge deadline={grant.deadlineDate} variant="badge" />
               )}
@@ -316,8 +281,8 @@ function GrantCard({
               disabled={saving}
               className={`p-2 rounded-lg transition-all ${
                 isSaved
-                  ? 'bg-pulse-accent/20 text-pulse-accent'
-                  : 'bg-pulse-surface text-pulse-text-tertiary hover:text-pulse-accent'
+                  ? 'bg-pulse-accent/10 text-pulse-accent'
+                  : 'bg-white/[0.03] text-pulse-text-tertiary hover:text-pulse-accent'
               }`}
             >
               {saving ? (
@@ -331,19 +296,19 @@ function GrantCard({
           </div>
 
           {/* Title & Sponsor */}
-          <h3 className="text-heading text-pulse-text mb-1 group-hover:text-pulse-accent transition-colors line-clamp-2">
+          <h3 className="text-heading-sm text-pulse-text mb-1 line-clamp-2">
             {grant.title}
           </h3>
-          <p className="text-body-sm text-pulse-text-tertiary flex items-center gap-1.5 mb-3">
+          <p className="text-label-sm text-pulse-text-tertiary flex items-center gap-1.5 mb-3">
             <Building2 className="w-3.5 h-3.5 flex-shrink-0" />
             <span className="truncate">{grant.sponsor}</span>
           </p>
 
           {/* AI Fit Summary */}
           {aiMatch?.fitSummary && (
-            <p className="text-body-sm text-pulse-accent mb-3 flex items-center gap-1.5">
-              <Target className="w-3.5 h-3.5 flex-shrink-0" />
-              {aiMatch.fitSummary}
+            <p className="text-body-sm text-pulse-accent/80 mb-3 flex items-start gap-1.5">
+              <Target className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+              <span className="line-clamp-2">{aiMatch.fitSummary}</span>
             </p>
           )}
 
@@ -351,13 +316,12 @@ function GrantCard({
           {aiMatch?.reasons && aiMatch.reasons.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-3">
               {aiMatch.reasons.slice(0, 2).map((reason, i) => (
-                <Badge
+                <span
                   key={i}
-                  variant="outline"
-                  className="text-xs border-pulse-accent/30 text-pulse-accent bg-pulse-accent/5"
+                  className="text-label-sm px-2 py-0.5 rounded-full border border-pulse-accent/15 text-pulse-accent/80 bg-pulse-accent/[0.04]"
                 >
                   {reason}
-                </Badge>
+                </span>
               ))}
             </div>
           )}
@@ -375,13 +339,13 @@ function GrantCard({
               {grant.categories.slice(0, 3).map((cat, i) => (
                 <span
                   key={i}
-                  className="px-2 py-0.5 rounded-full bg-pulse-surface text-label-sm text-pulse-text-tertiary normal-case"
+                  className="px-2 py-0.5 rounded-full bg-white/[0.04] text-label-sm text-pulse-text-tertiary normal-case border border-white/[0.04]"
                 >
                   {cat}
                 </span>
               ))}
               {(grant.categories?.length ?? 0) > 3 && (
-                <span className="px-2 py-0.5 rounded-full bg-pulse-surface text-label-sm text-pulse-text-tertiary normal-case">
+                <span className="px-2 py-0.5 rounded-full bg-white/[0.04] text-label-sm text-pulse-text-tertiary normal-case border border-white/[0.04]">
                   +{(grant.categories?.length ?? 0) - 3}
                 </span>
               )}
@@ -397,7 +361,7 @@ function GrantCard({
           )}
 
           {/* Bottom Row - Amount & Deadline */}
-          <div className="flex items-center justify-between pt-3 border-t border-pulse-border mt-auto">
+          <div className="flex items-center justify-between pt-3 border-t border-white/[0.05] mt-auto">
             <div className="flex items-center gap-1.5">
               <DollarSign className="w-4 h-4 text-pulse-accent" />
               <span className="text-body-sm font-medium text-pulse-text">{amountDisplay}</span>
@@ -419,14 +383,14 @@ function GrantCard({
             )}
           </div>
 
-          {/* Click for details hint */}
-          <div className="mt-3 pt-3 border-t border-pulse-border text-center">
-            <span className="text-xs text-pulse-text-tertiary flex items-center justify-center gap-1">
+          {/* Click hint */}
+          <div className="mt-3 pt-3 border-t border-white/[0.04] text-center">
+            <span className="text-label-sm text-pulse-text-tertiary flex items-center justify-center gap-1">
               <ExternalLink className="w-3 h-3" />
-              Click to view details
+              View details
             </span>
           </div>
-      </GlassCard>
+      </div>
     </motion.div>
   )
 }
@@ -454,10 +418,10 @@ function SourceSelector({
             disabled={isDisabled}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
               isDisabled
-                ? 'bg-pulse-surface/50 text-pulse-text-tertiary cursor-not-allowed'
+                ? 'bg-white/[0.02] text-pulse-text-tertiary cursor-not-allowed'
                 : isSelected
-                  ? 'bg-pulse-accent/20 text-pulse-accent border border-pulse-accent/30'
-                  : 'bg-pulse-surface border border-pulse-border text-pulse-text-secondary hover:border-pulse-accent/30'
+                  ? 'bg-pulse-accent/10 text-pulse-accent border border-pulse-accent/20'
+                  : 'bg-white/[0.02] border border-white/[0.06] text-pulse-text-secondary hover:border-white/[0.1]'
             }`}
             title={isDisabled ? `Requires ${source.requiresApiKey ? 'API key' : 'configuration'}` : source.description}
           >
@@ -492,10 +456,10 @@ function AISummaryBar({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
     >
-      <GlassCard variant="accent" className="p-4 mb-6">
+      <div className="p-4 mb-6 rounded-xl border border-pulse-accent/10 bg-pulse-accent/[0.02]">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-pulse-accent/20 border border-pulse-accent/30 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-lg bg-pulse-accent/10 flex items-center justify-center">
               {loading ? (
                 <Loader2 className="w-4 h-4 text-pulse-accent animate-spin" />
               ) : (
@@ -503,10 +467,10 @@ function AISummaryBar({
               )}
             </div>
             <div>
-              <p className="text-sm font-medium text-pulse-text">
+              <p className="text-body-sm font-medium text-pulse-text">
                 {loading ? 'Searching grant databases...' : `Found ${total.toLocaleString()} opportunities`}
               </p>
-              <p className="text-xs text-pulse-text-tertiary">
+              <p className="text-label-sm text-pulse-text-tertiary">
                 {sourceCounts.length > 0
                   ? `From ${sourceCounts.filter(s => s.count > 0).length} sources`
                   : 'Live results from federal and state databases'}
@@ -518,19 +482,19 @@ function AISummaryBar({
               <Badge
                 key={source.name}
                 variant="outline"
-                className={`text-xs ${source.error ? 'border-pulse-error/30 text-pulse-error' : ''}`}
+                className={`text-xs ${source.error ? 'border-pulse-error/20 text-pulse-error' : 'border-white/[0.08]'}`}
               >
                 {source.error ? (
                   <AlertCircle className="w-3 h-3 mr-1" />
                 ) : (
-                  <span className="w-2 h-2 bg-green-400 rounded-full mr-1.5 animate-pulse" />
+                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full mr-1.5" />
                 )}
                 {source.label}: {source.error ? 'Error' : source.count}
               </Badge>
             ))}
           </div>
         </div>
-      </GlassCard>
+      </div>
     </motion.div>
   )
 }
@@ -642,17 +606,17 @@ function FilterPanel({
           transition={{ duration: 0.2 }}
           className="overflow-hidden mb-6"
         >
-          <GlassCard className="p-6">
+          <div className="p-6 rounded-xl border border-white/[0.05] bg-[#111113]">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-pulse-text">Filters & Sources</h3>
-              <button onClick={onClose} aria-label="Close filters panel" className="p-2 rounded-lg hover:bg-pulse-surface min-h-[44px] min-w-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none">
+              <h3 className="text-heading-sm text-pulse-text">Filters & Sources</h3>
+              <button onClick={onClose} aria-label="Close filters panel" className="p-2 rounded-lg hover:bg-white/[0.04] min-h-[44px] min-w-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none">
                 <X className="w-4 h-4 text-pulse-text-tertiary" />
               </button>
             </div>
 
             {/* Source Selection */}
             <div className="mb-6">
-              <label className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-3 block">
+              <label className="text-label-sm text-pulse-text-tertiary uppercase tracking-wider mb-3 block">
                 Data Sources
               </label>
               <SourceSelector
@@ -665,13 +629,13 @@ function FilterPanel({
             <div className="grid md:grid-cols-3 gap-6">
               {/* Agency */}
               <div>
-                <label className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-3 block">
+                <label className="text-label-sm text-pulse-text-tertiary uppercase tracking-wider mb-3 block">
                   Agency
                 </label>
                 <select
                   value={filters.agency}
                   onChange={(e) => setFilters({ ...filters, agency: e.target.value })}
-                  className="w-full bg-pulse-surface border border-pulse-border rounded-lg px-3 py-2 text-sm text-pulse-text focus:outline-none focus:border-pulse-accent"
+                  className="w-full bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2 text-body-sm text-pulse-text focus:outline-none focus:border-pulse-accent/40"
                 >
                   {agencies.map((a) => (
                     <option key={a.value} value={a.value}>{a.label}</option>
@@ -681,7 +645,7 @@ function FilterPanel({
 
               {/* State */}
               <div>
-                <label className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-3 block">
+                <label className="text-label-sm text-pulse-text-tertiary uppercase tracking-wider mb-3 block">
                   Location
                   {userState && (
                     <span className="text-pulse-accent ml-1">(Your profile: {userState})</span>
@@ -690,7 +654,7 @@ function FilterPanel({
                 <select
                   value={filters.state}
                   onChange={(e) => setFilters({ ...filters, state: e.target.value })}
-                  className="w-full bg-pulse-surface border border-pulse-border rounded-lg px-3 py-2 text-sm text-pulse-text focus:outline-none focus:border-pulse-accent"
+                  className="w-full bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2 text-body-sm text-pulse-text focus:outline-none focus:border-pulse-accent/40"
                 >
                   {US_STATES.map((s) => (
                     <option key={s.value} value={s.value}>
@@ -702,7 +666,7 @@ function FilterPanel({
 
               {/* Status */}
               <div>
-                <label className="text-xs font-medium text-pulse-text-secondary uppercase tracking-wider mb-3 block">
+                <label className="text-label-sm text-pulse-text-tertiary uppercase tracking-wider mb-3 block">
                   Status
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -710,10 +674,10 @@ function FilterPanel({
                     <button
                       key={s.value}
                       onClick={() => setFilters({ ...filters, status: s.value })}
-                      className={`px-3 py-2 rounded-full text-xs transition-all min-h-[44px] focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none ${
+                      className={`px-3 py-2 rounded-full text-label-sm transition-all min-h-[44px] focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none ${
                         filters.status === s.value
                           ? 'bg-pulse-accent text-pulse-bg'
-                          : 'bg-pulse-surface border border-pulse-border text-pulse-text-secondary hover:border-pulse-accent/30'
+                          : 'bg-white/[0.03] border border-white/[0.06] text-pulse-text-secondary hover:border-white/[0.1]'
                       }`}
                     >
                       {s.label}
@@ -723,7 +687,7 @@ function FilterPanel({
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-pulse-border">
+            <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-white/[0.05]">
               <Button variant="ghost" size="sm" onClick={() => {
                 setFilters({ agency: '', status: 'open', state: '' })
               }}>
@@ -733,7 +697,7 @@ function FilterPanel({
                 Apply Filters
               </Button>
             </div>
-          </GlassCard>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
@@ -823,7 +787,6 @@ function DiscoverPageContent() {
   const [aiSearchError, setAiSearchError] = useState<string | null>(null)
 
   // --- URL update helper ---
-  // Replaces router.replace with updated search params (no scroll, no full navigation)
   const updateURL = useCallback((updates: Record<string, string | null>) => {
     const params = buildSearchParams(searchParams, updates)
     const paramString = params.toString()
@@ -857,7 +820,6 @@ function DiscoverPageContent() {
           const data = await sourcesResponse.json()
           setSources(data.sources || [])
           configuredSources = data.configured || []
-          // Only use API-configured sources if no URL sources param was provided
           if (!urlSources) {
             setSelectedSources(configuredSources)
           }
@@ -879,7 +841,6 @@ function DiscoverPageContent() {
             setUserState(profileData.profile.state)
             profileState = profileData.profile.state
 
-            // Pre-fill state filter from profile if not already set in URL
             if (profileData.profile.state && !filterState) {
               updateURL({ state: profileData.profile.state })
             }
@@ -888,12 +849,9 @@ function DiscoverPageContent() {
 
         setSourcesInitialized(true)
 
-        // Decide which mode to load based on URL
         if (isProfileMode && !searchQuery) {
-          // "For You" mode: load personalized grants
           await loadPersonalizedGrants()
         } else {
-          // Browse mode or has a search query: load general grants
           const effectiveSources = urlSources
             ? urlSources.split(',').filter(Boolean)
             : configuredSources
@@ -931,7 +889,6 @@ function DiscoverPageContent() {
         if (data.profileComplete === false) {
           setHasProfile(false)
           setAiMatchError('Complete your profile to see personalized grants tailored to your organization.')
-          // Switch to browse mode via URL
           updateURL({ mode: 'browse' })
           await fetchGeneralGrants()
         } else {
@@ -989,7 +946,6 @@ function DiscoverPageContent() {
     setLoading(true)
     setError(null)
 
-    // Use provided overrides or fall back to current URL-derived state
     const effectiveFilters = overrideFilters || filters
     const effectiveSources = overrideSources || selectedSources
 
@@ -1032,17 +988,14 @@ function DiscoverPageContent() {
       ? selectedSources.filter(s => s !== name)
       : [...selectedSources, name]
     setSelectedSources(newSources)
-    // Persist to URL when applied (not on every toggle, since filter panel has an Apply button)
   }
 
   const handleSearch = () => {
-    // Debounce protection: clear any pending debounce
     if (debounceRef.current) {
       clearTimeout(debounceRef.current)
       debounceRef.current = null
     }
 
-    // Update URL with search query and switch to browse mode
     updateURL({
       q: searchInput || null,
       mode: 'browse',
@@ -1066,12 +1019,11 @@ function DiscoverPageContent() {
   }
 
   const handleApplyFilters = () => {
-    // Write the current filter panel state to URL and close the panel
     updateURL({
       agency: filters.agency || null,
       status: filters.status || null,
       state: filters.state || null,
-      filters: null, // Close the panel
+      filters: null,
       mode: 'browse',
       sources: selectedSources.length > 0 ? selectedSources.join(',') : null,
     })
@@ -1081,7 +1033,6 @@ function DiscoverPageContent() {
   }
 
   const setFilters = (newFilters: { agency: string; status: string; state: string }) => {
-    // Update URL immediately for filter panel changes so they stay in sync
     updateURL({
       agency: newFilters.agency || null,
       status: newFilters.status || null,
@@ -1096,13 +1047,12 @@ function DiscoverPageContent() {
     setAiMatchResults(null)
     setAiMatchError(null)
 
-    // Clear search/browse params and switch to foryou mode
     updateURL({
       q: null,
-      mode: null, // foryou is default, so null removes it
+      mode: null,
       agency: null,
       status: null,
-      state: filterState || null, // Keep user's state filter
+      state: filterState || null,
       filters: null,
       sources: null,
     })
@@ -1183,17 +1133,13 @@ function DiscoverPageContent() {
     setAiSearchError(null)
   }
 
-  // Debounced search input handler
   const handleSearchInputChange = (value: string) => {
     setSearchInput(value)
 
-    // Debounce URL update for the search input to avoid excessive history entries
     if (debounceRef.current) {
       clearTimeout(debounceRef.current)
     }
     debounceRef.current = setTimeout(() => {
-      // Only update URL param on debounce if the user hasn't submitted yet
-      // This provides a "live URL" feel without flooding the history
       updateURL({ q: value || null })
     }, 500)
   }
@@ -1226,12 +1172,12 @@ function DiscoverPageContent() {
         <div className="flex items-end justify-between flex-wrap gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Target className="w-5 h-5 text-pulse-accent" />
-              <span className="text-label text-pulse-text-tertiary">
+              <Target className="w-4 h-4 text-pulse-accent" />
+              <span className="text-label-sm text-pulse-text-tertiary">
                 Grant Discovery
               </span>
             </div>
-            <h1 className="text-display-page text-pulse-text">
+            <h1 className="text-display-section text-pulse-text">
               {isAiSearchMode ? 'AI Grant Search' : isProfileMode ? 'Grants For You' : 'Browse All Grants'}
             </h1>
             <p className="text-body text-pulse-text-secondary mt-2">
@@ -1245,46 +1191,73 @@ function DiscoverPageContent() {
           </div>
           <div className="flex items-center gap-2">
             {/* Mode Toggle */}
-            <div className="flex items-center bg-pulse-surface rounded-lg p-1 border border-pulse-border">
+            <div className="relative flex items-center bg-[#111113] rounded-lg p-1 border border-white/[0.05]">
               <button
                 onClick={handleForYou}
                 disabled={isAiMatching || loading}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-1.5 min-h-[44px] focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none ${
+                className={`relative z-10 px-3 py-2 rounded-md text-body-sm font-medium transition-all flex items-center gap-1.5 min-h-[44px] focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none ${
                   isProfileMode
-                    ? 'bg-pulse-accent text-pulse-bg'
+                    ? 'text-pulse-bg'
                     : 'text-pulse-text-secondary hover:text-pulse-text'
                 }`}
               >
-                {(isAiMatching || (loading && isProfileMode)) ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Sparkles className="w-3.5 h-3.5" />
+                {isProfileMode && (
+                  <motion.div
+                    layoutId="mode-pill"
+                    className="absolute inset-0 bg-pulse-accent rounded-md"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
                 )}
-                For You
+                <span className="relative z-10 flex items-center gap-1.5">
+                  {(isAiMatching || (loading && isProfileMode)) ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3.5 h-3.5" />
+                  )}
+                  For You
+                </span>
               </button>
               <button
                 onClick={handleBrowseAll}
                 disabled={loading}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-1.5 min-h-[44px] focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none ${
+                className={`relative z-10 px-3 py-2 rounded-md text-body-sm font-medium transition-all flex items-center gap-1.5 min-h-[44px] focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none ${
                   mode === 'browse'
-                    ? 'bg-pulse-accent text-pulse-bg'
+                    ? 'text-pulse-bg'
                     : 'text-pulse-text-secondary hover:text-pulse-text'
                 }`}
               >
-                <Globe className="w-3.5 h-3.5" />
-                Browse All
+                {mode === 'browse' && (
+                  <motion.div
+                    layoutId="mode-pill"
+                    className="absolute inset-0 bg-pulse-accent rounded-md"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5" />
+                  Browse All
+                </span>
               </button>
               <button
                 onClick={handleAiSearchMode}
                 disabled={loading}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-1.5 min-h-[44px] focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none ${
+                className={`relative z-10 px-3 py-2 rounded-md text-body-sm font-medium transition-all flex items-center gap-1.5 min-h-[44px] focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none ${
                   isAiSearchMode
-                    ? 'bg-pulse-accent text-pulse-bg'
+                    ? 'text-pulse-bg'
                     : 'text-pulse-text-secondary hover:text-pulse-text'
                 }`}
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                AI Search
+                {isAiSearchMode && (
+                  <motion.div
+                    layoutId="mode-pill"
+                    className="absolute inset-0 bg-pulse-accent rounded-md"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  AI Search
+                </span>
               </button>
             </div>
             <Button variant="outline" size="sm" asChild>
@@ -1304,7 +1277,7 @@ function DiscoverPageContent() {
         transition={{ delay: 0.1 }}
         className="mb-6"
       >
-        <GlassCard className="p-4">
+        <div className="p-4 rounded-xl border border-white/[0.05] bg-white/[0.02]">
           <div className="flex items-center gap-4 flex-wrap">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-pulse-text-tertiary" />
@@ -1315,7 +1288,7 @@ function DiscoverPageContent() {
                 value={searchInput}
                 onChange={(e) => handleSearchInputChange(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="w-full pl-12 pr-4 py-3 rounded-xl bg-pulse-bg border border-pulse-border focus:border-pulse-accent focus:outline-none text-pulse-text placeholder:text-pulse-text-tertiary"
+                className="w-full pl-12 pr-4 py-3 rounded-lg bg-white/[0.03] border border-white/[0.06] focus:border-pulse-accent/40 focus:outline-none text-pulse-text placeholder:text-pulse-text-tertiary"
               />
             </div>
             <Button
@@ -1325,7 +1298,7 @@ function DiscoverPageContent() {
               <SlidersHorizontal className="w-4 h-4 mr-2" />
               Filters
               {selectedSources.length > 0 && (
-                <span className="ml-2 px-1.5 py-0.5 rounded-full bg-pulse-accent/20 text-xs">
+                <span className="ml-2 px-1.5 py-0.5 rounded-full bg-pulse-accent/15 text-xs">
                   {selectedSources.length}
                 </span>
               )}
@@ -1338,7 +1311,6 @@ function DiscoverPageContent() {
               )}
               Search
             </Button>
-            {/* Save Search Button */}
             {(searchQuery || filterAgency || filterState) && (
               <Button
                 variant="outline"
@@ -1351,19 +1323,19 @@ function DiscoverPageContent() {
           </div>
 
           {/* Quick Suggestions */}
-          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-pulse-border flex-wrap">
-            <span className="text-xs text-pulse-text-tertiary">Popular:</span>
+          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/[0.05] flex-wrap">
+            <span className="text-label-sm text-pulse-text-tertiary">Popular:</span>
             {quickSuggestions.map((suggestion) => (
               <button
                 key={suggestion.value}
                 onClick={() => handleSuggestion(suggestion.value)}
-                className="px-3 py-2 rounded-full bg-pulse-surface border border-pulse-border text-xs text-pulse-text-secondary hover:border-pulse-accent/30 hover:text-pulse-text transition-all capitalize min-h-[44px] focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none"
+                className="px-3 py-2 rounded-full bg-white/[0.03] border border-white/[0.06] text-label-sm text-pulse-text-secondary hover:border-white/[0.12] hover:text-pulse-text transition-all capitalize min-h-[44px] focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none"
               >
                 {suggestion.label}
               </button>
             ))}
           </div>
-        </GlassCard>
+        </div>
       </motion.div>}
 
       {/* AI Search Panel */}
@@ -1374,14 +1346,14 @@ function DiscoverPageContent() {
           transition={{ delay: 0.15 }}
           className="mb-6"
         >
-          <GlassCard variant="accent" className="p-6">
+          <div className="p-6 rounded-xl border border-pulse-accent/10 bg-pulse-accent/[0.02]">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-pulse-accent/20 border border-pulse-accent/30 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-pulse-accent/10 flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-pulse-accent" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-pulse-text">AI-Powered Search</h3>
-                <p className="text-xs text-pulse-text-tertiary">Describe what you need funding for in plain language</p>
+                <h3 className="text-heading-sm text-pulse-text">AI-Powered Search</h3>
+                <p className="text-label-sm text-pulse-text-tertiary">Describe what you need funding for in plain language</p>
               </div>
             </div>
 
@@ -1397,16 +1369,16 @@ function DiscoverPageContent() {
               aria-label="Describe what you need funding for"
               placeholder="Describe what you need funding for... e.g., 'We're a small nonprofit in California looking for grants to fund solar panel installations for low-income housing'"
               rows={3}
-              className="w-full px-4 py-3 rounded-xl bg-pulse-bg border border-pulse-border focus:border-pulse-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-pulse-accent/50 text-pulse-text placeholder:text-pulse-text-tertiary resize-none mb-4"
+              className="w-full px-4 py-3 rounded-lg bg-white/[0.03] border border-white/[0.06] focus:border-pulse-accent/40 focus:outline-none focus-visible:ring-1 focus-visible:ring-pulse-accent/30 text-pulse-text placeholder:text-pulse-text-tertiary resize-none mb-4"
             />
 
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-2">
-                <label className="text-xs text-pulse-text-secondary">Focus:</label>
+                <label className="text-label-sm text-pulse-text-secondary">Focus:</label>
                 <select
                   value={aiSearchFocus}
                   onChange={(e) => setAiSearchFocus(e.target.value)}
-                  className="px-3 py-1.5 rounded-lg bg-pulse-bg border border-pulse-border text-sm text-pulse-text focus:border-pulse-accent focus:outline-none"
+                  className="px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-body-sm text-pulse-text focus:border-pulse-accent/40 focus:outline-none"
                 >
                   <option value="all">All Sources</option>
                   <option value="recent">Recently Announced</option>
@@ -1429,10 +1401,10 @@ function DiscoverPageContent() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex items-center justify-center py-6 mt-4 border-t border-pulse-border"
+                className="flex items-center justify-center py-6 mt-4 border-t border-white/[0.05]"
               >
                 <Loader2 className="w-5 h-5 text-pulse-accent animate-spin mr-3" />
-                <span className="text-sm text-pulse-text-secondary">
+                <span className="text-body-sm text-pulse-text-secondary">
                   Searching the web with AI
                   <motion.span
                     animate={{ opacity: [1, 0.3, 1] }}
@@ -1444,12 +1416,12 @@ function DiscoverPageContent() {
 
             {/* AI Search Error */}
             {aiSearchError && (
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-pulse-error/10 border border-pulse-error/20 mt-4">
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-pulse-error/10 border border-pulse-error/20 mt-4">
                 <AlertCircle className="w-5 h-5 text-pulse-error shrink-0 mt-0.5" />
-                <p className="text-sm text-pulse-error">{aiSearchError}</p>
+                <p className="text-body-sm text-pulse-error">{aiSearchError}</p>
               </div>
             )}
-          </GlassCard>
+          </div>
         </motion.div>
       )}
 
@@ -1474,18 +1446,18 @@ function DiscoverPageContent() {
           transition={{ delay: 0.2 }}
           className="mb-6"
         >
-          <GlassCard variant="accent" className="p-4">
+          <div className="p-4 rounded-xl border border-pulse-accent/10 bg-pulse-accent/[0.02]">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-pulse-accent/20 border border-pulse-accent/30 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-lg bg-pulse-accent/10 flex items-center justify-center">
                   <Sparkles className="w-4 h-4 text-pulse-accent" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-pulse-text">
+                  <p className="text-body-sm font-medium text-pulse-text">
                     Your Top {aiMatchResults.length} Matched Grants
                   </p>
-                  <p className="text-xs text-pulse-text-tertiary">
-                    Based on your profile • Click any card to see details and next steps
+                  <p className="text-label-sm text-pulse-text-tertiary">
+                    Based on your profile -- Click any card to see details and next steps
                   </p>
                 </div>
               </div>
@@ -1493,7 +1465,7 @@ function DiscoverPageContent() {
                 Browse All Grants
               </Button>
             </div>
-          </GlassCard>
+          </div>
         </motion.div>
       ) : (
         <AISummaryBar total={total} loading={loading} sourceCounts={sourceCounts} />
@@ -1506,16 +1478,16 @@ function DiscoverPageContent() {
           animate={{ opacity: 1 }}
           className="mb-6"
         >
-          <GlassCard className="p-4 border-pulse-error/30">
+          <div className="p-4 rounded-xl border border-pulse-error/20 bg-pulse-error/[0.04]">
             <div className="flex items-center gap-3">
               <AlertCircle className="w-5 h-5 text-pulse-error" />
-              <p className="text-sm text-pulse-error">{error}</p>
+              <p className="text-body-sm text-pulse-error">{error}</p>
               <Button variant="ghost" size="sm" onClick={() => fetchGeneralGrants(searchQuery)}>
                 <RefreshCw className="w-4 h-4 mr-1" />
                 Retry
               </Button>
             </div>
-          </GlassCard>
+          </div>
         </motion.div>
       )}
 
@@ -1526,11 +1498,11 @@ function DiscoverPageContent() {
           animate={{ opacity: 1 }}
           className="text-center py-12"
         >
-          <div className="w-16 h-16 rounded-full bg-pulse-surface flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 rounded-full bg-white/[0.04] flex items-center justify-center mx-auto mb-4">
             <Globe className="w-8 h-8 text-pulse-text-tertiary" />
           </div>
-          <h3 className="text-lg font-semibold text-pulse-text mb-2">No sources selected</h3>
-          <p className="text-pulse-text-secondary mb-4">
+          <h3 className="text-heading text-pulse-text mb-2">No sources selected</h3>
+          <p className="text-body-sm text-pulse-text-secondary mb-4">
             Select at least one data source to search for grants
           </p>
           <Button variant="outline" onClick={() => updateURL({ filters: '1' })}>
@@ -1550,11 +1522,11 @@ function DiscoverPageContent() {
         >
           <div className="flex items-center gap-3">
             {isProfileMode && aiMatchResults ? (
-              <span className="text-sm text-pulse-text">
+              <span className="text-body-sm text-pulse-text">
                 <span className="font-semibold text-pulse-accent">{grants.length}</span> grants matched to your profile
               </span>
             ) : (
-              <span className="text-sm text-pulse-text">
+              <span className="text-body-sm text-pulse-text">
                 Showing <span className="font-semibold text-pulse-accent">{grants.length}</span>
                 {total > grants.length && ` of ${total.toLocaleString()}`} opportunities
               </span>
@@ -1576,28 +1548,28 @@ function DiscoverPageContent() {
       {!isAiSearchMode && loading && grants.length === 0 && (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {[...Array(6)].map((_, i) => (
-            <GlassCard key={i} className="p-5 animate-pulse">
+            <div key={i} className="p-5 animate-pulse rounded-xl border border-white/[0.05] bg-white/[0.02]">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <div className="h-5 w-20 bg-pulse-surface rounded-full" />
-                  <div className="h-5 w-14 bg-pulse-surface rounded-full" />
+                  <div className="h-5 w-20 bg-white/[0.04] rounded-full" />
+                  <div className="h-5 w-14 bg-white/[0.04] rounded-full" />
                 </div>
-                <div className="h-8 w-8 bg-pulse-surface rounded-lg" />
+                <div className="h-8 w-8 bg-white/[0.04] rounded-lg" />
               </div>
-              <div className="h-6 bg-pulse-surface rounded w-full mb-2" />
-              <div className="h-6 bg-pulse-surface rounded w-3/4 mb-1" />
-              <div className="h-4 bg-pulse-surface rounded w-1/2 mb-4" />
-              <div className="h-14 bg-pulse-surface rounded w-full mb-4" />
+              <div className="h-6 bg-white/[0.04] rounded w-full mb-2" />
+              <div className="h-6 bg-white/[0.04] rounded w-3/4 mb-1" />
+              <div className="h-4 bg-white/[0.04] rounded w-1/2 mb-4" />
+              <div className="h-14 bg-white/[0.04] rounded w-full mb-4" />
               <div className="flex gap-2 mb-4">
-                <div className="h-5 w-16 bg-pulse-surface rounded-full" />
-                <div className="h-5 w-20 bg-pulse-surface rounded-full" />
-                <div className="h-5 w-14 bg-pulse-surface rounded-full" />
+                <div className="h-5 w-16 bg-white/[0.04] rounded-full" />
+                <div className="h-5 w-20 bg-white/[0.04] rounded-full" />
+                <div className="h-5 w-14 bg-white/[0.04] rounded-full" />
               </div>
-              <div className="flex items-center justify-between pt-3 border-t border-pulse-border">
-                <div className="h-4 w-24 bg-pulse-surface rounded" />
-                <div className="h-4 w-20 bg-pulse-surface rounded" />
+              <div className="flex items-center justify-between pt-3 border-t border-white/[0.05]">
+                <div className="h-4 w-24 bg-white/[0.04] rounded" />
+                <div className="h-4 w-20 bg-white/[0.04] rounded" />
               </div>
-            </GlassCard>
+            </div>
           ))}
         </div>
       )}
@@ -1610,10 +1582,10 @@ function DiscoverPageContent() {
           transition={{ duration: 0.4 }}
           className="flex flex-col items-center justify-center text-center py-20"
         >
-          <div className="w-16 h-16 rounded-2xl bg-pulse-surface border border-pulse-border flex items-center justify-center mx-auto mb-6">
+          <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/[0.05] flex items-center justify-center mx-auto mb-6">
             <Search className="w-8 h-8 text-pulse-text-tertiary" />
           </div>
-          <h3 className="text-heading-sm font-semibold text-pulse-text mb-2">No grants found</h3>
+          <h3 className="text-heading text-pulse-text mb-2">No grants found</h3>
           <p className="text-body-sm text-pulse-text-secondary max-w-md mb-6">
             We couldn&apos;t find any grants matching your current search criteria. Try broadening your filters or using different keywords.
           </p>
@@ -1637,15 +1609,15 @@ function DiscoverPageContent() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <GlassCard className="p-4 border-yellow-500/30">
+          <div className="p-4 rounded-xl border border-yellow-500/15 bg-yellow-500/[0.04]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-yellow-500/20 border border-yellow-500/30 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-lg bg-yellow-500/10 border border-yellow-500/15 flex items-center justify-center">
                   <AlertCircle className="w-5 h-5 text-yellow-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-pulse-text">Profile Setup Needed</p>
-                  <p className="text-xs text-pulse-text-secondary">
+                  <p className="text-body-sm font-medium text-pulse-text">Profile Setup Needed</p>
+                  <p className="text-label-sm text-pulse-text-secondary">
                     {aiMatchError}
                   </p>
                 </div>
@@ -1661,7 +1633,7 @@ function DiscoverPageContent() {
                 </Button>
               </div>
             </div>
-          </GlassCard>
+          </div>
         </motion.div>
       )}
 
@@ -1674,7 +1646,7 @@ function DiscoverPageContent() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <span className="text-sm text-pulse-text">
+            <span className="text-body-sm text-pulse-text">
               <span className="font-semibold text-pulse-accent">{aiSearchResults.length}</span> grants found by AI
             </span>
           </motion.div>
@@ -1695,10 +1667,10 @@ function DiscoverPageContent() {
               transition={{ duration: 0.4 }}
               className="flex flex-col items-center justify-center text-center py-20"
             >
-              <div className="w-16 h-16 rounded-2xl bg-pulse-surface border border-pulse-border flex items-center justify-center mx-auto mb-6">
+              <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/[0.05] flex items-center justify-center mx-auto mb-6">
                 <Sparkles className="w-8 h-8 text-pulse-text-tertiary" />
               </div>
-              <h3 className="text-heading-sm font-semibold text-pulse-text mb-2">No grants found</h3>
+              <h3 className="text-heading text-pulse-text mb-2">No grants found</h3>
               <p className="text-body-sm text-pulse-text-secondary max-w-md mb-6">
                 AI couldn&apos;t find matching grants for your query. Try describing your needs differently or broadening your search criteria.
               </p>
@@ -1727,7 +1699,7 @@ function DiscoverPageContent() {
       {/* End of results indicator */}
       {!isProfileMode && grants.length > 0 && grants.length >= total && (
         <div className="flex items-center justify-center mt-8">
-          <span className="text-sm text-pulse-text-tertiary">Showing all {grants.length} results</span>
+          <span className="text-label-sm text-pulse-text-tertiary">Showing all {grants.length} results</span>
         </div>
       )}
 
@@ -1757,33 +1729,33 @@ function DiscoverLoading() {
       {/* Header skeleton */}
       <div className="mb-8 animate-pulse">
         <div className="flex items-center gap-2 mb-2">
-          <div className="h-5 w-5 bg-pulse-surface rounded" />
-          <div className="h-4 w-28 bg-pulse-surface rounded" />
+          <div className="h-4 w-4 bg-white/[0.04] rounded" />
+          <div className="h-4 w-28 bg-white/[0.04] rounded" />
         </div>
-        <div className="h-9 bg-pulse-surface rounded w-56 mb-2" />
-        <div className="h-4 bg-pulse-surface rounded w-96" />
+        <div className="h-9 bg-white/[0.04] rounded w-56 mb-2" />
+        <div className="h-4 bg-white/[0.04] rounded w-96" />
       </div>
       {/* Search bar skeleton */}
       <div className="mb-6 animate-pulse">
-        <div className="rounded-xl border border-pulse-border bg-pulse-elevated p-4">
-          <div className="h-12 bg-pulse-surface rounded-xl mb-4" />
-          <div className="flex items-center gap-2 pt-4 border-t border-pulse-border">
-            <div className="h-4 w-14 bg-pulse-surface rounded" />
+        <div className="rounded-xl border border-white/[0.05] bg-white/[0.02] p-4">
+          <div className="h-12 bg-white/[0.04] rounded-lg mb-4" />
+          <div className="flex items-center gap-2 pt-4 border-t border-white/[0.05]">
+            <div className="h-4 w-14 bg-white/[0.04] rounded" />
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-7 w-20 bg-pulse-surface rounded-full" />
+              <div key={i} className="h-7 w-20 bg-white/[0.04] rounded-full" />
             ))}
           </div>
         </div>
       </div>
       {/* Summary bar skeleton */}
       <div className="mb-6 animate-pulse">
-        <div className="rounded-xl border border-pulse-accent/20 bg-pulse-elevated p-4">
+        <div className="rounded-xl border border-pulse-accent/10 bg-pulse-accent/[0.02] p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-pulse-surface rounded-lg" />
+              <div className="w-9 h-9 bg-white/[0.04] rounded-lg" />
               <div>
-                <div className="h-4 w-48 bg-pulse-surface rounded mb-1" />
-                <div className="h-3 w-32 bg-pulse-surface rounded" />
+                <div className="h-4 w-48 bg-white/[0.04] rounded mb-1" />
+                <div className="h-3 w-32 bg-white/[0.04] rounded" />
               </div>
             </div>
           </div>
@@ -1792,25 +1764,25 @@ function DiscoverLoading() {
       {/* Grant grid skeleton */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="p-5 animate-pulse rounded-xl border border-pulse-border bg-pulse-elevated">
+          <div key={i} className="p-5 animate-pulse rounded-xl border border-white/[0.05] bg-white/[0.02]">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="h-5 w-20 bg-pulse-surface rounded-full" />
-                <div className="h-5 w-14 bg-pulse-surface rounded-full" />
+                <div className="h-5 w-20 bg-white/[0.04] rounded-full" />
+                <div className="h-5 w-14 bg-white/[0.04] rounded-full" />
               </div>
-              <div className="h-8 w-8 bg-pulse-surface rounded-lg" />
+              <div className="h-8 w-8 bg-white/[0.04] rounded-lg" />
             </div>
-            <div className="h-6 bg-pulse-surface rounded w-full mb-2" />
-            <div className="h-6 bg-pulse-surface rounded w-3/4 mb-1" />
-            <div className="h-4 bg-pulse-surface rounded w-1/2 mb-4" />
-            <div className="h-14 bg-pulse-surface rounded w-full mb-4" />
+            <div className="h-6 bg-white/[0.04] rounded w-full mb-2" />
+            <div className="h-6 bg-white/[0.04] rounded w-3/4 mb-1" />
+            <div className="h-4 bg-white/[0.04] rounded w-1/2 mb-4" />
+            <div className="h-14 bg-white/[0.04] rounded w-full mb-4" />
             <div className="flex gap-2 mb-4">
-              <div className="h-5 w-16 bg-pulse-surface rounded-full" />
-              <div className="h-5 w-20 bg-pulse-surface rounded-full" />
+              <div className="h-5 w-16 bg-white/[0.04] rounded-full" />
+              <div className="h-5 w-20 bg-white/[0.04] rounded-full" />
             </div>
-            <div className="flex items-center justify-between pt-3 border-t border-pulse-border">
-              <div className="h-4 w-24 bg-pulse-surface rounded" />
-              <div className="h-4 w-20 bg-pulse-surface rounded" />
+            <div className="flex items-center justify-between pt-3 border-t border-white/[0.05]">
+              <div className="h-4 w-24 bg-white/[0.04] rounded" />
+              <div className="h-4 w-20 bg-white/[0.04] rounded" />
             </div>
           </div>
         ))}

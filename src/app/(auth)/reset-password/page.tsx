@@ -91,33 +91,28 @@ function ResetPasswordForm() {
     return (
       <motion.div
         className="w-full max-w-md"
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{
-          duration: 0.4,
-          type: 'spring',
-          stiffness: 300,
-          damping: 30,
-        }}
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
       >
-        <Card className="border-pulse-border/50 overflow-hidden relative">
+        <Card className="overflow-hidden relative bg-white/[0.02] border border-white/[0.06] backdrop-blur-sm">
           <CardHeader className="text-center relative z-10">
             <motion.div
-              className="w-16 h-16 rounded-full bg-pulse-accent/20 border border-pulse-accent/30 flex items-center justify-center mx-auto mb-4"
+              className="w-16 h-16 rounded-full bg-pulse-accent/[0.1] border border-pulse-accent/[0.15] flex items-center justify-center mx-auto mb-4"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
             >
               <CheckCircle2 className="w-8 h-8 text-pulse-accent" />
             </motion.div>
-            <CardTitle className="font-serif text-heading-md">Password Reset!</CardTitle>
-            <CardDescription className="mt-2">
+            <CardTitle className="text-display-section text-pulse-text">Password Reset!</CardTitle>
+            <CardDescription className="text-body-sm text-pulse-text-secondary mt-2">
               Your password has been successfully reset.
             </CardDescription>
           </CardHeader>
 
           <CardContent className="relative z-10 space-y-4">
-            <p className="text-sm text-pulse-text-secondary text-center">
+            <p className="text-body-sm text-pulse-text-secondary text-center">
               Redirecting you to login...
             </p>
 
@@ -136,23 +131,18 @@ function ResetPasswordForm() {
   return (
     <motion.div
       className="w-full max-w-md"
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{
-        duration: 0.4,
-        type: 'spring',
-        stiffness: 300,
-        damping: 30,
-      }}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
     >
-      <Card className="border-pulse-border/50 overflow-hidden relative">
+      <Card className="overflow-hidden relative bg-white/[0.02] border border-white/[0.06] backdrop-blur-sm">
         <CardHeader className="text-center relative z-10">
-          <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="flex items-center justify-center gap-2 mb-5">
             <AnimatedLogo size="md" className="text-pulse-accent" />
             <BrandLogo size="lg" />
           </div>
-          <CardTitle className="font-serif text-heading-md">Reset your password</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-display-section text-pulse-text">Reset your password</CardTitle>
+          <CardDescription className="text-body-sm text-pulse-text-secondary">
             Enter your new password below
           </CardDescription>
         </CardHeader>
@@ -188,7 +178,7 @@ function ResetPasswordForm() {
               )}
 
               <div>
-                <label htmlFor="password" className="text-sm text-pulse-text-secondary mb-2 block">
+                <label htmlFor="password" className="text-body-sm text-pulse-text-secondary mb-2 block">
                   New Password
                 </label>
                 <div className="relative">
@@ -201,11 +191,13 @@ function ResetPasswordForm() {
                     icon={<Lock className="w-4 h-4" />}
                     required
                     autoFocus
+                    className="placeholder:text-pulse-text-tertiary/70"
                   />
                   <button
                     type="button"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-pulse-text-tertiary hover:text-pulse-text"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-pulse-text-tertiary hover:text-pulse-text transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -213,7 +205,7 @@ function ResetPasswordForm() {
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="text-sm text-pulse-text-secondary mb-2 block">
+                <label htmlFor="confirmPassword" className="text-body-sm text-pulse-text-secondary mb-2 block">
                   Confirm New Password
                 </label>
                 <Input
@@ -224,18 +216,19 @@ function ResetPasswordForm() {
                   placeholder="Confirm new password"
                   icon={<Lock className="w-4 h-4" />}
                   required
+                  className="placeholder:text-pulse-text-tertiary/70"
                 />
               </div>
 
               {/* Password requirements */}
-              <div className="text-xs text-pulse-text-tertiary space-y-1.5">
+              <div className="text-xs space-y-1.5">
                 {[
                   { met: password.length >= 8, label: 'At least 8 characters' },
                   { met: /[A-Z]/.test(password), label: 'One uppercase letter' },
                   { met: /[a-z]/.test(password), label: 'One lowercase letter' },
                   { met: /[0-9]/.test(password), label: 'One number' },
                 ].map((req) => (
-                  <div key={req.label} className={`flex items-center gap-2 ${req.met ? 'text-pulse-accent' : ''}`}>
+                  <div key={req.label} className={`flex items-center gap-2 ${req.met ? 'text-pulse-accent' : 'text-pulse-text-tertiary/70'}`}>
                     <Check className="w-3 h-3" />
                     <span>{req.label}</span>
                   </div>
@@ -248,7 +241,7 @@ function ResetPasswordForm() {
             </form>
           )}
 
-          <p className="mt-6 text-center text-sm text-pulse-text-secondary">
+          <p className="mt-6 text-center text-body-sm text-pulse-text-secondary">
             <Link href="/login" className="text-pulse-accent hover:underline flex items-center justify-center gap-1">
               <ArrowLeft className="w-4 h-4" />
               Back to login
@@ -264,7 +257,7 @@ export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
       <div className="w-full max-w-md">
-        <Card className="border-pulse-border/50">
+        <Card className="bg-white/[0.02] border border-white/[0.06] backdrop-blur-sm">
           <CardContent className="p-8 text-center">
             <div className="animate-pulse">
               <div className="w-16 h-16 bg-pulse-surface rounded-full mx-auto mb-4" />

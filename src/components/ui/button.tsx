@@ -11,13 +11,15 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-pulse-accent text-pulse-bg font-medium hover:bg-pulse-accent/90',
+          'bg-pulse-accent text-pulse-bg font-medium hover:bg-pulse-accent/90 shadow-[0_0_20px_rgba(64,255,170,0.25)] hover:shadow-[0_0_30px_rgba(64,255,170,0.4)]',
+        gradient:
+          'bg-gradient-to-r from-pulse-accent to-emerald-500 text-pulse-bg font-medium shadow-[0_0_20px_rgba(64,255,170,0.3)] hover:shadow-[0_0_35px_rgba(64,255,170,0.5)] hover:brightness-110',
         secondary:
           'bg-transparent border border-pulse-border text-pulse-text-primary hover:bg-pulse-elevated hover:border-pulse-border-hover',
         outline:
           'border border-pulse-border bg-transparent text-pulse-text hover:bg-pulse-surface hover:border-pulse-border-hover',
         ghost:
-          'text-pulse-text-secondary hover:text-pulse-text hover:bg-pulse-surface',
+          'text-pulse-text-secondary hover:text-pulse-text hover:bg-pulse-accent/5',
         link:
           'text-pulse-accent underline-offset-4 hover:underline',
         destructive:

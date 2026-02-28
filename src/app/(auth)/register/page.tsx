@@ -117,52 +117,37 @@ export default function RegisterPage() {
   return (
     <motion.div
       className="w-full max-w-md"
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{
-        duration: 0.4,
-        type: 'spring',
-        stiffness: 300,
-        damping: 30,
-      }}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
     >
-      <Card  className="border-pulse-border/50 overflow-hidden relative">
-        {/* Animated background shimmer */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-pulse-accent/5 to-transparent"
-          initial={{ x: '-100%' }}
-          animate={{ x: '200%' }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            repeatDelay: 5,
-            ease: 'linear',
-          }}
-        />
-
-        <CardHeader className="text-center relative z-10">
+      {/* Card with subtle border */}
+      <Card className="overflow-hidden relative bg-white/[0.02] border border-white/[0.06] backdrop-blur-sm">
+        <CardHeader className="text-center relative z-10 pb-2">
           <motion.div
-            className="flex items-center justify-center gap-2 mb-4"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.05, duration: 0.3 }}
+            className="flex items-center justify-center gap-2 mb-5"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.05, duration: 0.4 }}
           >
             <AnimatedLogo size="md" className="text-pulse-accent" />
             <BrandLogo size="lg" />
           </motion.div>
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <CardTitle className="text-xl font-semibold text-pulse-text">Create an account</CardTitle>
+            <CardTitle className="text-display-section text-pulse-text">Create an account</CardTitle>
           </motion.div>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <CardDescription>Start discovering grants in minutes</CardDescription>
+            <CardDescription className="text-body-sm text-pulse-text-secondary">
+              Start discovering grants in minutes
+            </CardDescription>
           </motion.div>
         </CardHeader>
 
@@ -187,11 +172,11 @@ export default function RegisterPage() {
             </AnimatePresence>
 
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
             >
-              <label htmlFor="name" className="text-sm text-pulse-text-secondary mb-2 block">
+              <label htmlFor="name" className="text-body-sm text-pulse-text-secondary mb-2 block">
                 Full Name <span className="text-pulse-error">*</span>
               </label>
               <Input
@@ -202,15 +187,16 @@ export default function RegisterPage() {
                 placeholder="John Doe"
                 icon={<User className="w-4 h-4" />}
                 required
+                className="placeholder:text-pulse-text-tertiary/70"
               />
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.25 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
             >
-              <label htmlFor="email" className="text-sm text-pulse-text-secondary mb-2 block">
+              <label htmlFor="email" className="text-body-sm text-pulse-text-secondary mb-2 block">
                 Email Address <span className="text-pulse-error">*</span>
               </label>
               <Input
@@ -221,15 +207,16 @@ export default function RegisterPage() {
                 placeholder="you@example.com"
                 icon={<Mail className="w-4 h-4" />}
                 required
+                className="placeholder:text-pulse-text-tertiary/70"
               />
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
             >
-              <label htmlFor="organization" className="text-sm text-pulse-text-secondary mb-2 block">
+              <label htmlFor="organization" className="text-body-sm text-pulse-text-secondary mb-2 block">
                 Organization
               </label>
               <Input
@@ -239,15 +226,16 @@ export default function RegisterPage() {
                 onChange={(e) => updateField('organization', e.target.value)}
                 placeholder="Your organization (optional)"
                 icon={<Building2 className="w-4 h-4" />}
+                className="placeholder:text-pulse-text-tertiary/70"
               />
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.35 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
             >
-              <label htmlFor="password" className="text-sm text-pulse-text-secondary mb-2 block">
+              <label htmlFor="password" className="text-body-sm text-pulse-text-secondary mb-2 block">
                 Password <span className="text-pulse-error">*</span>
               </label>
               <div className="relative">
@@ -256,31 +244,30 @@ export default function RegisterPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={(e) => updateField('password', e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Create a password"
                   icon={<Lock className="w-4 h-4" />}
                   required
+                  className="placeholder:text-pulse-text-tertiary/70"
                 />
-                <motion.button
+                <button
                   type="button"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-pulse-text-tertiary hover:text-pulse-text"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-pulse-text-tertiary hover:text-pulse-text transition-colors"
                 >
                   {showPassword ? (
                     <EyeOff className="w-4 h-4" />
                   ) : (
                     <Eye className="w-4 h-4" />
                   )}
-                </motion.button>
+                </button>
               </div>
 
               {/* Password Requirements */}
               <AnimatePresence>
                 {formData.password && (
                   <motion.div
-                    className="mt-2 space-y-1"
+                    className="mt-2.5 space-y-1.5"
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
@@ -292,19 +279,19 @@ export default function RegisterPage() {
                         className={`flex items-center gap-2 text-xs ${
                           req.check(formData.password)
                             ? 'text-pulse-accent'
-                            : 'text-pulse-text-tertiary'
+                            : 'text-pulse-text-tertiary/70'
                         }`}
-                        initial={{ opacity: 0, x: -10 }}
+                        initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.05 }}
+                        transition={{ delay: index * 0.04 }}
                       >
                         <motion.div
                           animate={
                             req.check(formData.password)
-                              ? { scale: [1, 1.3, 1] }
+                              ? { scale: [1, 1.2, 1] }
                               : {}
                           }
-                          transition={{ duration: 0.3 }}
+                          transition={{ duration: 0.25 }}
                         >
                           <Check className="w-3 h-3" />
                         </motion.div>
@@ -317,11 +304,11 @@ export default function RegisterPage() {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
             >
-              <label htmlFor="confirmPassword" className="text-sm text-pulse-text-secondary mb-2 block">
+              <label htmlFor="confirmPassword" className="text-body-sm text-pulse-text-secondary mb-2 block">
                 Confirm Password <span className="text-pulse-error">*</span>
               </label>
               <Input
@@ -329,14 +316,15 @@ export default function RegisterPage() {
                 type="password"
                 value={formData.confirmPassword}
                 onChange={(e) => updateField('confirmPassword', e.target.value)}
-                placeholder="••••••••"
+                placeholder="Confirm your password"
                 icon={<Lock className="w-4 h-4" />}
                 required
+                className="placeholder:text-pulse-text-tertiary/70"
               />
               <AnimatePresence>
                 {formData.confirmPassword && formData.password !== formData.confirmPassword && (
                   <motion.p
-                    className="mt-1 text-xs text-pulse-error"
+                    className="mt-1.5 text-xs text-pulse-error"
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -5 }}
@@ -348,10 +336,10 @@ export default function RegisterPage() {
             </motion.div>
 
             <motion.div
-              className="flex items-start gap-2"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.45 }}
+              className="flex items-start gap-2.5"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
             >
               <motion.button
                 type="button"
@@ -364,7 +352,6 @@ export default function RegisterPage() {
                     ? 'bg-pulse-accent border-pulse-accent'
                     : 'border-pulse-border hover:border-pulse-border-hover'
                 }`}
-                whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
                 <AnimatePresence>
@@ -380,7 +367,7 @@ export default function RegisterPage() {
                   )}
                 </AnimatePresence>
               </motion.button>
-              <p className="text-xs text-pulse-text-secondary">
+              <p className="text-xs text-pulse-text-secondary/80">
                 I agree to the{' '}
                 <Link href="/terms" className="text-pulse-accent hover:underline">
                   Terms of Service
@@ -393,9 +380,9 @@ export default function RegisterPage() {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
+              transition={{ delay: 0.45 }}
             >
               <Button type="submit" className="w-full" loading={isLoading}>
                 Create Account
@@ -408,13 +395,13 @@ export default function RegisterPage() {
             className="relative my-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.55 }}
+            transition={{ delay: 0.5 }}
           >
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-pulse-border" />
+              <div className="w-full border-t border-white/[0.06]" />
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="px-2 bg-pulse-elevated text-pulse-text-tertiary">
+              <span className="px-3 bg-pulse-bg text-pulse-text-tertiary">
                 or continue with
               </span>
             </div>
@@ -422,9 +409,9 @@ export default function RegisterPage() {
 
           <motion.div
             className="grid grid-cols-2 gap-3"
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
+            transition={{ delay: 0.55 }}
           >
             <Button
               variant="outline"
@@ -454,10 +441,10 @@ export default function RegisterPage() {
           </motion.div>
 
           <motion.p
-            className="mt-6 text-center text-sm text-pulse-text-secondary"
+            className="mt-6 text-center text-body-sm text-pulse-text-secondary"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.65 }}
+            transition={{ delay: 0.6 }}
           >
             Already have an account?{' '}
             <Link href="/login" className="text-pulse-accent hover:underline">

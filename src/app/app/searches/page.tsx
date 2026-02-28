@@ -115,23 +115,23 @@ function SearchStats() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4 sm:gap-6 flex-wrap">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-pulse-accent/20 border border-pulse-accent/30 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-pulse-accent/10 border border-pulse-accent/20 flex items-center justify-center">
                 <Search className="w-5 h-5 text-pulse-accent" />
               </div>
               <div>
-                <p className="text-3xl font-bold tabular-nums text-pulse-text">{totalSearches}</p>
-                <p className="text-xs text-pulse-text-tertiary">Saved searches</p>
+                <p className="text-stat-sm text-pulse-text">{totalSearches}</p>
+                <p className="text-label-sm text-pulse-text-tertiary normal-case">Saved searches</p>
               </div>
             </div>
             <div className="w-px h-10 bg-pulse-border hidden sm:block" />
             <div>
-              <p className="text-3xl font-bold tabular-nums text-pulse-accent">{totalAlerts}</p>
-              <p className="text-xs text-pulse-text-tertiary">Active alerts</p>
+              <p className="text-stat-sm text-pulse-accent">{totalAlerts}</p>
+              <p className="text-label-sm text-pulse-text-tertiary normal-case">Active alerts</p>
             </div>
             <div className="w-px h-10 bg-pulse-border hidden sm:block" />
             <div>
-              <p className="text-3xl font-bold tabular-nums text-pulse-warning">{totalNewMatches}</p>
-              <p className="text-xs text-pulse-text-tertiary">New matches</p>
+              <p className="text-stat-sm text-pulse-warning">{totalNewMatches}</p>
+              <p className="text-label-sm text-pulse-text-tertiary normal-case">New matches</p>
             </div>
           </div>
           <Button size="sm" asChild>
@@ -168,19 +168,19 @@ function SearchCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 + index * 0.05 }}
     >
-      <GlassCard className="p-5 hover:border-pulse-accent/30 transition-all">
+      <GlassCard className="p-5 hover:border-white/[0.1] transition-all">
         <div className="flex items-start justify-between gap-4">
           {/* Search Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-3">
-              <h3 className="text-lg font-semibold text-pulse-text truncate">{search.name}</h3>
+              <h3 className="text-heading text-pulse-text truncate">{search.name}</h3>
               {search.newMatches > 0 && (
                 <Badge variant="accent" className="shrink-0">
                   {search.newMatches} new
                 </Badge>
               )}
               {search.alertEnabled && (
-                <Badge variant="default" className="shrink-0 bg-blue-500/20 text-blue-400 border-blue-500/30">
+                <Badge variant="default" className="shrink-0 bg-teal-500/10 text-teal-400 border-teal-500/20">
                   <Bell className="w-3 h-3 mr-1" />
                   {search.alertFreq}
                 </Badge>
@@ -366,14 +366,14 @@ export default function SavedSearchesPage() {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Search className="w-5 h-5 text-pulse-accent" />
-              <span className="text-pulse-text-tertiary font-mono text-micro uppercase tracking-wider">
+              <span className="text-label text-pulse-text-tertiary">
                 Search Management
               </span>
             </div>
-            <h1 className="text-heading-lg md:text-display font-bold tracking-tight text-pulse-text">
+            <h1 className="text-display-page text-pulse-text">
               Saved Searches
             </h1>
-            <p className="text-pulse-text-secondary mt-2">
+            <p className="text-body text-pulse-text-secondary mt-2">
               Run saved searches instantly or enable alerts for new matches
             </p>
           </div>

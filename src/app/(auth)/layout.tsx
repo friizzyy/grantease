@@ -25,6 +25,12 @@ export default function AuthLayout({
 
       {/* Content */}
       <main id="main-content" className="relative z-10 flex-1 flex items-center justify-center p-6">
+        {/* Subtle ambient background */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-[-10%] left-[15%] w-[600px] h-[400px] rounded-full bg-pulse-accent/[0.03] blur-[160px]" />
+          <div className="absolute bottom-[-5%] right-[10%] w-[500px] h-[350px] rounded-full bg-emerald-500/[0.02] blur-[130px]" />
+        </div>
+
         <PageTransition>
           {children}
         </PageTransition>
@@ -33,7 +39,7 @@ export default function AuthLayout({
       {/* Simple Footer */}
       <footer className="relative z-10 p-6 text-center">
         <p className="text-xs text-pulse-text-tertiary">
-          © {new Date().getFullYear()} Grants By AI. All rights reserved.
+          &copy; {new Date().getFullYear()} Grants By AI. All rights reserved.
         </p>
       </footer>
     </div>

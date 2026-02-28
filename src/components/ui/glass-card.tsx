@@ -4,7 +4,7 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'elevated' | 'accent' | 'subtle'
+  variant?: 'default' | 'elevated' | 'accent' | 'subtle' | 'glow'
   interactive?: boolean
   border?: boolean
   children: React.ReactNode
@@ -21,7 +21,8 @@ export function GlassCard({
   const variantStyles = {
     default: 'bg-pulse-surface/60 backdrop-blur-xl',
     elevated: 'bg-pulse-elevated/70 backdrop-blur-2xl shadow-xl',
-    accent: 'bg-pulse-accent/5 backdrop-blur-xl',
+    accent: 'bg-gradient-to-br from-pulse-accent/5 via-pulse-surface to-pulse-surface backdrop-blur-xl',
+    glow: 'bg-pulse-surface/60 backdrop-blur-xl shadow-[0_0_20px_rgba(64,255,170,0.1)]',
     subtle: 'bg-pulse-surface/40 backdrop-blur-lg',
   }
 
@@ -35,10 +36,10 @@ export function GlassCard({
         borderStyles,
         interactive && [
           'cursor-pointer',
-          'hover:-translate-y-0.5',
-          'hover:border-pulse-border',
-          'hover:shadow-lg',
-          'hover:shadow-pulse-accent/5',
+          'hover:-translate-y-1',
+          'hover:border-pulse-accent/30',
+          'hover:shadow-[0_8px_30px_rgba(0,0,0,0.3),0_0_20px_rgba(64,255,170,0.08)]',
+          'hover:scale-[1.01]',
         ],
         className
       )}

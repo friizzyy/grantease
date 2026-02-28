@@ -1,10 +1,10 @@
 'use client'
 
 /**
- * ONBOARDING COMPLETE PAGE - PREMIUM GLASS DESIGN
- * -----------------------------------------------
+ * ONBOARDING COMPLETE PAGE
+ * ------------------------
  * Celebration screen after completing onboarding
- * Clean, minimal design with glass aesthetics
+ * Clean design with brand-consistent confetti
  */
 
 import { useEffect, useState, useMemo } from 'react'
@@ -25,7 +25,7 @@ import {
 import { useOnboarding } from '@/lib/contexts/OnboardingContext'
 import { ENTITY_TYPES, INDUSTRY_CATEGORIES } from '@/lib/types/onboarding'
 
-// Simple confetti component
+// Brand-consistent confetti
 function Confetti() {
   const [windowHeight, setWindowHeight] = useState(800)
 
@@ -34,7 +34,8 @@ function Confetti() {
   }, [])
 
   const confettiPieces = useMemo(() => {
-    const colors = ['#40ffaa', '#6366F1', '#F59E0B', '#EC4899', '#8B5CF6', '#14B8A6']
+    // Stick to brand palette: mint, emerald, teal
+    const colors = ['#40ffaa', '#34d399', '#2dd4bf', '#6ee7b7', '#5eead4', '#a7f3d0']
 
     return [...Array(50)].map((_, i) => ({
       id: i,
@@ -150,8 +151,8 @@ export default function OnboardingCompletePage() {
     <div className="min-h-screen bg-pulse-bg flex flex-col font-sans relative overflow-hidden">
       {/* Ambient background */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-pulse-accent/[0.08] blur-[150px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-emerald-500/[0.05] blur-[120px]" />
+        <div className="absolute top-[-10%] left-[15%] w-[700px] h-[500px] rounded-full bg-pulse-accent/[0.04] blur-[160px]" />
+        <div className="absolute bottom-[-10%] right-[10%] w-[500px] h-[400px] rounded-full bg-emerald-500/[0.025] blur-[130px]" />
       </div>
 
       {/* Confetti */}
@@ -183,16 +184,16 @@ export default function OnboardingCompletePage() {
 
           {/* Headline */}
           <motion.h1
-            className="text-heading-lg font-bold tracking-tight text-pulse-text mb-3"
+            className="text-display-section text-pulse-text mb-3"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            You're all set!
+            You&apos;re all set!
           </motion.h1>
 
           <motion.p
-            className="text-lg text-pulse-text-secondary mb-8"
+            className="text-body-lg text-pulse-text-secondary mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
@@ -209,16 +210,16 @@ export default function OnboardingCompletePage() {
                 transition={{ delay: 0.1 }}
                 className="mb-8"
               >
-                <div className="inline-block p-6 rounded-2xl bg-white/[0.02] backdrop-blur-xl border border-white/[0.06]">
+                <div className="inline-block p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
                   <div className="flex items-center justify-center gap-4">
                     <div className="w-14 h-14 rounded-xl bg-pulse-accent/10 flex items-center justify-center">
                       <Search className="w-7 h-7 text-pulse-accent" />
                     </div>
                     <div className="text-left">
-                      <p className="text-4xl font-bold text-pulse-accent">
+                      <p className="text-stat text-pulse-accent tabular-nums">
                         {matchCount}
                       </p>
-                      <p className="text-sm text-pulse-text-secondary">grants match your profile</p>
+                      <p className="text-body-sm text-pulse-text-secondary">grants match your profile</p>
                     </div>
                   </div>
                 </div>
@@ -235,12 +236,12 @@ export default function OnboardingCompletePage() {
                 transition={{ delay: 0.3 }}
                 className="mb-8"
               >
-                <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] text-left">
+                <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.05] text-left">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="w-7 h-7 rounded-lg bg-white/[0.04] flex items-center justify-center">
                       <User className="w-3.5 h-3.5 text-pulse-text-tertiary" />
                     </div>
-                    <h3 className="text-xs font-medium text-pulse-text-tertiary uppercase tracking-wider">
+                    <h3 className="text-label-sm text-pulse-text-tertiary">
                       Your Profile
                     </h3>
                   </div>
@@ -251,7 +252,7 @@ export default function OnboardingCompletePage() {
                         <div className="w-7 h-7 rounded-lg bg-white/[0.04] flex items-center justify-center">
                           <Briefcase className="w-3.5 h-3.5 text-pulse-text-tertiary" />
                         </div>
-                        <span className="text-sm text-pulse-text">{entityLabel}</span>
+                        <span className="text-body-sm text-pulse-text">{entityLabel}</span>
                       </div>
                     )}
 
@@ -260,7 +261,7 @@ export default function OnboardingCompletePage() {
                         <div className="w-7 h-7 rounded-lg bg-white/[0.04] flex items-center justify-center">
                           <MapPin className="w-3.5 h-3.5 text-pulse-text-tertiary" />
                         </div>
-                        <span className="text-sm text-pulse-text">{state.state}, {state.country}</span>
+                        <span className="text-body-sm text-pulse-text">{state.state}, {state.country}</span>
                       </div>
                     )}
 
@@ -269,7 +270,7 @@ export default function OnboardingCompletePage() {
                         <div className="w-7 h-7 rounded-lg bg-white/[0.04] flex items-center justify-center">
                           <Target className="w-3.5 h-3.5 text-pulse-text-tertiary" />
                         </div>
-                        <span className="text-sm text-pulse-text">
+                        <span className="text-body-sm text-pulse-text">
                           {industryLabels.join(', ')}
                           {state.industryTags.length > 3 && (
                             <span className="text-pulse-text-tertiary"> +{state.industryTags.length - 3} more</span>
@@ -294,7 +295,7 @@ export default function OnboardingCompletePage() {
               >
                 <Link
                   href="/app/discover"
-                  className="w-full flex items-center justify-center gap-2 py-4 px-6 rounded-xl bg-pulse-accent text-pulse-bg font-medium hover:bg-pulse-accent/90 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-4 px-6 rounded-xl bg-pulse-accent text-pulse-bg font-semibold hover:bg-pulse-accent/90 shadow-lg shadow-pulse-accent/25 transition-all"
                 >
                   <Search className="w-5 h-5" />
                   <span>Explore Your Matches</span>
@@ -307,14 +308,14 @@ export default function OnboardingCompletePage() {
                     className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-white/[0.06] text-pulse-text-secondary hover:text-pulse-text hover:border-white/[0.12] transition-colors"
                   >
                     <Rocket className="w-4 h-4" />
-                    <span>Dashboard</span>
+                    <span className="text-body-sm">Dashboard</span>
                   </Link>
                   <Link
                     href="/app/settings"
                     className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-white/[0.06] text-pulse-text-secondary hover:text-pulse-text hover:border-white/[0.12] transition-colors"
                   >
                     <Bell className="w-4 h-4" />
-                    <span>Set Up Alerts</span>
+                    <span className="text-body-sm">Set Up Alerts</span>
                   </Link>
                 </div>
               </motion.div>
@@ -323,7 +324,7 @@ export default function OnboardingCompletePage() {
 
           {/* Edit later hint */}
           <motion.p
-            className="mt-8 text-xs text-pulse-text-tertiary"
+            className="mt-8 text-label-sm text-pulse-text-tertiary"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.9 }}

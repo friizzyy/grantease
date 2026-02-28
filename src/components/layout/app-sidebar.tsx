@@ -54,7 +54,9 @@ export function AppSidebar({ isAdmin = false }: AppSidebarProps) {
   }
 
   return (
-    <aside className="hidden md:block fixed left-0 top-0 bottom-0 w-52 bg-pulse-surface/50 border-r border-pulse-border/60 backdrop-blur-xl z-40">
+    <aside className="hidden md:block fixed left-0 top-0 bottom-0 w-52 bg-pulse-surface/50 backdrop-blur-xl z-40">
+      {/* Right border gradient */}
+      <div className="absolute right-0 top-0 bottom-0 w-px bg-gradient-to-b from-pulse-accent/10 via-transparent to-pulse-accent/10" />
       <div className="flex flex-col h-full">
         {/* Logo */}
         <div className="px-5 py-5 border-b border-pulse-border/40">
@@ -152,7 +154,7 @@ function NavItem({ href, label, icon: Icon, isActive }: NavItemProps) {
     <Link href={href} className="block relative rounded-lg focus-visible:ring-2 focus-visible:ring-pulse-accent/50 focus-visible:outline-none" aria-current={isActive ? 'page' : undefined}>
       <motion.div
         className={cn(
-          'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 relative',
+          'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 relative',
           isActive
             ? 'text-pulse-accent'
             : 'text-pulse-text-secondary hover:text-pulse-text hover:bg-pulse-elevated'

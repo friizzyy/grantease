@@ -5,9 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Calendar, DollarSign, MapPin, Bookmark, ExternalLink, Check } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { formatCurrency, formatRelativeDate, truncate, parseJSON } from '@/lib/utils'
-import { springs, easings } from '@/lib/motion/animations'
+import { cn, formatCurrency, formatRelativeDate, truncate, parseJSON } from '@/lib/utils'
 import type { Grant } from '@/types'
 import { useState } from 'react'
 
@@ -19,10 +17,21 @@ interface GrantCardProps {
   index?: number
 }
 
+/** Compute days until deadline */
+function getDaysUntilDeadline(deadlineDate?: Date | null): number | null {
+  if (!deadlineDate) return null
+  const now = new Date()
+  const deadline = new Date(deadlineDate)
+  const diffMs = deadline.getTime() - now.getTime()
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+}
+
 export function GrantCard({ grant, saved, onSave, onUnsave, index = 0 }: GrantCardProps) {
   const categories = parseJSON<string[]>(grant.categories, [])
   const eligibility = parseJSON<{ types: string[] }>(grant.eligibility, { types: [] })
   const [showSaveConfirm, setShowSaveConfirm] = useState(false)
+  const daysUntilDeadline = getDaysUntilDeadline(grant.deadlineDate)
+  const isUrgent = daysUntilDeadline !== null && daysUntilDeadline >= 0 && daysUntilDeadline < 7
 
   const statusVariant = {
     open: 'success',
@@ -41,7 +50,7 @@ export function GrantCard({ grant, saved, onSave, onUnsave, index = 0 }: GrantCa
   }
 
   return (
-    <Card className="p-6 group">
+    <div className="p-6 group rounded-xl border border-white/[0.05] bg-white/[0.02] hover:border-white/[0.1] transition-all duration-200">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-3">
         <motion.span
@@ -52,15 +61,19 @@ export function GrantCard({ grant, saved, onSave, onUnsave, index = 0 }: GrantCa
         >
           {grant.sponsor}
         </motion.span>
-        <Badge variant={statusVariant} className="capitalize shrink-0">
-          {grant.status}
+        <Badge
+          variant={statusVariant}
+          pulse={isUrgent && grant.status === 'open'}
+          className="capitalize shrink-0"
+        >
+          {isUrgent && grant.status === 'open' ? 'Closing Soon' : grant.status}
         </Badge>
       </div>
 
       {/* Title */}
       <Link href={`/app/grants/${grant.id}`} className="block group/link">
         <motion.h3
-          className="text-heading text-pulse-text group-hover/link:text-pulse-accent transition-colors mb-2 line-clamp-2"
+          className="text-heading-sm text-pulse-text group-hover/link:text-pulse-accent transition-colors mb-2 line-clamp-2"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.15, duration: 0.3 }}
@@ -81,26 +94,29 @@ export function GrantCard({ grant, saved, onSave, onUnsave, index = 0 }: GrantCa
 
       {/* Categories */}
       <motion.div
-        className="flex flex-wrap gap-2 mb-4"
+        className="flex flex-wrap gap-1.5 mb-4"
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25, duration: 0.3 }}
       >
-        {categories.slice(0, 3).map((cat, i) => (
-          <Badge key={cat} variant="outline" className="text-xs">
+        {categories.slice(0, 3).map((cat) => (
+          <span
+            key={cat}
+            className="px-2 py-0.5 rounded-full text-label-sm bg-white/[0.04] border border-white/[0.06] text-pulse-text-tertiary"
+          >
             {cat}
-          </Badge>
+          </span>
         ))}
         {categories.length > 3 && (
-          <Badge variant="outline" className="text-xs">
+          <span className="px-2 py-0.5 rounded-full text-label-sm bg-white/[0.04] border border-white/[0.06] text-pulse-text-tertiary">
             +{categories.length - 3}
-          </Badge>
+          </span>
         )}
       </motion.div>
 
       {/* Meta Info */}
       <motion.div
-        className="flex flex-wrap items-center gap-4 text-sm text-pulse-text-tertiary mb-4"
+        className="flex flex-wrap items-center gap-4 text-body-sm text-pulse-text-tertiary mb-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.3 }}
@@ -121,16 +137,19 @@ export function GrantCard({ grant, saved, onSave, onUnsave, index = 0 }: GrantCa
         )}
 
         {grant.deadlineDate && (
-          <div className="flex items-center gap-1.5">
+          <div className={cn(
+            'flex items-center gap-1.5',
+            isUrgent && 'text-orange-400 font-medium'
+          )}>
             <Calendar className="w-4 h-4" />
-            <span>{formatRelativeDate(grant.deadlineDate)}</span>
+            <span>{isUrgent ? `${daysUntilDeadline}d left` : formatRelativeDate(grant.deadlineDate)}</span>
           </div>
         )}
       </motion.div>
 
       {/* Actions */}
       <motion.div
-        className="flex items-center justify-between pt-4 border-t border-pulse-border"
+        className="flex items-center justify-between pt-4 border-t border-white/[0.05]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.35, duration: 0.3 }}
@@ -147,10 +166,10 @@ export function GrantCard({ grant, saved, onSave, onUnsave, index = 0 }: GrantCa
                 {showSaveConfirm ? (
                   <motion.div
                     key="check"
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    exit={{ scale: 0, rotate: 180 }}
-                    transition={springs.bouncy}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                     className="flex items-center gap-1"
                   >
                     <Check className="w-4 h-4 text-pulse-accent" />
@@ -164,12 +183,7 @@ export function GrantCard({ grant, saved, onSave, onUnsave, index = 0 }: GrantCa
                     exit={{ scale: 0.8, opacity: 0 }}
                     className="flex items-center gap-1"
                   >
-                    <motion.div
-                      whileHover={{ scale: 1.2 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <Bookmark className={`w-4 h-4 ${saved ? 'fill-current' : ''}`} />
-                    </motion.div>
+                    <Bookmark className={`w-4 h-4 ${saved ? 'fill-current' : ''}`} />
                     <span>{saved ? 'Saved' : 'Save'}</span>
                   </motion.div>
                 )}
@@ -193,7 +207,7 @@ export function GrantCard({ grant, saved, onSave, onUnsave, index = 0 }: GrantCa
           </Link>
         </Button>
       </motion.div>
-    </Card>
+    </div>
   )
 }
 

@@ -1,12 +1,12 @@
 'use client'
 
 /**
- * ONBOARDING PROGRESS - PREMIUM REDESIGN
- * --------------------------------------
+ * ONBOARDING PROGRESS
+ * -------------------
  * Clean, minimal progress indicator:
  * - Smooth animated mint progress bar
  * - Step counter with labels
- * - No distracting animations
+ * - Uses design system typography
  */
 
 import { motion } from 'framer-motion'
@@ -32,14 +32,14 @@ export function OnboardingProgress({ currentStep, totalSteps = 5 }: OnboardingPr
       {/* Header with step info */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <span className="text-pulse-text-tertiary font-mono text-xs uppercase tracking-wider">
+          <span className="text-label-sm text-pulse-text-tertiary">
             Step {currentStep} of {totalSteps}
           </span>
-          <h2 className="text-heading-sm font-semibold text-pulse-text mt-1">
+          <h2 className="text-heading-sm text-pulse-text mt-1">
             {STEP_LABELS[currentStep - 1]}
           </h2>
         </div>
-        <span className="text-heading font-bold text-pulse-accent">
+        <span className="text-heading text-pulse-accent tabular-nums">
           {Math.round((currentStep / totalSteps) * 100)}%
         </span>
       </div>
@@ -54,7 +54,7 @@ export function OnboardingProgress({ currentStep, totalSteps = 5 }: OnboardingPr
         />
       </div>
 
-      {/* Step dots — desktop only */}
+      {/* Step dots -- desktop only */}
       <div className="hidden md:flex items-center justify-between mt-4">
         {STEP_LABELS.map((label, index) => {
           const stepNum = index + 1
@@ -70,8 +70,8 @@ export function OnboardingProgress({ currentStep, totalSteps = 5 }: OnboardingPr
                   'bg-white/[0.1]'
                 }`}
               />
-              <span className={`text-xs transition-colors ${
-                isCurrent ? 'text-pulse-text font-medium' :
+              <span className={`text-label-sm transition-colors ${
+                isCurrent ? 'text-pulse-text' :
                 isCompleted ? 'text-pulse-text-secondary' :
                 'text-pulse-text-tertiary'
               }`}>

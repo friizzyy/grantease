@@ -124,16 +124,14 @@ function SavedGrantCard({
   const matchScore = grant.matchScore
 
   const getMatchColor = (score: number) => {
-    if (score >= 90) return 'text-pulse-accent'
-    if (score >= 80) return 'text-blue-400'
-    if (score >= 70) return 'text-yellow-400'
+    if (score >= 80) return 'text-pulse-accent'
+    if (score >= 60) return 'text-emerald-400'
     return 'text-pulse-text-tertiary'
   }
 
   const getMatchBg = (score: number) => {
-    if (score >= 90) return 'bg-pulse-accent/10 border-pulse-accent/30'
-    if (score >= 80) return 'bg-blue-500/10 border-blue-500/30'
-    if (score >= 70) return 'bg-yellow-500/10 border-yellow-500/30'
+    if (score >= 80) return 'bg-pulse-accent/10 border-pulse-accent/30'
+    if (score >= 60) return 'bg-emerald-500/10 border-emerald-500/30'
     return 'bg-pulse-surface border-pulse-border'
   }
 
@@ -144,7 +142,7 @@ function SavedGrantCard({
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ delay: index * 0.05 }}
     >
-      <GlassCard className="p-5 hover:border-pulse-accent/30 transition-all group">
+      <GlassCard className="p-5 hover:border-white/[0.1] transition-all group">
         {/* Top Row - Match Score & Actions */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -667,7 +665,7 @@ export default function SavedGrantsPage() {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <BookmarkCheck className="w-5 h-5 text-pulse-accent" />
-              <span className="text-pulse-text-tertiary font-mono text-micro uppercase tracking-wider">
+              <span className="text-label text-pulse-text-tertiary">
                 Your Collection
               </span>
             </div>

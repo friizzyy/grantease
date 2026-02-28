@@ -18,16 +18,16 @@ import * as LucideIcons from 'lucide-react'
 // Type-safe icon lookup from lucide-react namespace
 const LucideIconMap = LucideIcons as unknown as Record<string, LucideIcon>
 
-// Color mappings for different entity/option types
+// Color mappings standardized to pulse-accent / emerald / teal family
 const GRADIENT_COLORS: Record<string, string> = {
-  // Entity types
-  individual: 'from-violet-500 to-purple-600',
-  nonprofit: 'from-rose-500 to-pink-600',
-  small_business: 'from-blue-500 to-cyan-600',
-  for_profit: 'from-amber-500 to-orange-600',
+  // Entity types -- all within the brand palette
+  individual: 'from-pulse-accent to-emerald-500',
+  nonprofit: 'from-emerald-400 to-teal-500',
+  small_business: 'from-teal-400 to-emerald-500',
+  for_profit: 'from-pulse-accent to-teal-500',
   educational: 'from-emerald-500 to-teal-600',
-  government: 'from-slate-500 to-gray-600',
-  tribal: 'from-orange-500 to-red-600',
+  government: 'from-teal-500 to-emerald-600',
+  tribal: 'from-emerald-500 to-pulse-accent',
   // Default
   default: 'from-pulse-accent to-emerald-500',
 }

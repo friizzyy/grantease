@@ -22,6 +22,8 @@ import {
   Clock,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { AnimatedLogo } from '@/components/ui/animated-logo'
+import { BrandLogo } from '@/components/ui/brand-logo'
 import { ENTITY_TYPES, US_STATES, INDUSTRY_CATEGORIES, EntityType } from '@/lib/types/onboarding'
 import {
   Select,
@@ -125,29 +127,27 @@ export default function QuickOnboardingPage() {
 
   return (
     <div className="min-h-screen bg-pulse-bg flex flex-col font-sans">
-      {/* Background effects */}
+      {/* Subtle ambient background */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-pulse-accent/[0.08] blur-[100px]" />
-        <div className="absolute bottom-1/3 left-1/3 w-[300px] h-[300px] rounded-full bg-emerald-500/[0.05] blur-[80px]" />
+        <div className="absolute top-[-10%] right-[15%] w-[600px] h-[400px] rounded-full bg-pulse-accent/[0.03] blur-[160px]" />
+        <div className="absolute bottom-[-5%] left-[20%] w-[500px] h-[350px] rounded-full bg-emerald-500/[0.02] blur-[130px]" />
       </div>
 
       {/* Header */}
-      <header className="relative z-10 p-6 border-b border-white/[0.06]">
+      <header className="relative z-10 p-6 border-b border-white/[0.04]">
         <div className="max-w-xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-pulse-accent flex items-center justify-center">
-              <Zap className="w-5 h-5 text-pulse-bg" />
-            </div>
-            <span className="font-bold text-pulse-text">Quick Start</span>
+            <AnimatedLogo size="sm" className="text-pulse-accent" />
+            <BrandLogo size="md" />
           </Link>
-          <div className="flex items-center gap-2 text-sm text-pulse-text-tertiary">
+          <div className="flex items-center gap-2 text-label-sm text-pulse-text-tertiary">
             <Clock className="w-4 h-4" />
             <span>~60 seconds</span>
           </div>
         </div>
       </header>
 
-      {/* Progress bar — smooth mint animated */}
+      {/* Progress bar */}
       <div className="relative z-10 w-full h-1 bg-pulse-surface rounded-full overflow-hidden">
         <motion.div
           className="h-full bg-pulse-accent rounded-full"
@@ -170,13 +170,13 @@ export default function QuickOnboardingPage() {
                 exit={{ opacity: 0, x: -20 }}
               >
                 <div className="text-center mb-8">
-                  <div className="w-12 h-12 rounded-xl bg-pulse-accent/20 flex items-center justify-center mx-auto mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-pulse-accent/[0.1] flex items-center justify-center mx-auto mb-4">
                     <Building2 className="w-6 h-6 text-pulse-accent" />
                   </div>
-                  <h1 className="text-heading-lg font-bold tracking-tight text-pulse-text mb-2">
+                  <h1 className="text-display-section text-pulse-text mb-2">
                     What type of organization?
                   </h1>
-                  <p className="text-pulse-text-secondary">
+                  <p className="text-body text-pulse-text-secondary">
                     Select the option that best describes you
                   </p>
                 </div>
@@ -186,14 +186,14 @@ export default function QuickOnboardingPage() {
                     <button
                       key={entity.value}
                       onClick={() => setEntityType(entity.value)}
-                      className={`p-4 rounded-xl border text-left transition-all ${
+                      className={`p-4 rounded-xl border text-left transition-all duration-200 ${
                         entityType === entity.value
-                          ? 'bg-pulse-accent/5 border-pulse-accent/30 ring-1 ring-pulse-accent/20 text-pulse-text'
-                          : 'bg-pulse-surface border-pulse-border text-pulse-text-secondary hover:border-pulse-border-hover'
+                          ? 'bg-pulse-accent/[0.06] border-pulse-accent/30 text-pulse-text'
+                          : 'bg-white/[0.02] border-white/[0.06] text-pulse-text-secondary hover:border-white/[0.1] hover:bg-white/[0.04]'
                       }`}
                     >
                       <div className="text-lg mb-1">{entity.icon}</div>
-                      <div className="text-sm font-medium">{entity.label}</div>
+                      <div className="text-body-sm font-medium">{entity.label}</div>
                     </button>
                   ))}
                 </div>
@@ -209,13 +209,13 @@ export default function QuickOnboardingPage() {
                 exit={{ opacity: 0, x: -20 }}
               >
                 <div className="text-center mb-8">
-                  <div className="w-12 h-12 rounded-xl bg-pulse-accent/20 flex items-center justify-center mx-auto mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-pulse-accent/[0.1] flex items-center justify-center mx-auto mb-4">
                     <MapPin className="w-6 h-6 text-pulse-accent" />
                   </div>
-                  <h1 className="text-heading-lg font-bold tracking-tight text-pulse-text mb-2">
+                  <h1 className="text-display-section text-pulse-text mb-2">
                     Where are you based?
                   </h1>
-                  <p className="text-pulse-text-secondary">
+                  <p className="text-body text-pulse-text-secondary">
                     Many grants are region-specific
                   </p>
                 </div>
@@ -244,13 +244,13 @@ export default function QuickOnboardingPage() {
                 exit={{ opacity: 0, x: -20 }}
               >
                 <div className="text-center mb-8">
-                  <div className="w-12 h-12 rounded-xl bg-pulse-accent/20 flex items-center justify-center mx-auto mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-pulse-accent/[0.1] flex items-center justify-center mx-auto mb-4">
                     <Target className="w-6 h-6 text-pulse-accent" />
                   </div>
-                  <h1 className="text-heading-lg font-bold tracking-tight text-pulse-text mb-2">
+                  <h1 className="text-display-section text-pulse-text mb-2">
                     What do you focus on?
                   </h1>
-                  <p className="text-pulse-text-secondary">
+                  <p className="text-body text-pulse-text-secondary">
                     Select up to 3 focus areas
                   </p>
                 </div>
@@ -265,12 +265,12 @@ export default function QuickOnboardingPage() {
                         key={industry.value}
                         onClick={() => handleIndustryToggle(industry.value)}
                         disabled={isDisabled}
-                        className={`p-4 rounded-xl border text-left transition-all ${
+                        className={`p-4 rounded-xl border text-left transition-all duration-200 ${
                           isSelected
-                            ? 'bg-pulse-accent/5 border-pulse-accent/30 ring-1 ring-pulse-accent/20 text-pulse-text'
+                            ? 'bg-pulse-accent/[0.06] border-pulse-accent/30 text-pulse-text'
                             : isDisabled
-                            ? 'bg-pulse-surface/50 border-pulse-border/50 text-pulse-text-tertiary cursor-not-allowed'
-                            : 'bg-pulse-surface border-pulse-border text-pulse-text-secondary hover:border-pulse-border-hover'
+                            ? 'bg-white/[0.01] border-white/[0.04] text-pulse-text-tertiary cursor-not-allowed'
+                            : 'bg-white/[0.02] border-white/[0.06] text-pulse-text-secondary hover:border-white/[0.1] hover:bg-white/[0.04]'
                         }`}
                       >
                         <div className="flex items-center justify-between">
@@ -279,14 +279,14 @@ export default function QuickOnboardingPage() {
                             <Check className="w-4 h-4 text-pulse-accent" />
                           )}
                         </div>
-                        <div className="text-sm font-medium">{industry.label}</div>
+                        <div className="text-body-sm font-medium">{industry.label}</div>
                       </button>
                     )
                   })}
                 </div>
 
                 {industries.length > 0 && (
-                  <div className="text-center text-sm text-pulse-text-tertiary mb-4">
+                  <div className="text-center text-body-sm text-pulse-text-tertiary mb-4">
                     {industries.length}/3 selected
                   </div>
                 )}
@@ -296,7 +296,7 @@ export default function QuickOnboardingPage() {
 
           {/* Error message */}
           {error && (
-            <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+            <div className="mb-4 p-3 rounded-lg bg-pulse-error/10 border border-pulse-error/20 text-pulse-error text-body-sm text-center">
               {error}
             </div>
           )}
@@ -360,8 +360,8 @@ export default function QuickOnboardingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 p-6 text-center">
-        <p className="text-xs text-pulse-text-tertiary">
+      <footer className="relative z-10 p-6 text-center border-t border-white/[0.04]">
+        <p className="text-label-sm text-pulse-text-tertiary">
           Want more personalized matches?{' '}
           <Link href="/onboarding/step-1" className="text-pulse-accent hover:underline">
             Complete full setup
