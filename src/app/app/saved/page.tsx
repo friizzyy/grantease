@@ -111,11 +111,19 @@ function SavedGrantCard({
   index,
   onRemove,
   isRemoving,
+  userCollections = [],
+  collectionGrantIds = {},
+  handleAddToCollection,
+  onCreateCollection,
 }: {
   grant: SavedGrant
   index: number
   onRemove: (id: string) => void
   isRemoving: boolean
+  userCollections?: Array<{ id: string; name: string }>
+  collectionGrantIds?: Record<string, string[]>
+  handleAddToCollection?: (grantId: string, collectionId: string) => void
+  onCreateCollection?: () => void
 }) {
   const [showMenu, setShowMenu] = useState(false)
   const daysLeft = getDaysLeft(grant.deadlineDate)
@@ -183,16 +191,41 @@ function SavedGrantCard({
                   role="menu"
                   aria-label="Grant actions"
                 >
-                  <button
-                    role="menuitem"
-                    disabled
-                    title="Collections coming soon"
-                    className="w-full px-4 py-2 text-left text-sm text-pulse-text-tertiary flex items-center gap-2 opacity-50 cursor-not-allowed"
-                  >
-                    <FolderOpen className="w-4 h-4" />
-                    Move to collection
-                    <span className="ml-auto text-[10px] uppercase tracking-wider text-pulse-text-tertiary">Soon</span>
-                  </button>
+                  {userCollections.length > 0 && handleAddToCollection ? (
+                    <div className="px-4 py-1.5">
+                      <p className="text-[10px] font-medium uppercase tracking-wider text-pulse-text-tertiary mb-1">Add to collection</p>
+                      {userCollections.map(col => (
+                        <button
+                          key={col.id}
+                          role="menuitem"
+                          onClick={() => {
+                            setShowMenu(false)
+                            handleAddToCollection(grant.id, col.id)
+                          }}
+                          disabled={(collectionGrantIds[col.id] || []).includes(grant.id)}
+                          className="w-full px-0 py-1.5 text-left text-sm text-pulse-text hover:text-pulse-accent transition-colors flex items-center gap-2 disabled:opacity-40 disabled:cursor-default"
+                        >
+                          <FolderOpen className="w-3.5 h-3.5" />
+                          {col.name}
+                          {(collectionGrantIds[col.id] || []).includes(grant.id) && (
+                            <span className="text-[10px] text-pulse-accent ml-auto">Added</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        setShowMenu(false)
+                        onCreateCollection?.()
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-pulse-text hover:bg-pulse-surface flex items-center gap-2"
+                    >
+                      <FolderPlus className="w-4 h-4" />
+                      Create a collection
+                    </button>
+                  )}
                   <Link
                     href="/app/workspace"
                     role="menuitem"
@@ -522,18 +555,33 @@ export default function SavedGrantsPage() {
   const [showNewCollectionModal, setShowNewCollectionModal] = useState(false)
   const [newCollectionName, setNewCollectionName] = useState('')
   const [creatingCollection, setCreatingCollection] = useState(false)
+  const [userCollections, setUserCollections] = useState<Array<{ id: string; name: string; _count?: { grants: number } }>>([])
+  const [collectionGrantIds, setCollectionGrantIds] = useState<Record<string, string[]>>({})
   const { success, error: showError } = useToastActions()
 
   const fetchGrants = useCallback(async () => {
     setIsLoading(true)
     setError(null)
     try {
-      const response = await fetch('/api/user/saved-grants')
-      if (!response.ok) {
-        throw new Error('Failed to fetch saved grants')
+      const [grantsRes, collectionsRes] = await Promise.all([
+        fetch('/api/user/saved-grants'),
+        fetch('/api/user/collections?includeGrants=true&grantsLimit=50'),
+      ])
+      if (!grantsRes.ok) throw new Error('Failed to fetch saved grants')
+      const grantsData = await grantsRes.json()
+      setGrants(grantsData.grants || [])
+
+      if (collectionsRes.ok) {
+        const colData = await collectionsRes.json()
+        const cols = colData.collections || []
+        setUserCollections(cols)
+        // Build a map of collectionId → [grantId, ...]
+        const idMap: Record<string, string[]> = {}
+        for (const col of cols) {
+          idMap[col.id] = (col.grants || []).map((g: { grant: { id: string } }) => g.grant.id)
+        }
+        setCollectionGrantIds(idMap)
       }
-      const data = await response.json()
-      setGrants(data.grants || [])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
@@ -579,9 +627,15 @@ export default function SavedGrantsPage() {
         const data = await response.json()
         throw new Error(data.error || 'Failed to create collection')
       }
+      const created = await response.json()
       success('Collection created', `"${newCollectionName}" has been created`)
       setNewCollectionName('')
       setShowNewCollectionModal(false)
+      // Add to local state
+      if (created.collection) {
+        setUserCollections(prev => [...prev, created.collection])
+        setCollectionGrantIds(prev => ({ ...prev, [created.collection.id]: [] }))
+      }
     } catch (err) {
       showError('Failed to create', err instanceof Error ? err.message : 'Please try again')
     } finally {
@@ -589,7 +643,30 @@ export default function SavedGrantsPage() {
     }
   }
 
-  // Build collections from grants
+  // Add grant to a collection
+  const handleAddToCollection = async (grantId: string, collectionId: string) => {
+    try {
+      const res = await fetch(`/api/user/collections/${collectionId}/grants`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ grantId }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to add to collection')
+      }
+      setCollectionGrantIds(prev => ({
+        ...prev,
+        [collectionId]: [...(prev[collectionId] || []), grantId],
+      }))
+      const colName = userCollections.find(c => c.id === collectionId)?.name || 'collection'
+      success('Added', `Grant added to "${colName}"`)
+    } catch (err) {
+      showError('Failed', err instanceof Error ? err.message : 'Try again')
+    }
+  }
+
+  // Build collections from grants + user collections
   const collections: Collection[] = [
     { id: 'all', name: 'All Saved', count: grants.length, icon: Bookmark },
     {
@@ -610,6 +687,13 @@ export default function SavedGrantsPage() {
       }).length,
       icon: Clock,
     },
+    // User-created collections
+    ...userCollections.map(col => ({
+      id: col.id,
+      name: col.name,
+      count: (collectionGrantIds[col.id] || []).length,
+      icon: FolderOpen,
+    })),
   ]
 
   const filteredGrants = grants.filter((g) => {
@@ -617,6 +701,9 @@ export default function SavedGrantsPage() {
     const days = getDaysLeft(g.deadlineDate)
     if (activeCollection === 'priority') return days !== null && days <= 30
     if (activeCollection === 'later') return days === null || days > 30
+    // User collection filter
+    const ids = collectionGrantIds[activeCollection]
+    if (ids) return ids.includes(g.id)
     return true
   })
 
@@ -766,6 +853,10 @@ export default function SavedGrantsPage() {
                   index={index}
                   onRemove={handleRemove}
                   isRemoving={removingId === grant.id}
+                  userCollections={userCollections}
+                  collectionGrantIds={collectionGrantIds}
+                  handleAddToCollection={handleAddToCollection}
+                  onCreateCollection={() => setShowNewCollectionModal(true)}
                 />
               ))}
             </div>

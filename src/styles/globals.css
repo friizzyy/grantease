@@ -532,3 +532,58 @@ select:-webkit-autofill:active {
 .reveal-delay-3 { animation-delay: 0.3s; opacity: 0; }
 .reveal-delay-4 { animation-delay: 0.4s; opacity: 0; }
 .reveal-delay-5 { animation-delay: 0.5s; opacity: 0; }
+
+/* ==================== PRINT STYLESHEET ==================== */
+/* Clean output when user prints the application review step (Export PDF). */
+@media print {
+  /* Hide non-content elements */
+  nav, aside, header, footer,
+  [data-sidebar], [data-mobile-nav],
+  button, .no-print,
+  [role="tablist"], [aria-live] {
+    display: none !important;
+  }
+
+  /* Reset dark theme for paper */
+  body, main, html {
+    background: white !important;
+    color: #1a1a1a !important;
+    font-size: 12pt !important;
+  }
+
+  /* Remove glass/border styling */
+  [class*="glass-card"], [class*="GlassCard"],
+  [class*="rounded-xl"], [class*="border"] {
+    background: white !important;
+    border: 1px solid #e5e5e5 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Readable text colors */
+  [class*="text-pulse-text"] { color: #1a1a1a !important; }
+  [class*="text-pulse-text-secondary"] { color: #4a4a4a !important; }
+  [class*="text-pulse-text-tertiary"] { color: #6a6a6a !important; }
+  [class*="text-pulse-accent"] { color: #059669 !important; }
+
+  /* Remove max-width constraints for full-page layout */
+  .max-w-4xl, .max-w-6xl, [class*="max-w-"] {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Proper page margins */
+  @page {
+    margin: 1.5cm;
+    size: letter;
+  }
+
+  /* Avoid breaking inside cards */
+  [class*="GlassCard"], [class*="glass-card"] {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Remove sidebar margin */
+  main { margin-left: 0 !important; padding-top: 0 !important; }
+}

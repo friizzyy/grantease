@@ -181,6 +181,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') || undefined
     const limit = Math.min(parseInt(searchParams.get('limit') || '25'), 100)
     const offset = Math.max(0, parseInt(searchParams.get('offset') || '0'))
+    const sortBy = (searchParams.get('sortBy') || 'relevance') as 'relevance' | 'deadline' | 'amount' | 'newest'
     const useProfileParam = searchParams.get('useProfile')
 
     // Get user profile if logged in
@@ -274,6 +275,26 @@ export async function GET(request: NextRequest) {
           const dateB = b.deadlineDate ? new Date(b.deadlineDate).getTime() : Infinity
           return dateA - dateB
         })
+    }
+
+    // Apply user-requested sort (relevance is default from profile scoring above)
+    if (sortBy !== 'relevance') {
+      processedGrants.sort((a, b) => {
+        if (sortBy === 'deadline') {
+          const da = a.deadlineDate ? new Date(a.deadlineDate).getTime() : Infinity
+          const db = b.deadlineDate ? new Date(b.deadlineDate).getTime() : Infinity
+          return da - db
+        }
+        if (sortBy === 'amount') {
+          return (b.amountMax ?? b.amountMin ?? 0) - (a.amountMax ?? a.amountMin ?? 0)
+        }
+        if (sortBy === 'newest') {
+          const pa = a.openDate ? new Date(a.openDate).getTime() : 0
+          const pb = b.openDate ? new Date(b.openDate).getTime() : 0
+          return pb - pa
+        }
+        return 0
+      })
     }
 
     // Apply offset + limit for pagination

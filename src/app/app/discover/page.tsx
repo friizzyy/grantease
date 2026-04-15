@@ -775,6 +775,7 @@ function DiscoverPageContent() {
   const [sourcesInitialized, setSourcesInitialized] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(false)
+  const [sortBy, setSortBy] = useState<'relevance' | 'deadline' | 'amount' | 'newest'>('relevance')
   const limit = 20
 
   // AI Search state
@@ -964,6 +965,7 @@ function DiscoverPageContent() {
       params.set('sources', effectiveSources.length > 0 ? effectiveSources.join(',') : 'grants-gov')
       params.set('limit', String(limit))
       if (append) params.set('offset', String(grants.length))
+      if (sortBy !== 'relevance') params.set('sortBy', sortBy)
       params.set('useProfile', 'true')
 
       const response = await fetch(`/api/grants/unified-search?${params}`)
@@ -1542,15 +1544,35 @@ function DiscoverPageContent() {
               </span>
             )}
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => isProfileMode ? loadPersonalizedGrants() : fetchGeneralGrants(searchQuery)}
-            disabled={loading}
-          >
-            <RefreshCw className={`w-4 h-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            {!isProfileMode && (
+              <select
+                value={sortBy}
+                onChange={(e) => {
+                  const val = e.target.value as typeof sortBy
+                  setSortBy(val)
+                  fetchGeneralGrants(searchQuery)
+                }}
+                aria-label="Sort grants by"
+                className="h-8 px-2 pr-7 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs text-pulse-text-secondary focus:outline-none focus:ring-1 focus:ring-pulse-accent/30 appearance-none"
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center' }}
+              >
+                <option value="relevance">Best match</option>
+                <option value="deadline">Deadline (soonest)</option>
+                <option value="amount">Amount (highest)</option>
+                <option value="newest">Newest first</option>
+              </select>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => isProfileMode ? loadPersonalizedGrants() : fetchGeneralGrants(searchQuery)}
+              disabled={loading}
+            >
+              <RefreshCw className={`w-4 h-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </motion.div>
       )}
 

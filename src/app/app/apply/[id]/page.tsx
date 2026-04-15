@@ -35,6 +35,7 @@ import {
   Copy,
   ExternalLink,
   CheckCircle2,
+  Printer,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -1411,6 +1412,17 @@ export default function ApplyPage({ params }: { params: Promise<{ id: string }> 
                       <span>Missing: {missingRequired.slice(0, 3).join(', ')}{missingRequired.length > 3 ? `, +${missingRequired.length - 3} more` : ''}</span>
                     </div>
                   )}
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.print()}
+                      className="hidden sm:inline-flex"
+                      title="Print or save as PDF"
+                    >
+                      <Printer className="w-4 h-4 mr-1.5" />
+                      Export PDF
+                    </Button>
                   <Button
                     className="bg-gradient-to-r from-pulse-accent to-pulse-accent/80 w-full sm:w-auto"
                     disabled={!canSubmit}
@@ -1424,6 +1436,7 @@ export default function ApplyPage({ params }: { params: Promise<{ id: string }> 
                     <Check className="w-4 h-4 mr-2" />
                     Complete & Apply
                   </Button>
+                  </div>
                 </div>
               )
             })()
