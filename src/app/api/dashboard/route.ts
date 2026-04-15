@@ -1,16 +1,18 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { safeJsonParse } from '@/lib/api-utils'
+import { rateLimiters, rateLimitExceededResponse } from '@/lib/rate-limit'
+import { calculateVaultCompleteness } from '@/lib/services/vault-service'
 
 /**
  * GET /api/dashboard
  *
- * Aggregated dashboard endpoint - returns all data needed for the dashboard in a single request.
- * Reduces multiple client-side fetches into one server-side query.
+ * Aggregated dashboard endpoint — returns all data needed for the dashboard
+ * in a single request. All data is collected at request time (no caching).
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
@@ -19,30 +21,36 @@ export async function GET() {
 
     const userId = session.user.id
 
-    // Parallel queries for performance
+    // Rate limiting: 30 requests per minute
+    const rateLimit = rateLimiters.general(userId)
+    if (!rateLimit.allowed) {
+      return rateLimitExceededResponse(rateLimit.resetAt)
+    }
+
+    // Parallel queries — bounded with .take() to prevent unbounded fetches
     const [
       user,
       profile,
       savedGrants,
       workspaces,
-      savedSearches,
-      notifications,
+      savedSearchCount,
+      unreadNotificationCount,
       aiUsageStats,
+      totalGrantCount,
     ] = await Promise.all([
-      // User info
       prisma.user.findUnique({
         where: { id: userId },
         select: { id: true, name: true, email: true, organization: true },
       }),
 
-      // Profile info
       prisma.userProfile.findUnique({
         where: { userId },
       }),
 
-      // Saved grants with grant details
+      // Saved grants — capped at 200 for dashboard aggregation
       prisma.savedGrant.findMany({
         where: { userId },
+        take: 200,
         include: {
           grant: {
             select: {
@@ -51,9 +59,7 @@ export async function GET() {
               sponsor: true,
               amountMin: true,
               amountMax: true,
-              amountText: true,
               deadlineDate: true,
-              deadlineType: true,
               status: true,
               categories: true,
             },
@@ -62,9 +68,10 @@ export async function GET() {
         orderBy: { createdAt: 'desc' },
       }),
 
-      // Workspaces with grant info
+      // Workspaces — capped at 100
       prisma.workspace.findMany({
         where: { userId },
+        take: 100,
         include: {
           grant: {
             select: {
@@ -80,31 +87,33 @@ export async function GET() {
         orderBy: { updatedAt: 'desc' },
       }),
 
-      // Saved searches
-      prisma.savedSearch.findMany({
-        where: { userId },
-        orderBy: { updatedAt: 'desc' },
-      }),
+      // Counts only — no need to fetch full objects
+      prisma.savedSearch.count({ where: { userId } }),
+      prisma.notification.count({ where: { userId, read: false } }),
 
-      // Recent unread notifications
-      prisma.notification.findMany({
-        where: { userId, read: false },
-        orderBy: { createdAt: 'desc' },
-        take: 5,
-      }),
-
-      // AI usage statistics
       prisma.aIUsageLog.aggregate({
         where: { userId },
         _count: { id: true },
-        _sum: {
-          totalTokens: true,
-          responseTime: true,
-        },
+        _sum: { totalTokens: true, responseTime: true },
       }),
+
+      // Total grants in database for "Browse X opportunities" display
+      prisma.grant.count({ where: { status: 'open' } }),
     ])
 
-    // Calculate stats
+    // Vault completeness — graceful degradation if vault service fails
+    let vaultCompleteness: { overall: number; sections: Record<string, number>; missingCritical: string[] } | null = null
+    try {
+      const vc = await calculateVaultCompleteness(userId)
+      vaultCompleteness = {
+        overall: vc.overall,
+        sections: vc.sections,
+        missingCritical: vc.missingCritical,
+      }
+    } catch (vcError) {
+      console.warn('Vault completeness unavailable:', vcError instanceof Error ? vcError.message : vcError)
+    }
+
     const now = new Date()
     const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
 
@@ -122,37 +131,41 @@ export async function GET() {
 
     // Application pipeline stages
     const applicationStages = [
-      { name: 'Discovered', count: savedGrants.length, color: '#40ffaa' },
-      { name: 'In Progress', count: workspacesByStatus['in_progress'] || 0, color: '#ffb340' },
-      { name: 'Submitted', count: workspacesByStatus['submitted'] || 0, color: '#40a0ff' },
-      { name: 'Awarded', count: workspacesByStatus['awarded'] || 0, color: '#a040ff' },
+      { name: 'Discovered', count: savedGrants.length, color: '#40ffaa', href: '/app/saved' },
+      { name: 'In Progress', count: workspacesByStatus['in_progress'] || 0, color: '#ffb340', href: '/app/workspace' },
+      { name: 'Submitted', count: workspacesByStatus['submitted'] || 0, color: '#40a0ff', href: '/app/workspace' },
+      { name: 'Awarded', count: workspacesByStatus['awarded'] || 0, color: '#a040ff', href: '/app/workspace' },
     ]
 
-    // Upcoming deadlines (from saved grants and workspaces)
+    // Upcoming deadlines — filter to next 30 days, guard against orphaned grants
     const upcomingDeadlines = [
-      ...savedGrants.map((sg) => ({
-        id: sg.grant.id,
-        title: sg.grant.title,
-        type: 'saved' as const,
-        deadline: sg.grant.deadlineDate,
-        amount: sg.grant.amountMax || sg.grant.amountMin,
-        progress: 0,
-        href: `/app/grants/${sg.grant.id}`,
-      })),
-      ...workspaces.map((ws) => {
-        const checklist = safeJsonParse<Array<{ completed?: boolean }>>(ws.checklist, [])
-        const completed = checklist.filter((item) => item.completed).length
-        const total = checklist.length
-        return {
-          id: ws.id,
-          title: ws.grant.title,
-          type: 'workspace' as const,
-          deadline: ws.grant.deadlineDate,
-          amount: ws.grant.amountMax || ws.grant.amountMin,
-          progress: total > 0 ? Math.round((completed / total) * 100) : 0,
-          href: `/app/workspace/${ws.id}`,
-        }
-      }),
+      ...savedGrants
+        .filter((sg) => sg.grant) // Guard against orphaned references
+        .map((sg) => ({
+          id: sg.grant.id,
+          title: sg.grant.title,
+          type: 'saved' as const,
+          deadline: sg.grant.deadlineDate,
+          amount: sg.grant.amountMax || sg.grant.amountMin,
+          progress: 0,
+          href: `/app/grants/${sg.grant.id}`,
+        })),
+      ...workspaces
+        .filter((ws) => ws.grant) // Guard against orphaned references
+        .map((ws) => {
+          const checklist = safeJsonParse<Array<{ completed?: boolean }>>(ws.checklist, [])
+          const completed = checklist.filter((item) => item.completed).length
+          const total = checklist.length
+          return {
+            id: ws.id,
+            title: ws.grant.title,
+            type: 'workspace' as const,
+            deadline: ws.grant.deadlineDate,
+            amount: ws.grant.amountMax || ws.grant.amountMin,
+            progress: total > 0 ? Math.round((completed / total) * 100) : 0,
+            href: `/app/workspace/${ws.id}`,
+          }
+        }),
     ]
       .filter((d) => d.deadline && new Date(d.deadline) <= thirtyDaysFromNow)
       .sort((a, b) => {
@@ -171,9 +184,10 @@ export async function GET() {
     // Top categories from saved grants
     const categoryCount: Record<string, number> = {}
     savedGrants.forEach((sg) => {
+      if (!sg.grant) return
       const categories = safeJsonParse<string[]>(sg.grant.categories, [])
       categories.forEach((cat: string) => {
-        categoryCount[cat] = (categoryCount[cat] || 0) + 1
+        if (typeof cat === 'string') categoryCount[cat] = (categoryCount[cat] || 0) + 1
       })
     })
     const topCategories = Object.entries(categoryCount)
@@ -184,24 +198,18 @@ export async function GET() {
     // AI stats from actual usage logs
     const aiInteractions = aiUsageStats._count.id || 0
     const totalResponseTime = aiUsageStats._sum.responseTime || 0
-
-    // Estimate time saved: ~2 min per AI interaction vs manual research
     const estimatedMinutesSaved = aiInteractions * 2
     const timeSavedHours = Math.floor(estimatedMinutesSaved / 60)
     const timeSavedMinutes = estimatedMinutesSaved % 60
 
     const aiStats = {
-      grantsAnalyzed: aiInteractions > 0 ? aiInteractions * 10 : savedGrants.length,
+      interactions: aiInteractions,
       matchesFound: savedGrants.length,
       timeSaved: timeSavedHours > 0
         ? `~${timeSavedHours}h ${timeSavedMinutes}m`
         : `~${timeSavedMinutes}m`,
       successRate: workspaces.length > 0
         ? Math.round((workspacesByStatus['awarded'] || 0) / workspaces.length * 100)
-        : 0,
-      totalInteractions: aiInteractions,
-      avgResponseTime: aiInteractions > 0
-        ? Math.round(totalResponseTime / aiInteractions)
         : 0,
     }
 
@@ -213,21 +221,26 @@ export async function GET() {
       stats: {
         savedGrants: savedGrants.length,
         workspaces: workspaces.length,
-        savedSearches: savedSearches.length,
+        savedSearches: savedSearchCount,
         fundingPotential,
-        unreadNotifications: notifications.length,
+        unreadNotifications: unreadNotificationCount,
+        totalGrantsAvailable: totalGrantCount,
       },
       applicationStages,
       upcomingDeadlines,
       topCategories,
       aiStats,
+      vaultCompleteness,
       recentActivity: {
         lastSavedGrant: savedGrants[0]?.createdAt || null,
         lastWorkspaceUpdate: workspaces[0]?.updatedAt || null,
       },
     })
   } catch (error) {
-    console.error('Dashboard API error:', error)
+    console.error('Dashboard API error:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    })
     return NextResponse.json(
       { error: 'Failed to fetch dashboard data' },
       { status: 500 }

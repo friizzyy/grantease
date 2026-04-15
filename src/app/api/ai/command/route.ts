@@ -55,12 +55,19 @@ export async function POST(request: NextRequest) {
 
     const { command } = validated.data
 
-    // Load user profile
-    const dbProfile = await prisma.userProfile.findUnique({
-      where: { userId: session.user.id },
-    })
+    // Load user profile and user record in parallel
+    const [dbProfile, dbUser] = await Promise.all([
+      prisma.userProfile.findUnique({ where: { userId: session.user.id } }),
+      prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { organization: true },
+      }),
+    ])
 
     // Build profile object (gracefully handle missing profile)
+    const industryAttrs = dbProfile
+      ? safeJsonParse<Record<string, unknown>>(dbProfile.industryAttributes, {})
+      : {}
     const profile: UserProfile = dbProfile ? {
       id: dbProfile.id,
       userId: dbProfile.userId,
@@ -77,10 +84,10 @@ export async function POST(request: NextRequest) {
       onboardingCompletedAt: dbProfile.onboardingCompletedAt,
       onboardingStep: dbProfile.onboardingStep,
       confidenceScore: dbProfile.confidenceScore,
-      companyName: null,
+      companyName: dbUser?.organization || null,
       companyDescription: null,
-      certifications: safeJsonParse<Record<string, unknown>>(dbProfile.industryAttributes, {}).certifications as string[] | undefined,
-      fundingNeeds: safeJsonParse<Record<string, unknown>>(dbProfile.industryAttributes, {}).fundingNeeds as string[] | undefined,
+      certifications: Array.isArray(industryAttrs.certifications) ? industryAttrs.certifications as string[] : [],
+      fundingNeeds: Array.isArray(industryAttrs.goals) ? industryAttrs.goals as string[] : [],
     } : {
       id: '',
       userId: session.user.id,
@@ -97,6 +104,9 @@ export async function POST(request: NextRequest) {
       onboardingCompletedAt: null,
       onboardingStep: 1,
       confidenceScore: 0,
+      companyName: dbUser?.organization || null,
+      certifications: [],
+      fundingNeeds: [],
     }
 
     const startTime = Date.now()
