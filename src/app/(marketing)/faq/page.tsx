@@ -490,7 +490,7 @@ export default function FAQPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, ease }}
                 >
-                  <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm flex items-center justify-center mx-auto mb-6 shadow-lg shadow-black/10">
+                  <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-6 shadow-lg shadow-black/10">
                     <Search className="w-7 h-7 text-pulse-text-tertiary" />
                   </div>
                   <p className="text-heading text-pulse-text mb-2">No results found</p>

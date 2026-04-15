@@ -104,9 +104,8 @@ body {
 }
 
 @keyframes glow-drift {
-  0%, 100% { transform: translate(0, 0); opacity: 0.6; }
-  33% { transform: translate(5%, 3%); opacity: 0.8; }
-  66% { transform: translate(-3%, -2%); opacity: 0.5; }
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.85; }
 }
 
 /* Noise overlay */
@@ -134,16 +133,6 @@ body {
     animation: none;
   }
 
-  .animate-shimmer,
-  .animate-float,
-  .animate-pulse-glow,
-  .text-shimmer,
-  .animate-orb-1,
-  .animate-orb-2,
-  .animate-orb-3,
-  .animate-twinkle {
-    animation: none !important;
-  }
 }
 
 /* ==================== TYPOGRAPHY SYSTEM ==================== */
@@ -274,7 +263,6 @@ body {
 .card-pulse {
   background: rgba(17, 17, 19, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(10px);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -287,7 +275,6 @@ body {
 /* Glass card: subtle glassmorphism for marketing sections */
 .card-glass {
   background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.07);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -301,7 +288,6 @@ body {
 /* Glass card accent: for highlighted cards (Pro tier, CTA, etc.) */
 .card-glass-accent {
   background: rgba(64, 255, 170, 0.04);
-  backdrop-filter: blur(8px);
   border: 1px solid rgba(64, 255, 170, 0.15);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -315,7 +301,6 @@ body {
 /* Glass card rose: for funding/pricing/value elements */
 .card-glass-rose {
   background: rgba(64, 255, 170, 0.04);
-  backdrop-filter: blur(8px);
   border: 1px solid rgba(64, 255, 170, 0.12);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -329,7 +314,6 @@ body {
 /* Glass card indigo: for trust/info/category elements */
 .card-glass-indigo {
   background: rgba(45, 212, 191, 0.04);
-  backdrop-filter: blur(8px);
   border: 1px solid rgba(45, 212, 191, 0.12);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -449,65 +433,6 @@ select:-webkit-autofill:active {
   100% { background-position: -200% 0; }
 }
 
-/* Premium shimmer animation */
-@keyframes shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-
-.animate-shimmer {
-  background-size: 200% auto;
-  animation: shimmer 3s linear infinite;
-}
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 4s ease-in-out infinite;
-}
-
-/* Gradient text shimmer for headlines */
-.text-shimmer {
-  background-size: 200% auto;
-  animation: shimmer 4s linear infinite;
-}
-
-/* Orb drift animation */
-@keyframes orb-drift-1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(30px, -20px) scale(1.05); }
-  50% { transform: translate(-20px, 15px) scale(0.95); }
-  75% { transform: translate(15px, 25px) scale(1.02); }
-}
-
-@keyframes orb-drift-2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(-25px, 20px) scale(0.98); }
-  50% { transform: translate(30px, -15px) scale(1.04); }
-  75% { transform: translate(-15px, -25px) scale(1); }
-}
-
-@keyframes orb-drift-3 {
-  0%, 100% { transform: translate(0, 0) scale(1.02); }
-  33% { transform: translate(20px, -30px) scale(0.96); }
-  66% { transform: translate(-30px, 10px) scale(1.06); }
-}
-
-.animate-orb-1 { animation: orb-drift-1 12s ease-in-out infinite; }
-.animate-orb-2 { animation: orb-drift-2 15s ease-in-out infinite; }
-.animate-orb-3 { animation: orb-drift-3 18s ease-in-out infinite; }
-
-/* Subtle star particles */
-@keyframes twinkle {
-  0%, 100% { opacity: 0; transform: scale(0.5); }
-  50% { opacity: 1; transform: scale(1); }
-}
-
-.animate-twinkle {
-  animation: twinkle 3s ease-in-out infinite;
-}
 
 /* ==================== TAG / CHIP STYLES ==================== */
 .chip {
@@ -551,45 +476,6 @@ select:-webkit-autofill:active {
   background: rgba(255, 179, 64, 0.1);
   color: #ffb340;
   border: 1px solid rgba(255, 179, 64, 0.2);
-}
-
-/* ==================== PREMIUM ANIMATIONS ==================== */
-@keyframes shimmer-slide {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-@keyframes gradient-flow {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
-}
-
-@keyframes pulse-glow {
-  0%, 100% {
-    opacity: 0.4;
-    box-shadow: 0 0 20px rgba(64, 255, 170, 0.2);
-  }
-  50% {
-    opacity: 0.8;
-    box-shadow: 0 0 40px rgba(64, 255, 170, 0.4);
-  }
 }
 
 /* Reveal animation for scroll */

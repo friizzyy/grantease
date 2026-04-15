@@ -62,7 +62,7 @@ export default function AboutPage() {
             ].map((stat, i) => (
               <div
                 key={stat.label}
-                className={`p-6 rounded-xl bg-white/[0.02] border ${stat.border} backdrop-blur-sm`}
+                className={`p-6 rounded-xl bg-white/[0.02] border ${stat.border}`}
               >
                 <div className={`text-stat-sm ${stat.color} tabular-nums mb-1`}>
                   <AnimatedCounter

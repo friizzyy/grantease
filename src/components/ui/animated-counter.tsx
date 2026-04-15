@@ -95,7 +95,7 @@ export function StatBlock({
     <motion.div
       ref={ref}
       className={cn(
-        'relative p-6 rounded-2xl bg-pulse-surface/40 backdrop-blur-sm border border-white/[0.06]',
+        'relative p-6 rounded-2xl bg-pulse-surface/40 border border-white/[0.06]',
         className
       )}
       initial={{ opacity: 0, y: 20 }}

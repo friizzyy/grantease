@@ -23,7 +23,7 @@ const tabs = [
   },
 ]
 
-const TYPE_SPEED = 50
+const TYPE_SPEED = 80
 const PAUSE_BETWEEN_TABS = 2500
 
 interface AIWritingSimulatorProps {

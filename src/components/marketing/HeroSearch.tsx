@@ -126,7 +126,7 @@ export function HeroSearch() {
   return (
     <div className="max-w-2xl">
       {/* Card container */}
-      <div className="rounded-xl border border-pulse-border bg-pulse-surface/80 backdrop-blur-xl shadow-card overflow-hidden">
+      <div className="rounded-xl border border-pulse-border bg-pulse-surface/80 shadow-card overflow-hidden">
         {/* Search input area */}
         <form
           onSubmit={(e) => { e.preventDefault(); if (query.trim()) go() }}

@@ -6,7 +6,7 @@ import { Search } from 'lucide-react'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 
 const QUERY = 'environmental nonprofit'
-const TYPE_SPEED = 60
+const TYPE_SPEED = 80
 
 const mockResults = [
   { name: 'CA Climate Action Fund', category: 'Environment', match: 94 },

@@ -19,11 +19,11 @@ export function GlassCard({
   ...props
 }: GlassCardProps) {
   const variantStyles = {
-    default: 'bg-pulse-surface/60 backdrop-blur-xl',
-    elevated: 'bg-pulse-elevated/70 backdrop-blur-2xl shadow-xl',
-    accent: 'bg-gradient-to-br from-pulse-accent/5 via-pulse-surface to-pulse-surface backdrop-blur-xl',
-    glow: 'bg-pulse-surface/60 backdrop-blur-xl shadow-[0_0_20px_rgba(64,255,170,0.1)]',
-    subtle: 'bg-pulse-surface/40 backdrop-blur-lg',
+    default: 'bg-pulse-surface/60',
+    elevated: 'bg-pulse-elevated/70 shadow-xl',
+    accent: 'bg-gradient-to-br from-pulse-accent/5 via-pulse-surface to-pulse-surface',
+    glow: 'bg-pulse-surface/60 shadow-[0_0_20px_rgba(64,255,170,0.1)]',
+    subtle: 'bg-pulse-surface/40',
   }
 
   const borderStyles = border ? 'border border-pulse-border/40' : ''
