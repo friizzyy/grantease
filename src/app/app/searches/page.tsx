@@ -169,7 +169,7 @@ function SearchCard({
       transition={{ delay: 0.1 + index * 0.05 }}
     >
       <GlassCard className="p-5 hover:border-white/[0.1] transition-all">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
           {/* Search Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-3">
@@ -213,7 +213,7 @@ function SearchCard({
             </div>
 
             {/* Stats Row */}
-            <div className="flex items-center gap-6 text-sm">
+            <div className="flex items-center gap-3 sm:gap-6 text-sm flex-wrap">
               <div className="flex items-center gap-2 text-pulse-text-tertiary">
                 <TrendingUp className="w-4 h-4" />
                 <span>{search.totalMatches} total matches</span>
@@ -230,9 +230,9 @@ function SearchCard({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
             {/* Alert Toggle & Frequency */}
-            <div className="flex items-center gap-2 pr-3 border-r border-pulse-border">
+            <div className="flex items-center gap-2 sm:pr-3 sm:border-r border-pulse-border">
               <button
                 onClick={() => onToggleAlert(search.id)}
                 aria-label={search.alertEnabled ? 'Disable alert for this search' : 'Enable alert for this search'}
@@ -355,28 +355,19 @@ export default function SavedSearchesPage() {
   }
 
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8">
+    <div className="px-4 md:px-8 lg:px-10 py-8 max-w-[1400px] mx-auto">
       {/* Header */}
       <motion.div
-        className="mb-8"
-        initial={{ opacity: 0, y: -20 }}
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8"
+        initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
       >
-        <div className="flex items-end justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Search className="w-5 h-5 text-pulse-accent" />
-              <span className="text-label text-pulse-text-tertiary">
-                Search Management
-              </span>
-            </div>
-            <h1 className="text-display-page text-pulse-text">
-              Saved Searches
-            </h1>
-            <p className="text-body text-pulse-text-secondary mt-2">
-              Run saved searches instantly or enable alerts for new matches
-            </p>
-          </div>
+        <div>
+          <h1 className="text-heading-lg text-pulse-text">Saved Searches</h1>
+          <p className="text-body-sm text-pulse-text-tertiary mt-1">
+            Run saved searches instantly or enable alerts for new matches
+          </p>
         </div>
       </motion.div>
 

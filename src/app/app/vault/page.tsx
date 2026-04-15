@@ -661,7 +661,7 @@ export default function VaultPage() {
 
   if (isLoading) {
     return (
-      <div className="px-4 md:px-6 lg:px-8 py-8 max-w-4xl mx-auto animate-pulse">
+      <div className="px-4 md:px-8 lg:px-10 py-8 max-w-4xl mx-auto animate-pulse">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">
@@ -725,7 +725,7 @@ export default function VaultPage() {
               </div>
               {section.open && (
                 <div className="p-4 pt-0 border-t border-pulse-border/30">
-                  <div className="grid md:grid-cols-2 gap-4 pt-4">
+                  <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 pt-4">
                     {[1, 2, 3, 4].map(j => (
                       <div key={j}>
                         <div className="h-3 bg-pulse-surface rounded w-24 mb-1" />
@@ -743,37 +743,32 @@ export default function VaultPage() {
   }
 
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8 max-w-4xl mx-auto">
+    <div className="px-4 md:px-8 lg:px-10 py-8 max-w-4xl mx-auto">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
+        transition={{ duration: 0.3 }}
+        className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8"
       >
-        <div className="flex items-center gap-2 mb-2">
-          <Shield className="w-5 h-5 text-pulse-accent" />
-          <span className="text-label text-pulse-text-tertiary">Data Vault</span>
+        <div>
+          <h1 className="text-heading-lg text-pulse-text">Application Vault</h1>
+          <p className="text-body-sm text-pulse-text-tertiary mt-1">
+            Store your information once, use it across all grant applications
+          </p>
         </div>
-        <div className="flex items-start justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-display-page text-pulse-text mb-2">Your Application Vault</h1>
-            <p className="text-body text-pulse-text-secondary">
-              Store your information once, use it across all grant applications
-            </p>
-          </div>
-          <Button
-            onClick={handleImportDocument}
-            disabled={importLoading}
-            className="bg-pulse-accent text-pulse-bg hover:bg-pulse-accent/90 active:scale-[0.98] rounded-lg font-medium transition-all duration-150"
-          >
-            {importLoading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Upload className="w-4 h-4 mr-2" />
-            )}
-            Upload & Auto-Fill
-          </Button>
-        </div>
+        <Button
+          onClick={handleImportDocument}
+          disabled={importLoading}
+          size="sm"
+        >
+          {importLoading ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <Upload className="w-4 h-4 mr-2" />
+          )}
+          Upload &amp; Auto-Fill
+        </Button>
       </motion.div>
 
       {/* Completeness Card */}
@@ -802,7 +797,7 @@ export default function VaultPage() {
             completeness={completeness?.sections.organization}
             defaultOpen={true}
           >
-            <div className="grid md:grid-cols-2 gap-4 pt-4">
+            <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 pt-4">
               <EditableField
                 label="Organization Name"
                 value={vault?.organizationName}
@@ -862,7 +857,7 @@ export default function VaultPage() {
             icon={Users}
             completeness={completeness?.sections.contact}
           >
-            <div className="grid md:grid-cols-2 gap-4 pt-4">
+            <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 pt-4">
               <EditableField
                 label="Full Name"
                 value={vault?.primaryContactName}
@@ -908,7 +903,7 @@ export default function VaultPage() {
             icon={MapPin}
             completeness={completeness?.sections.address}
           >
-            <div className="grid md:grid-cols-2 gap-4 pt-4">
+            <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 pt-4">
               <div className="md:col-span-2">
                 <EditableField
                   label="Street Address"
@@ -925,7 +920,7 @@ export default function VaultPage() {
                 onSave={handleSaveField}
                 placeholder="City"
               />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2 sm:gap-4">
                 <EditableField
                   label="State"
                   value={vault?.state}

@@ -314,7 +314,7 @@ function DocumentCard({ doc, index }: { doc: WorkspaceDocument; index: number })
 // Loading skeleton
 function WorkspaceSkeleton() {
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8 animate-pulse">
+    <div className="px-4 md:px-8 lg:px-10 py-8 animate-pulse">
       {/* Back button */}
       <div className="flex items-center gap-2 mb-6">
         <div className="w-4 h-4 bg-pulse-surface rounded" />
@@ -362,8 +362,8 @@ function WorkspaceSkeleton() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
+        <div className="md:col-span-2 space-y-4 sm:space-y-6">
           {/* Checklist Card */}
           <div className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-6">
             <div className="flex items-center justify-between mb-6">
@@ -447,7 +447,7 @@ function WorkspaceSkeleton() {
 // Error state
 function WorkspaceError({ onRetry, error }: { onRetry: () => void; error: string }) {
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8 flex items-center justify-center min-h-[60vh]">
+    <div className="px-4 md:px-8 lg:px-10 py-8 flex items-center justify-center min-h-[60vh]">
       <GlassCard className="p-8 text-center max-w-md">
         <div className="w-12 h-12 rounded-full bg-pulse-error/20 flex items-center justify-center mx-auto mb-4">
           <AlertCircle className="w-6 h-6 text-pulse-error" />
@@ -795,7 +795,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
   }
 
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8">
+    <div className="px-4 md:px-8 lg:px-10 py-8 max-w-[1400px] mx-auto">
       {/* Back Button */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
@@ -826,7 +826,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h1 className="text-display-page text-pulse-text mb-1">
+                  <h1 className="text-heading-lg text-pulse-text mb-1">
                     {workspace.name}
                   </h1>
                   <Link
@@ -1193,9 +1193,9 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
       )}
 
       {/* Main Content */}
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
         {/* Checklist & Notes */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="md:col-span-2 space-y-4 sm:space-y-6">
           {/* Checklist */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}

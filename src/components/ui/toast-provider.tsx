@@ -82,7 +82,7 @@ function ToastContainer({
 }) {
   return (
     <div
-      className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"
+      className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 z-50 flex flex-col gap-2 pointer-events-none"
       aria-live="polite"
       aria-label="Notifications"
     >
@@ -117,7 +117,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 20, scale: 0.95 }}
       transition={springs.snappy}
-      className={`pointer-events-auto min-w-[300px] max-w-[400px] rounded-xl border backdrop-blur-sm shadow-lg ${backgrounds[toast.type]}`}
+      className={`pointer-events-auto w-full sm:min-w-[300px] sm:max-w-[400px] rounded-xl border backdrop-blur-sm shadow-lg ${backgrounds[toast.type]}`}
     >
       <div className="flex items-start gap-3 p-4">
         <div className="shrink-0 mt-0.5">{icons[toast.type]}</div>

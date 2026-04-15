@@ -9,13 +9,13 @@ const createSearchSchema = z.object({
   query: z.string().max(500).optional(),
   filters: z.record(z.unknown()).optional(),
   alertEnabled: z.boolean().optional(),
-  alertFreq: z.enum(['daily', 'weekly', 'monthly']).optional(),
+  alertFreq: z.enum(['daily', 'weekly']).optional(),
 })
 
 const updateSearchSchema = z.object({
   id: z.string().min(1, 'Search ID is required').max(200),
   alertEnabled: z.boolean().optional(),
-  alertFreq: z.enum(['daily', 'weekly', 'monthly']).optional(),
+  alertFreq: z.enum(['daily', 'weekly']).optional(),
 })
 
 const deleteSearchQuerySchema = z.object({

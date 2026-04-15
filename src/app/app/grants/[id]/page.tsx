@@ -285,7 +285,7 @@ function RequirementItem({ requirement, index }: { requirement: string; index: n
 // Loading skeleton
 function GrantSkeleton() {
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8 animate-pulse">
+    <div className="px-4 md:px-8 lg:px-10 py-8 animate-pulse">
       {/* Back button */}
       <div className="flex items-center gap-2 mb-6">
         <div className="w-4 h-4 bg-pulse-surface rounded" />
@@ -429,7 +429,7 @@ function GrantSkeleton() {
 // Error state
 function GrantError({ onRetry, error }: { onRetry: () => void; error: string }) {
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8 flex items-center justify-center min-h-[60vh]">
+    <div className="px-4 md:px-8 lg:px-10 py-8 flex items-center justify-center min-h-[60vh]">
       <GlassCard className="p-8 text-center max-w-md">
         <div className="w-12 h-12 rounded-full bg-pulse-error/20 flex items-center justify-center mx-auto mb-4">
           <AlertCircle className="w-6 h-6 text-pulse-error" />
@@ -780,7 +780,7 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
   const amountDisplay = formatAmount(grant.amountMin, grant.amountMax, grant.amountText)
 
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8">
+    <div className="px-4 md:px-8 lg:px-10 py-8 max-w-[1400px] mx-auto">
       {/* Back Button */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
@@ -812,7 +812,7 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
                 <Building2 className="w-4 h-4 text-pulse-accent" />
                 <span className="text-sm font-medium text-pulse-accent">{grant.sponsor}</span>
               </div>
-              <h1 className="text-display-section text-pulse-text mb-3">
+              <h1 className="text-heading-lg text-pulse-text mb-3">
                 {grant.title}
               </h1>
               <div className="flex flex-wrap items-center gap-2">
@@ -836,7 +836,7 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
           </div>
 
           {/* Quick Stats */}
-          <div className="flex flex-wrap items-center gap-6 py-4 border-t border-b border-pulse-border mb-4">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-6 py-3 sm:py-4 border-t border-b border-pulse-border mb-4">
             <div className="flex items-center gap-2">
               <DollarSign className="w-5 h-5 text-pulse-accent" />
               <span className="text-lg font-semibold text-pulse-text">{amountDisplay}</span>
@@ -1261,9 +1261,9 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
       )}
 
       {/* Main Content */}
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
         {/* Left Column - Main Info */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="md:col-span-2 space-y-4 sm:space-y-6">
           {/* AI Insights */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1420,7 +1420,7 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
         </div>
 
         {/* Right Column - Sidebar */}
-        <div className="space-y-6 sticky top-6">
+        <div className="space-y-4 sm:space-y-6 md:sticky md:top-6">
           {/* Match Score Card */}
           <MatchScoreCard aiMatch={aiMatch} />
 

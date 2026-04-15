@@ -15,7 +15,7 @@ import { z } from 'zod'
 const updateApplicationSchema = z.object({
   action: z.enum(['update_form', 'update_status', 'update_notes', 'prepopulate']).optional(),
   formData: z.record(z.unknown()).optional(),
-  status: z.enum(['draft', 'in_progress', 'review', 'submitted', 'awarded', 'rejected', 'withdrawn']).optional(),
+  status: z.enum(['draft', 'in_progress', 'ready_to_submit', 'submitted', 'awarded', 'rejected']).optional(),
   metadata: z.record(z.unknown()).optional(),
   notes: z.string().max(50000).optional(),
 })

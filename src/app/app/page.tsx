@@ -20,10 +20,11 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { SectionCard } from '@/components/ui/section-card'
+import { EmptyState } from '@/components/ui/empty-state'
 import { useEffect, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 
-// Types for API response
 interface DashboardData {
   user: {
     id: string
@@ -103,37 +104,38 @@ function ProgressBar({ progress, color }: { progress: number; color: string }) {
   )
 }
 
-// Skeleton
 function DashboardSkeleton() {
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8 max-w-6xl mx-auto animate-pulse">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <div className="h-3 bg-white/[0.04] rounded w-24 mb-2" />
-          <div className="h-8 bg-white/[0.04] rounded w-64" />
-        </div>
-        <div className="h-10 bg-white/[0.04] rounded-lg w-32" />
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className="p-5 rounded-xl border border-white/[0.05] bg-white/[0.02]">
-            <div className="h-3 bg-white/[0.04] rounded w-20 mb-3" />
-            <div className="h-7 bg-white/[0.04] rounded w-24 mb-1" />
-            <div className="h-3 bg-white/[0.04] rounded w-16" />
+    <div className="px-4 md:px-8 lg:px-10 py-8 max-w-[1200px] mx-auto">
+      <div className="animate-pulse">
+        <div className="flex items-center justify-between mb-10">
+          <div>
+            <div className="h-3 skeleton w-20 mb-3" />
+            <div className="h-7 skeleton w-56" />
           </div>
-        ))}
-      </div>
-      <div className="rounded-xl border border-white/[0.05] bg-white/[0.02] p-5 mb-6">
-        <div className="h-4 bg-white/[0.04] rounded w-36 mb-4" />
-        <div className="space-y-3">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-16 bg-white/[0.04] rounded-lg" />
+          <div className="h-9 skeleton rounded-lg w-28" />
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="p-4 sm:p-5 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+              <div className="h-3 skeleton w-20 mb-4" />
+              <div className="h-8 skeleton w-24 mb-2" />
+              <div className="h-3 skeleton w-16" />
+            </div>
           ))}
         </div>
-      </div>
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="rounded-xl border border-white/[0.05] bg-white/[0.02] p-5 h-48" />
-        <div className="rounded-xl border border-white/[0.05] bg-white/[0.02] p-5 h-48" />
+        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 mb-6">
+          <div className="h-5 skeleton w-40 mb-5" />
+          <div className="space-y-3">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-16 skeleton rounded-lg" />
+            ))}
+          </div>
+        </div>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 h-52" />
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 h-52" />
+        </div>
       </div>
     </div>
   )
@@ -141,18 +143,18 @@ function DashboardSkeleton() {
 
 function DashboardError({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8 flex items-center justify-center min-h-[60vh]">
-      <div className="p-8 text-center max-w-md rounded-xl border border-white/[0.05] bg-white/[0.02]">
-        <div className="w-12 h-12 rounded-full bg-pulse-error/10 flex items-center justify-center mx-auto mb-4">
-          <AlertCircle className="w-6 h-6 text-pulse-error" />
+    <div className="px-4 md:px-8 lg:px-10 py-8 flex items-center justify-center min-h-[60vh]">
+      <div className="text-center max-w-md">
+        <div className="w-14 h-14 rounded-2xl bg-pulse-error/10 flex items-center justify-center mx-auto mb-5">
+          <AlertCircle className="w-7 h-7 text-pulse-error" />
         </div>
-        <h2 className="text-heading text-pulse-text mb-2">Failed to load dashboard</h2>
-        <p className="text-body-sm text-pulse-text-secondary mb-4">
-          We couldn&apos;t load your dashboard data. Please try again.
+        <h2 className="text-heading text-pulse-text mb-2">Couldn&apos;t load your dashboard</h2>
+        <p className="text-body-sm text-pulse-text-secondary mb-6">
+          There was a problem loading your data. This is usually temporary.
         </p>
-        <Button onClick={onRetry}>
+        <Button onClick={onRetry} variant="outline">
           <RefreshCw className="w-4 h-4 mr-2" />
-          Retry
+          Try again
         </Button>
       </div>
     </div>
@@ -223,20 +225,26 @@ export default function AppDashboard() {
   const vaultPct = dashboardData.vaultCompleteness?.overall ?? 0
   const urgentCount = upcomingDeadlines.filter(d => d.urgent || (d.daysLeft !== null && d.daysLeft <= 14)).length
 
+  const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.04 } } }
+  const fadeUp = {
+    hidden: { opacity: 0, y: 12 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] } },
+  }
+
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8 max-w-6xl mx-auto">
+    <div className="px-4 md:px-8 lg:px-10 py-8 max-w-[1200px] mx-auto">
       {/* Header */}
       <motion.div
-        className="flex items-start justify-between mb-8"
-        initial={{ opacity: 0, y: -10 }}
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-8 sm:mb-10"
+        initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
       >
         <div>
-          <h1 className="text-heading-lg text-pulse-text">
-            {getGreeting()}, {firstName}
-          </h1>
+          <p className="text-label text-pulse-text-tertiary mb-1">{getGreeting()}</p>
+          <h1 className="text-display-section text-pulse-text">{firstName}</h1>
           {user.organization && (
-            <p className="text-body-sm text-pulse-text-tertiary mt-0.5">{user.organization}</p>
+            <p className="text-body-sm text-pulse-text-tertiary mt-1">{user.organization}</p>
           )}
         </div>
         <Button size="sm" asChild>
@@ -247,102 +255,122 @@ export default function AppDashboard() {
         </Button>
       </motion.div>
 
-      {/* Metrics row */}
+      {/* Stat cards */}
       <motion.div
-        className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
+        className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8"
+        variants={stagger}
+        initial="hidden"
+        animate="show"
       >
-        <Link
-          href="/app/saved"
-          className="group p-5 rounded-xl border border-white/[0.05] bg-pulse-accent/[0.03] hover:border-pulse-accent/20 transition-all duration-200"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="w-4 h-4 text-pulse-accent" />
-            <span className="text-label-sm text-pulse-text-tertiary">Funding potential</span>
-          </div>
-          <p className="text-heading-lg text-pulse-accent tabular-nums">
-            {stats.fundingPotential > 0 ? formatCurrency(stats.fundingPotential) : '$0'}
-          </p>
-          <p className="text-label-sm text-pulse-text-tertiary mt-1 flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            {stats.savedGrants} grants saved
-          </p>
-        </Link>
+        {/* Funding potential */}
+        <motion.div variants={fadeUp}>
+          <Link
+            href="/app/saved"
+            className="group block p-5 rounded-xl border border-pulse-accent/10 bg-pulse-accent/[0.03] hover:border-pulse-accent/20 transition-all duration-200"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 rounded-lg bg-pulse-accent/10 flex items-center justify-center">
+                <DollarSign className="w-3.5 h-3.5 text-pulse-accent" />
+              </div>
+              <span className="text-label-sm text-pulse-text-tertiary">Funding potential</span>
+            </div>
+            <p className="text-stat-sm text-pulse-accent tabular-nums">
+              {stats.fundingPotential > 0 ? formatCurrency(stats.fundingPotential) : '$0'}
+            </p>
+            <p className="text-label-sm text-pulse-text-tertiary mt-2 flex items-center gap-1">
+              <TrendingUp className="w-3 h-3" />
+              {stats.savedGrants} grants saved
+            </p>
+          </Link>
+        </motion.div>
 
-        <Link
-          href="/app/saved"
-          className="group p-5 rounded-xl border border-white/[0.05] bg-white/[0.02] hover:border-white/[0.1] transition-all duration-200"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Bookmark className="w-4 h-4 text-pulse-text-tertiary group-hover:text-pulse-accent transition-colors" />
-            <span className="text-label-sm text-pulse-text-tertiary">Saved grants</span>
-          </div>
-          <p className="text-heading-lg text-pulse-text tabular-nums">{stats.savedGrants}</p>
-          <p className="text-label-sm text-pulse-text-tertiary mt-1">
-            {stats.savedSearches} saved searches
-          </p>
-        </Link>
+        {/* Saved grants */}
+        <motion.div variants={fadeUp}>
+          <Link
+            href="/app/saved"
+            className="group block p-5 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] transition-all duration-200"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 rounded-lg bg-white/[0.04] flex items-center justify-center group-hover:bg-pulse-accent/10 transition-colors">
+                <Bookmark className="w-3.5 h-3.5 text-pulse-text-tertiary group-hover:text-pulse-accent transition-colors" />
+              </div>
+              <span className="text-label-sm text-pulse-text-tertiary">Saved grants</span>
+            </div>
+            <p className="text-stat-sm text-pulse-text tabular-nums">{stats.savedGrants}</p>
+            <p className="text-label-sm text-pulse-text-tertiary mt-2">
+              {stats.savedSearches} saved searches
+            </p>
+          </Link>
+        </motion.div>
 
-        <Link
-          href="/app/workspace"
-          className="group p-5 rounded-xl border border-white/[0.05] bg-white/[0.02] hover:border-white/[0.1] transition-all duration-200"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Clock className={`w-4 h-4 ${urgentCount > 0 ? 'text-orange-400' : 'text-pulse-text-tertiary'} group-hover:text-pulse-accent transition-colors`} />
-            <span className="text-label-sm text-pulse-text-tertiary">Due soon</span>
-          </div>
-          <p className={`text-heading-lg tabular-nums ${urgentCount > 0 ? 'text-orange-400' : 'text-pulse-text'}`}>
-            {urgentCount}
-          </p>
-          <p className="text-label-sm text-pulse-text-tertiary mt-1">
-            {upcomingDeadlines.length} total deadlines
-          </p>
-        </Link>
+        {/* Due soon */}
+        <motion.div variants={fadeUp}>
+          <Link
+            href="/app/workspace"
+            className="group block p-5 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] transition-all duration-200"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${urgentCount > 0 ? 'bg-orange-400/10' : 'bg-white/[0.04] group-hover:bg-pulse-accent/10'}`}>
+                <Clock className={`w-3.5 h-3.5 transition-colors ${urgentCount > 0 ? 'text-orange-400' : 'text-pulse-text-tertiary group-hover:text-pulse-accent'}`} />
+              </div>
+              <span className="text-label-sm text-pulse-text-tertiary">Due soon</span>
+            </div>
+            <p className={`text-stat-sm tabular-nums ${urgentCount > 0 ? 'text-orange-400' : 'text-pulse-text'}`}>
+              {urgentCount}
+            </p>
+            <p className="text-label-sm text-pulse-text-tertiary mt-2">
+              {upcomingDeadlines.length} total deadlines
+            </p>
+          </Link>
+        </motion.div>
 
-        <Link
-          href="/app/vault"
-          className="group p-5 rounded-xl border border-white/[0.05] bg-white/[0.02] hover:border-white/[0.1] transition-all duration-200"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Shield className={`w-4 h-4 ${vaultPct >= 80 ? 'text-pulse-accent' : 'text-pulse-text-tertiary'} group-hover:text-pulse-accent transition-colors`} />
-            <span className="text-label-sm text-pulse-text-tertiary">Vault</span>
-          </div>
-          <p className={`text-heading-lg tabular-nums ${vaultPct >= 80 ? 'text-pulse-accent' : 'text-pulse-text'}`}>
-            {vaultPct}%
-          </p>
-          <p className="text-label-sm text-pulse-text-tertiary mt-1">
-            {vaultPct >= 80 ? 'Ready for applications' : 'Complete to auto-fill'}
-          </p>
-        </Link>
+        {/* Vault */}
+        <motion.div variants={fadeUp}>
+          <Link
+            href="/app/vault"
+            className="group block p-5 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] transition-all duration-200"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${vaultPct >= 80 ? 'bg-pulse-accent/10' : 'bg-white/[0.04] group-hover:bg-pulse-accent/10'}`}>
+                <Shield className={`w-3.5 h-3.5 transition-colors ${vaultPct >= 80 ? 'text-pulse-accent' : 'text-pulse-text-tertiary group-hover:text-pulse-accent'}`} />
+              </div>
+              <span className="text-label-sm text-pulse-text-tertiary">Vault</span>
+            </div>
+            <p className={`text-stat-sm tabular-nums ${vaultPct >= 80 ? 'text-pulse-accent' : 'text-pulse-text'}`}>
+              {vaultPct}%
+            </p>
+            <p className="text-label-sm text-pulse-text-tertiary mt-2">
+              {vaultPct >= 80 ? 'Ready for applications' : 'Complete to auto-fill'}
+            </p>
+          </Link>
+        </motion.div>
       </motion.div>
 
       {/* Deadlines */}
       <motion.div
         className="mb-6"
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+        transition={{ delay: 0.12, duration: 0.35 }}
       >
-        <div className="p-5 rounded-xl border border-white/[0.05] bg-white/[0.02]">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-heading-sm text-pulse-text">Upcoming deadlines</h2>
+        <SectionCard
+          title="Upcoming deadlines"
+          headerAction={
             <Link
               href="/app/workspace"
               className="text-label-sm text-pulse-text-tertiary hover:text-pulse-accent transition-colors flex items-center gap-1"
             >
               View all <ChevronRight className="w-3.5 h-3.5" />
             </Link>
-          </div>
-
+          }
+        >
           {upcomingDeadlines.length > 0 ? (
             <div className="space-y-2">
-              {upcomingDeadlines.slice(0, 5).map((d, i) => (
+              {upcomingDeadlines.slice(0, 5).map((d) => (
                 <Link
                   key={d.id}
                   href={d.href}
-                  className={`flex items-center gap-4 p-3 rounded-lg border transition-all duration-200 hover:border-white/[0.1] group ${
+                  className={`flex items-center gap-2 sm:gap-4 p-3 sm:p-3.5 rounded-lg border transition-all duration-200 hover:border-white/[0.12] group ${
                     d.urgent
                       ? 'bg-red-500/[0.04] border-red-500/15'
                       : d.daysLeft !== null && d.daysLeft <= 14
@@ -357,7 +385,7 @@ export default function AppDashboard() {
                         {d.title}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 mt-1.5">
+                    <div className="flex items-center gap-3 mt-2">
                       <ProgressBar progress={d.progress} color={d.urgent ? '#ef4444' : '#40ffaa'} />
                       <span className="text-label-sm text-pulse-text-tertiary shrink-0 w-12 text-right tabular-nums">
                         {d.progress}%
@@ -365,11 +393,11 @@ export default function AppDashboard() {
                     </div>
                   </div>
                   {d.amount && (
-                    <span className="text-body-sm font-medium text-pulse-accent shrink-0 hidden sm:block">
+                    <span className="text-body-sm font-medium text-pulse-accent shrink-0 hidden sm:block tabular-nums">
                       {formatCurrency(d.amount)}
                     </span>
                   )}
-                  <span className={`text-label-sm shrink-0 tabular-nums ${
+                  <span className={`text-label shrink-0 tabular-nums font-medium ${
                     d.urgent ? 'text-red-400' : d.daysLeft !== null && d.daysLeft <= 14 ? 'text-orange-400' : 'text-pulse-text-tertiary'
                   }`}>
                     {d.daysLeft !== null ? `${d.daysLeft}d` : '--'}
@@ -378,38 +406,38 @@ export default function AppDashboard() {
               ))}
             </div>
           ) : (
-            <div className="py-8 text-center">
-              <Clock className="w-8 h-8 text-pulse-text-tertiary/30 mx-auto mb-3" />
-              <p className="text-body-sm text-pulse-text-secondary mb-1">No upcoming deadlines</p>
-              <p className="text-label-sm text-pulse-text-tertiary">
-                Save grants to start tracking their deadlines
-              </p>
-            </div>
+            <EmptyState
+              icon={Clock}
+              title="No upcoming deadlines"
+              description="Save grants to start tracking their deadlines automatically."
+              actionLabel="Discover grants"
+              actionHref="/app/discover"
+            />
           )}
-        </div>
+        </SectionCard>
       </motion.div>
 
       {/* Pipeline + Quick Actions */}
       <motion.div
-        className="grid md:grid-cols-2 gap-6 mb-6"
-        initial={{ opacity: 0, y: 10 }}
+        className="grid md:grid-cols-2 gap-4 sm:gap-6 mb-6"
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
+        transition={{ delay: 0.18, duration: 0.35 }}
       >
         {/* Pipeline */}
-        <div className="p-5 rounded-xl border border-white/[0.05] bg-white/[0.02]">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-heading-sm text-pulse-text">Pipeline</h2>
+        <SectionCard
+          title="Pipeline"
+          headerAction={
             <span className="text-label-sm text-pulse-text-tertiary tabular-nums">{totalGrants} total</span>
-          </div>
-
+          }
+        >
           {totalGrants > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {applicationStages.map((stage) => {
                 const pct = totalGrants > 0 ? (stage.count / totalGrants) * 100 : 0
                 return (
                   <div key={stage.name} className="flex items-center gap-3">
-                    <span className="text-body-sm text-pulse-text-secondary w-24 shrink-0">{stage.name}</span>
+                    <span className="text-body-sm text-pulse-text-secondary w-20 sm:w-28 shrink-0 truncate">{stage.name}</span>
                     <div className="flex-1">
                       <ProgressBar progress={pct} color={stage.color} />
                     </div>
@@ -419,19 +447,18 @@ export default function AppDashboard() {
               })}
             </div>
           ) : (
-            <div className="py-6 text-center">
-              <FileText className="w-7 h-7 text-pulse-text-tertiary/30 mx-auto mb-2" />
-              <p className="text-body-sm text-pulse-text-secondary mb-3">No applications yet</p>
-              <Button size="sm" variant="outline" asChild>
-                <Link href="/app/discover">Start discovering</Link>
-              </Button>
-            </div>
+            <EmptyState
+              icon={FileText}
+              title="No applications yet"
+              description="Start discovering grants to build your application pipeline."
+              actionLabel="Start discovering"
+              actionHref="/app/discover"
+            />
           )}
-        </div>
+        </SectionCard>
 
         {/* Quick Actions */}
-        <div className="p-5 rounded-xl border border-white/[0.05] bg-white/[0.02]">
-          <h2 className="text-heading-sm text-pulse-text mb-4">Quick actions</h2>
+        <SectionCard title="Quick actions">
           <div className="space-y-1">
             {[
               { icon: Search, label: 'Discover new grants', desc: 'Browse 20,000+ opportunities', href: '/app/discover' },
@@ -444,9 +471,9 @@ export default function AppDashboard() {
                 href={item.href}
                 className="flex items-center gap-3 p-3 -mx-1 rounded-lg hover:bg-white/[0.04] transition-colors group"
               >
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                  item.highlight ? 'bg-pulse-accent/10 text-pulse-accent' : 'bg-white/[0.04] text-pulse-text-tertiary group-hover:text-pulse-accent'
-                } transition-colors`}>
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                  item.highlight ? 'bg-pulse-accent/10 text-pulse-accent' : 'bg-white/[0.04] text-pulse-text-tertiary group-hover:text-pulse-accent group-hover:bg-pulse-accent/10'
+                }`}>
                   <item.icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -455,47 +482,52 @@ export default function AppDashboard() {
                   </p>
                   <p className="text-label-sm text-pulse-text-tertiary">{item.desc}</p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-pulse-text-tertiary/40 group-hover:text-pulse-accent transition-colors shrink-0" />
+                <ChevronRight className="w-4 h-4 text-pulse-text-tertiary/30 group-hover:text-pulse-accent/60 transition-colors shrink-0" />
               </Link>
             ))}
           </div>
-        </div>
+        </SectionCard>
       </motion.div>
 
-      {/* AI Assistant - compact */}
+      {/* AI Assistant */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.24, duration: 0.35 }}
       >
-        <div className="p-4 rounded-xl border border-white/[0.05] bg-[#111113]">
-          <div className="flex items-center gap-3">
+        <div className="p-5 rounded-xl border border-pulse-accent/10 bg-pulse-accent/[0.02]">
+          <div className="flex items-center gap-3 mb-4">
             <div className="w-8 h-8 rounded-lg bg-pulse-accent/10 flex items-center justify-center shrink-0">
               <Sparkles className="w-4 h-4 text-pulse-accent" />
             </div>
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Ask AI anything about grants..."
-                aria-label="Ask AI about grants"
-                value={aiInput}
-                onChange={(e) => setAiInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAiSubmit()}
-                className="w-full px-4 py-2.5 pr-11 rounded-lg bg-white/[0.03] border border-white/[0.06] focus:ring-1 focus:ring-pulse-accent/30 focus:border-pulse-accent/40 focus:outline-none text-body-sm text-pulse-text placeholder:text-pulse-text-tertiary/50 transition-all duration-150"
-              />
-              <button
-                onClick={handleAiSubmit}
-                disabled={aiLoading || !aiInput.trim()}
-                aria-label="Send"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-md bg-pulse-accent flex items-center justify-center hover:bg-pulse-accent/90 transition-colors disabled:opacity-40"
-              >
-                {aiLoading ? (
-                  <Loader2 className="w-3.5 h-3.5 text-pulse-bg animate-spin" />
-                ) : (
-                  <Send className="w-3.5 h-3.5 text-pulse-bg" />
-                )}
-              </button>
+            <div>
+              <h2 className="text-heading-sm text-pulse-text">AI Assistant</h2>
+              <p className="text-label-sm text-pulse-text-tertiary">Ask anything about grants, eligibility, or applications</p>
             </div>
+          </div>
+
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="e.g. &quot;Find grants for renewable energy research&quot;"
+              aria-label="Ask AI about grants"
+              value={aiInput}
+              onChange={(e) => setAiInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAiSubmit()}
+              className="w-full px-4 py-3 pr-12 rounded-lg bg-white/[0.04] border border-white/[0.08] focus:ring-1 focus:ring-pulse-accent/30 focus:border-pulse-accent/30 focus:outline-none text-body-sm text-pulse-text placeholder:text-pulse-text-tertiary/40 transition-all duration-150"
+            />
+            <button
+              onClick={handleAiSubmit}
+              disabled={aiLoading || !aiInput.trim()}
+              aria-label="Send"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-md bg-pulse-accent flex items-center justify-center hover:bg-pulse-accent/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              {aiLoading ? (
+                <Loader2 className="w-3.5 h-3.5 text-pulse-bg animate-spin" />
+              ) : (
+                <Send className="w-3.5 h-3.5 text-pulse-bg" />
+              )}
+            </button>
           </div>
 
           {/* AI Result */}
@@ -503,19 +535,19 @@ export default function AppDashboard() {
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              className="mt-3 pt-3 border-t border-white/[0.06]"
+              className="mt-4 pt-4 border-t border-white/[0.06]"
             >
               {aiResult.error ? (
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-pulse-error/10 border border-pulse-error/20">
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-pulse-error/5 border border-pulse-error/15">
                   <AlertCircle className="w-4 h-4 text-pulse-error shrink-0 mt-0.5" />
-                  <p className="text-body-sm text-pulse-error">{aiResult.error}</p>
+                  <p className="text-body-sm text-pulse-error/80">{aiResult.error}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {aiResult.response && (
-                    <div className="flex items-start gap-2">
-                      <Sparkles className="w-3.5 h-3.5 text-pulse-accent shrink-0 mt-1" />
-                      <p className="text-body-sm text-pulse-text">{aiResult.response}</p>
+                    <div className="flex items-start gap-3">
+                      <Sparkles className="w-4 h-4 text-pulse-accent shrink-0 mt-0.5" />
+                      <p className="text-body-sm text-pulse-text leading-relaxed">{aiResult.response}</p>
                     </div>
                   )}
                   {aiResult.suggestedAction && (
@@ -533,14 +565,14 @@ export default function AppDashboard() {
                         <Link
                           key={g.id}
                           href={`/app/grants/${encodeURIComponent(g.id)}`}
-                          className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.1] transition-colors group"
+                          className="p-3.5 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:border-pulse-accent/20 transition-all group"
                         >
                           <p className="text-body-sm font-medium text-pulse-text group-hover:text-pulse-accent transition-colors truncate">
                             {g.title}
                           </p>
-                          <div className="flex items-center gap-3 mt-1 text-label-sm text-pulse-text-tertiary">
+                          <div className="flex items-center gap-3 mt-1.5 text-label-sm text-pulse-text-tertiary">
                             <span>{g.sponsor}</span>
-                            {g.amount && <span className="text-pulse-accent">{g.amount}</span>}
+                            {g.amount && <span className="text-pulse-accent font-medium">{g.amount}</span>}
                           </div>
                         </Link>
                       ))}
@@ -550,7 +582,7 @@ export default function AppDashboard() {
               )}
               <button
                 onClick={() => setAiResult(null)}
-                className="mt-2 text-label-sm text-pulse-text-tertiary hover:text-pulse-text transition-colors"
+                className="mt-3 text-label-sm text-pulse-text-tertiary hover:text-pulse-text transition-colors"
               >
                 Dismiss
               </button>

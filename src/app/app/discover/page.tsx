@@ -383,13 +383,6 @@ function GrantCard({
             )}
           </div>
 
-          {/* Click hint */}
-          <div className="mt-3 pt-3 border-t border-white/[0.04] text-center">
-            <span className="text-label-sm text-pulse-text-tertiary flex items-center justify-center gap-1">
-              <ExternalLink className="w-3 h-3" />
-              View details
-            </span>
-          </div>
       </div>
     </motion.div>
   )
@@ -1154,7 +1147,7 @@ function DiscoverPageContent() {
   }, [])
 
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8">
+    <div className="px-4 md:px-8 lg:px-10 py-8 max-w-[1400px] mx-auto">
       {/* Profile Completeness Banner */}
       {profileLoaded && userProfile && (
         <ProfileCompletenessBanner
@@ -1166,32 +1159,27 @@ function DiscoverPageContent() {
       {/* Header */}
       <motion.div
         className="mb-8"
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
       >
-        <div className="flex items-end justify-between flex-wrap gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3 lg:gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Target className="w-4 h-4 text-pulse-accent" />
-              <span className="text-label-sm text-pulse-text-tertiary">
-                Grant Discovery
-              </span>
-            </div>
-            <h1 className="text-display-section text-pulse-text">
+            <h1 className="text-heading-lg text-pulse-text">
               {isAiSearchMode ? 'AI Grant Search' : isProfileMode ? 'Grants For You' : 'Browse All Grants'}
             </h1>
-            <p className="text-body text-pulse-text-secondary mt-2">
+            <p className="text-body-sm text-pulse-text-tertiary mt-1">
               {isAiSearchMode
                 ? 'Describe your needs and let AI find the best funding opportunities'
                 : isProfileMode
                 ? 'Top grants matched to your profile and focus areas'
-                : 'Search real-time across federal, state, and foundation funding opportunities'
+                : 'Search across federal, state, and foundation funding sources'
               }
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {/* Mode Toggle */}
-            <div className="relative flex items-center bg-[#111113] rounded-lg p-1 border border-white/[0.05]">
+            <div className="relative flex items-center bg-[#111113] rounded-lg p-0.5 sm:p-1 border border-white/[0.05]">
               <button
                 onClick={handleForYou}
                 disabled={isAiMatching || loading}
@@ -1278,8 +1266,8 @@ function DiscoverPageContent() {
         className="mb-6"
       >
         <div className="p-4 rounded-xl border border-white/[0.05] bg-white/[0.02]">
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="relative flex-1 min-w-[200px]">
+          <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+            <div className="relative flex-1 min-w-0 w-full sm:w-auto sm:min-w-[200px]">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-pulse-text-tertiary" />
               <input
                 type="text"
@@ -1323,7 +1311,7 @@ function DiscoverPageContent() {
           </div>
 
           {/* Quick Suggestions */}
-          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/[0.05] flex-wrap">
+          <div className="flex items-center gap-1.5 sm:gap-2 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-white/[0.05] flex-wrap">
             <span className="text-label-sm text-pulse-text-tertiary">Popular:</span>
             {quickSuggestions.map((suggestion) => (
               <button
@@ -1589,7 +1577,7 @@ function DiscoverPageContent() {
           <p className="text-body-sm text-pulse-text-secondary max-w-md mb-6">
             We couldn&apos;t find any grants matching your current search criteria. Try broadening your filters or using different keywords.
           </p>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
             <Button variant="outline" onClick={handleClearSearch}>
               <RefreshCw className="w-4 h-4 mr-2" />
               Clear Search
@@ -1610,19 +1598,19 @@ function DiscoverPageContent() {
           className="mb-6"
         >
           <div className="p-4 rounded-xl border border-yellow-500/15 bg-yellow-500/[0.04]">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-yellow-500/10 border border-yellow-500/15 flex items-center justify-center">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-lg bg-yellow-500/10 border border-yellow-500/15 flex items-center justify-center shrink-0">
                   <AlertCircle className="w-5 h-5 text-yellow-400" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-body-sm font-medium text-pulse-text">Profile Setup Needed</p>
                   <p className="text-label-sm text-pulse-text-secondary">
                     {aiMatchError}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <Button variant="default" size="sm" asChild>
                   <Link href="/app/settings">
                     Complete Profile
@@ -1725,7 +1713,7 @@ function DiscoverPageContent() {
 // Loading fallback for the Suspense boundary
 function DiscoverLoading() {
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8">
+    <div className="px-4 md:px-8 lg:px-10 py-8 max-w-[1400px] mx-auto">
       {/* Header skeleton */}
       <div className="mb-8 animate-pulse">
         <div className="flex items-center gap-2 mb-2">

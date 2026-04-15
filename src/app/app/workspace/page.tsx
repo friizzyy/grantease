@@ -268,7 +268,7 @@ function WorkspaceCard({ workspace, index }: { workspace: Workspace; index: numb
         <GlassCard className={`p-5 md:p-6 hover:border-white/[0.1] transition-all duration-200 group cursor-pointer ${
           isUrgent ? 'border-pulse-warning/30' : ''
         }`}>
-          <div className="flex items-start gap-5">
+          <div className="flex items-start gap-3 sm:gap-5">
             {/* Progress Ring */}
             <div className="shrink-0">
               <ProgressRing progress={progress} color={getProgressColor()} />
@@ -302,7 +302,7 @@ function WorkspaceCard({ workspace, index }: { workspace: Workspace; index: numb
               </p>
 
               {/* Meta Info */}
-              <div className="flex items-center gap-4 text-sm">
+              <div className="flex items-center gap-2 sm:gap-4 text-sm flex-wrap">
                 <span className="flex items-center gap-1.5 text-pulse-text-tertiary">
                   <Building2 className="w-4 h-4" />
                   {workspace.grant.sponsor}
@@ -389,7 +389,7 @@ function EmptyWorkspaces() {
 // Loading skeleton
 function WorkspacesSkeleton() {
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8 animate-pulse">
+    <div className="px-4 md:px-8 lg:px-10 py-8 animate-pulse">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-2">
@@ -442,7 +442,7 @@ function WorkspacesSkeleton() {
       <div className="space-y-4">
         {[1, 2, 3].map(i => (
           <div key={i} className="rounded-2xl border border-pulse-border/30 bg-pulse-surface/30 p-5">
-            <div className="flex items-start gap-5">
+            <div className="flex items-start gap-3 sm:gap-5">
               {/* Progress ring placeholder */}
               <div className="w-14 h-14 bg-pulse-surface rounded-full shrink-0" />
               <div className="flex-1 min-w-0">
@@ -481,7 +481,7 @@ function WorkspacesSkeleton() {
 // Error state
 function WorkspacesError({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8 flex items-center justify-center min-h-[60vh]">
+    <div className="px-4 md:px-8 lg:px-10 py-8 flex items-center justify-center min-h-[60vh]">
       <GlassCard className="p-8 text-center max-w-md">
         <div className="w-12 h-12 rounded-full bg-pulse-error/20 flex items-center justify-center mx-auto mb-4">
           <AlertCircle className="w-6 h-6 text-pulse-error" />
@@ -543,28 +543,19 @@ export default function WorkspacesPage() {
     : workspaces.filter(w => w.status === filter)
 
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8">
+    <div className="px-4 md:px-8 lg:px-10 py-8 max-w-[1400px] mx-auto">
       {/* Header */}
       <motion.div
-        className="mb-8"
-        initial={{ opacity: 0, y: -20 }}
+        className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8"
+        initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
       >
-        <div className="flex items-end justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <FileText className="w-5 h-5 text-pulse-accent" />
-              <span className="text-label text-pulse-text-tertiary">
-                Application Manager
-              </span>
-            </div>
-            <h1 className="text-display-page text-pulse-text">
-              Your Workspaces
-            </h1>
-            <p className="text-body text-pulse-text-secondary mt-2">
-              Track progress, manage tasks, and submit winning applications
-            </p>
-          </div>
+        <div>
+          <h1 className="text-heading-lg text-pulse-text">Workspaces</h1>
+          <p className="text-body-sm text-pulse-text-tertiary mt-1">
+            Track progress, manage tasks, and submit applications
+          </p>
         </div>
       </motion.div>
 
@@ -580,7 +571,7 @@ export default function WorkspacesPage() {
 
           {/* Filter Tabs */}
           <motion.div
-            className="flex items-center gap-2 mb-6 flex-wrap"
+            className="flex items-center gap-1.5 sm:gap-2 mb-4 sm:mb-6 flex-wrap"
             role="tablist"
             aria-label="Filter workspaces"
             initial={{ opacity: 0, y: 10 }}

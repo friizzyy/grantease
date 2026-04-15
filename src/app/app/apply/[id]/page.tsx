@@ -185,7 +185,7 @@ function ProgressSteps({
               className="relative z-10 flex flex-col items-center group"
             >
               <div className={`
-                w-10 h-10 rounded-full flex items-center justify-center transition-all
+                w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all
                 ${isActive
                   ? 'bg-pulse-accent text-pulse-bg ring-4 ring-pulse-accent/20'
                   : isCompleted
@@ -471,7 +471,7 @@ function ContactStep({
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
         <FormInput
           label="Full Name"
           name="contactName"
@@ -531,7 +531,7 @@ function OrganizationStep({
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
         <div className="md:col-span-2">
           <FormInput
             label="Organization Name"
@@ -577,7 +577,7 @@ function OrganizationStep({
           placeholder="City"
           fromVault={!!vaultData?.city && formData.organizationCity === vaultData.city}
         />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4">
           <FormInput
             label="State"
             name="organizationState"
@@ -640,7 +640,7 @@ function ProjectStep({
           context={{ grant, formData }}
         />
 
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
           <FormInput
             label="Total Project Cost"
             name="totalProjectCost"
@@ -781,7 +781,7 @@ function BudgetStep({
       </div>
 
       <GlassCard className="p-4">
-        <div className="grid md:grid-cols-2 gap-4 mb-4">
+        <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
           <FormInput
             label="Personnel / Salaries"
             name="personnelCost"
@@ -1175,7 +1175,7 @@ export default function ApplyPage({ params }: { params: Promise<{ id: string }> 
 
   if (isLoading) {
     return (
-      <div className="px-4 md:px-6 lg:px-8 py-8 flex items-center justify-center min-h-[60vh]">
+      <div className="px-4 md:px-8 lg:px-10 py-8 flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <Loader2 className="w-8 h-8 text-pulse-accent animate-spin mx-auto mb-4" />
           <p className="text-pulse-text-secondary">Loading application...</p>
@@ -1185,7 +1185,7 @@ export default function ApplyPage({ params }: { params: Promise<{ id: string }> 
   }
 
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8 max-w-4xl mx-auto">
+    <div className="px-4 md:px-8 lg:px-10 py-8 max-w-4xl mx-auto">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -1274,29 +1274,30 @@ export default function ApplyPage({ params }: { params: Promise<{ id: string }> 
       </motion.div>
 
       {/* Navigation */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <Button
           variant="outline"
           onClick={goPrev}
           disabled={currentStep === 0}
+          className="w-full sm:w-auto"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Previous
         </Button>
 
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-pulse-text-tertiary">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <span className="text-sm text-pulse-text-tertiary text-center hidden sm:block">
             Step {currentStep + 1} of {STEPS.length}
           </span>
 
           {currentStep < STEPS.length - 1 ? (
-            <Button onClick={goNext}>
-              Continue to {STEPS[currentStep + 1].label}
-              <ArrowRight className="w-4 h-4 ml-2" />
+            <Button onClick={goNext} className="w-full sm:w-auto">
+              <span className="truncate">Continue to {STEPS[currentStep + 1].label}</span>
+              <ArrowRight className="w-4 h-4 ml-2 shrink-0" />
             </Button>
           ) : (
             <Button
-              className="bg-gradient-to-r from-pulse-accent to-pulse-accent/80"
+              className="bg-gradient-to-r from-pulse-accent to-pulse-accent/80 w-full sm:w-auto"
               onClick={() => {
                 handleSave()
                 if (grant?.url) {

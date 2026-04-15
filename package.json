@@ -20,7 +20,8 @@
     "db:studio": "prisma studio",
     "seed-grants": "npx tsx src/lib/ingestion/seed-grants.ts",
     "ingest": "npx tsx src/lib/ingestion/run.ts",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "validate-env": "npx tsx scripts/validate-env.ts"
   },
   "dependencies": {
     "@google/genai": "^1.43.0",

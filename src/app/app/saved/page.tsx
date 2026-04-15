@@ -330,8 +330,8 @@ function SavedStats({ grants }: { grants: SavedGrant[] }) {
       className="mb-6"
     >
       <GlassCard variant="accent" className="p-4">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-6 flex-wrap">
+        <div className="flex items-center justify-between flex-wrap gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-pulse-accent/20 border border-pulse-accent/30 flex items-center justify-center">
                 <BookmarkCheck className="w-5 h-5 text-pulse-accent" />
@@ -619,19 +619,15 @@ export default function SavedGrantsPage() {
 
   if (isLoading) {
     return (
-      <div className="px-4 md:px-6 lg:px-8 py-8">
+      <div className="px-4 md:px-8 lg:px-10 py-8 max-w-[1400px] mx-auto">
         <motion.div
           className="mb-8"
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
         >
-          <div className="flex items-center gap-2 mb-2">
-            <BookmarkCheck className="w-5 h-5 text-pulse-accent" />
-            <span className="text-label text-pulse-text-tertiary">
-              Your Collection
-            </span>
-          </div>
-          <h1 className="text-display-page text-pulse-text">Saved Grants</h1>
+          <h1 className="text-heading-lg text-pulse-text">Saved Grants</h1>
+          <p className="text-body-sm text-pulse-text-tertiary mt-1">Manage and organize grants you&apos;re interested in</p>
         </motion.div>
         <LoadingState />
       </div>
@@ -640,13 +636,14 @@ export default function SavedGrantsPage() {
 
   if (error) {
     return (
-      <div className="px-4 md:px-6 lg:px-8 py-8">
+      <div className="px-4 md:px-8 lg:px-10 py-8 max-w-[1400px] mx-auto">
         <motion.div
           className="mb-8"
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
         >
-          <h1 className="text-display-page text-pulse-text">Saved Grants</h1>
+          <h1 className="text-heading-lg text-pulse-text">Saved Grants</h1>
         </motion.div>
         <ErrorState onRetry={fetchGrants} />
       </div>
@@ -654,35 +651,26 @@ export default function SavedGrantsPage() {
   }
 
   return (
-    <div className="px-4 md:px-6 lg:px-8 py-8">
+    <div className="px-4 md:px-8 lg:px-10 py-8 max-w-[1400px] mx-auto">
       {/* Header */}
       <motion.div
-        className="mb-8"
-        initial={{ opacity: 0, y: -20 }}
+        className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-6 sm:mb-8"
+        initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
       >
-        <div className="flex items-end justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <BookmarkCheck className="w-5 h-5 text-pulse-accent" />
-              <span className="text-label text-pulse-text-tertiary">
-                Your Collection
-              </span>
-            </div>
-            <h1 className="text-display-page text-pulse-text">
-              Saved Grants
-            </h1>
-            <p className="text-body text-pulse-text-secondary mt-2">
-              Manage and organize grants you're interested in
-            </p>
-          </div>
-          {grants.length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => setShowNewCollectionModal(true)}>
-              <FolderPlus className="w-4 h-4 mr-2" />
-              New Collection
-            </Button>
-          )}
+        <div>
+          <h1 className="text-heading-lg text-pulse-text">Saved Grants</h1>
+          <p className="text-body-sm text-pulse-text-tertiary mt-1">
+            Manage and organize grants you&apos;re interested in
+          </p>
         </div>
+        {grants.length > 0 && (
+          <Button variant="outline" size="sm" onClick={() => setShowNewCollectionModal(true)}>
+            <FolderPlus className="w-4 h-4 mr-2" />
+            New Collection
+          </Button>
+        )}
       </motion.div>
 
       {grants.length === 0 ? (
@@ -694,7 +682,7 @@ export default function SavedGrantsPage() {
 
           {/* Collection Tabs */}
           <motion.div
-            className="flex items-center gap-2 mb-6 flex-wrap"
+            className="flex items-center gap-1.5 sm:gap-2 mb-6 flex-wrap"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -767,7 +755,7 @@ export default function SavedGrantsPage() {
 
           {/* Grant Grid */}
           <AnimatePresence mode="popLayout">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
               {filteredGrants.map((grant, index) => (
                 <SavedGrantCard
                   key={grant.id}

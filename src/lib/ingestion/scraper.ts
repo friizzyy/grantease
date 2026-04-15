@@ -174,7 +174,7 @@ function extractGrantLinks(
   const listSelector = source.selectors?.grantList || '.grant, .opportunity, .program';
   const linkSelector = source.selectors?.grantLink || 'a';
 
-  $(listSelector).each((_: number, element: cheerio.Element) => {
+  $(listSelector).each((_: number, element: any) => {
     const link = $(element).find(linkSelector).attr('href') || $(element).attr('href');
 
     if (link) {

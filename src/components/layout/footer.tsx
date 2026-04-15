@@ -33,7 +33,7 @@ export function Footer() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16">
         {/* Top: Brand + Link columns */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-10 md:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-6 sm:gap-8 md:gap-8">
           {/* Brand column: spans 2 */}
           <div className="col-span-2">
             <Link href="/" className="inline-flex items-center gap-2 mb-4">

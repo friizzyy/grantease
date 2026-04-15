@@ -249,7 +249,7 @@ function SettingsSkeleton() {
             </div>
             <div className="h-8 bg-pulse-surface rounded-lg w-16" />
           </div>
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
             {[1, 2, 3, 4].map(i => (
               <div key={i} className={i === 3 ? 'md:col-span-2' : ''}>
                 <div className="h-3 bg-pulse-surface rounded w-20 mb-2" />
@@ -529,19 +529,16 @@ function SettingsPageContent() {
         <div className="absolute top-0 right-1/4 w-[600px] h-[600px] rounded-full bg-pulse-accent/[0.02] blur-[160px]" />
       </div>
 
-      <div className="relative z-10 px-4 md:px-6 lg:px-8 py-8 max-w-6xl mx-auto">
+      <div className="relative z-10 px-4 md:px-8 lg:px-10 py-8 max-w-6xl mx-auto">
         {/* Header */}
         <motion.div
           className="mb-8"
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
         >
-          <div className="flex items-center gap-2 mb-2">
-            <SettingsIcon className="w-5 h-5 text-pulse-accent" />
-            <span className="text-label text-pulse-text-tertiary">Account Settings</span>
-          </div>
-          <h1 className="text-display-page text-pulse-text">Settings</h1>
-          <p className="text-body text-pulse-text-secondary mt-2">
+          <h1 className="text-heading-lg text-pulse-text">Settings</h1>
+          <p className="text-body-sm text-pulse-text-tertiary mt-1">
             Manage your profile, AI matching preferences, and account settings
           </p>
         </motion.div>
@@ -559,7 +556,7 @@ function SettingsPageContent() {
             </Button>
           </GlassCard>
         ) : (
-          <div className="flex flex-col lg:flex-row gap-8">
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
             {/* Sidebar Navigation */}
             <motion.div
               className="lg:w-72 shrink-0"
@@ -567,7 +564,7 @@ function SettingsPageContent() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 }}
             >
-              <div className="sticky top-8 space-y-6">
+              <div className="sticky top-8 space-y-4 sm:space-y-6">
                 {/* Account Summary Card */}
                 <GlassCard className="p-6">
                   <div className="flex flex-col items-center text-center mb-6">
@@ -704,7 +701,7 @@ function SettingsPageContent() {
                         </Button>
                       </div>
 
-                      <div className="grid md:grid-cols-2 gap-4">
+                      <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
                         <div>
                           <label className="text-xs font-medium text-pulse-text-tertiary uppercase tracking-wider mb-2 block flex items-center gap-1.5">
                             <User className="w-3 h-3" />
@@ -805,7 +802,7 @@ function SettingsPageContent() {
                       </div>
 
                       {/* Profile Grid */}
-                      <div className="grid md:grid-cols-2 gap-4 mb-6">
+                      <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
                         <InfoCard
                           ref={(el) => { fieldRefs.current['entityType'] = el }}
                           icon={User}
@@ -934,7 +931,7 @@ function SettingsPageContent() {
                       </div>
 
                       {/* Size & Stage Grid */}
-                      <div className="grid md:grid-cols-3 gap-4 mb-6">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
                         <InfoCard
                           ref={(el) => { fieldRefs.current['sizeBand'] = el }}
                           icon={Users}
@@ -1015,7 +1012,7 @@ function SettingsPageContent() {
                       </div>
 
                       {/* Grant Preferences */}
-                      <div className="grid md:grid-cols-2 gap-4 mb-6">
+                      <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
                         <InfoCard
                           icon={DollarSign}
                           label="Preferred Grant Size"
@@ -1306,7 +1303,7 @@ function SettingsPageContent() {
                         <Badge variant="outline">Current Plan</Badge>
                       </div>
 
-                      <div className="grid md:grid-cols-3 gap-4 mb-6">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
                         <div className="p-4 rounded-xl bg-pulse-surface border border-pulse-border/40 text-center">
                           <p className="text-2xl font-bold text-pulse-text">Unlimited</p>
                           <p className="text-sm text-pulse-text-tertiary">Saved Grants</p>
@@ -1376,7 +1373,7 @@ function SettingsPageContent() {
 // Loading fallback for Suspense
 function SettingsLoading() {
   return (
-    <div className="min-h-screen relative px-4 md:px-6 lg:px-8 py-8 max-w-6xl mx-auto animate-pulse">
+    <div className="min-h-screen relative px-4 md:px-8 lg:px-10 py-8 max-w-6xl mx-auto animate-pulse">
       {/* Header */}
       <div className="mb-8">
         <div className="h-8 bg-pulse-surface rounded-full w-40 mb-4" />
