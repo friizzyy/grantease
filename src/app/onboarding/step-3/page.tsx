@@ -24,6 +24,7 @@ export default function OnboardingStep3() {
     setCompanyName,
     setSizeBand,
     setBudget,
+    setIndustryAttribute,
   } = useOnboarding()
 
   const handleContinue = () => {
@@ -85,7 +86,7 @@ export default function OnboardingStep3() {
               <h3 className="text-heading-sm text-pulse-text">
                 {isIndividual ? "What's your project called?" : "What's your organization called?"}
               </h3>
-              <p className="text-body-sm text-pulse-text-tertiary">Optional — helps personalize AI matching</p>
+              <p className="text-body-sm text-pulse-text-tertiary">Optional, helps personalize AI matching</p>
             </div>
           </div>
 
@@ -219,14 +220,14 @@ export default function OnboardingStep3() {
                   label="Independent"
                   description="Working on my own"
                   isSelected={state.industryAttributes.affiliation === 'independent'}
-                  onClick={() => {}}
+                  onClick={() => setIndustryAttribute('affiliation', 'independent')}
                   size="compact"
                 />
                 <OptionCard
                   label="Affiliated"
                   description="University, research center, etc."
                   isSelected={state.industryAttributes.affiliation === 'affiliated'}
-                  onClick={() => {}}
+                  onClick={() => setIndustryAttribute('affiliation', 'affiliated')}
                   size="compact"
                 />
               </div>

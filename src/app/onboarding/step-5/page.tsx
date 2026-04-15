@@ -137,7 +137,7 @@ export default function OnboardingStep5() {
             </div>
             <div>
               <h3 className="text-heading-sm text-pulse-text">Do any of these apply to you?</h3>
-              <p className="text-body-sm text-pulse-text-tertiary">Optional — unlocks specialized grants</p>
+              <p className="text-body-sm text-pulse-text-tertiary">Optional, unlocks specialized grants</p>
             </div>
           </div>
 

@@ -4,7 +4,7 @@
  * ONBOARDING STEP 4
  * -----------------
  * "What do you need funding for?"
- * Primary: Funding goals (maps to GOALS_TO_PURPOSE for scoring — +15 points)
+ * Primary: Funding goals (maps to GOALS_TO_PURPOSE for scoring, +15 points)
  * Secondary: Industry-specific questions (max 2) if relevant
  */
 
