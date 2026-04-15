@@ -80,11 +80,10 @@ export function OptionCard({
         {(isHovered || isSelected) && (
           <motion.div
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            animate={{ opacity: isSelected ? 0.08 : 0.04 }}
             exit={{ opacity: 0 }}
             className={cn(
               'absolute inset-0 rounded-2xl bg-gradient-to-br pointer-events-none',
-              isSelected ? 'opacity-[0.08]' : 'opacity-[0.04]',
               gradientColor
             )}
           />
