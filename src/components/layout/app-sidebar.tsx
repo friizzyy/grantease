@@ -84,14 +84,14 @@ export function AppSidebar({ isAdmin = false }: AppSidebarProps) {
             )
           })}
 
-          {/* Admin Section — separated by clean divider */}
+          {/* Admin Section: separated by clean divider */}
           {isAdmin && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="pt-4 mt-4 border-t border-pulse-border/40"
             >
-              <p className="px-3 py-2 text-micro uppercase tracking-wider text-pulse-text-tertiary font-mono">
+              <p className="px-3 py-2 text-micro uppercase tracking-wider text-pulse-text-tertiary font-medium">
                 Admin
               </p>
               <NavItem
@@ -176,7 +176,7 @@ function NavItem({ href, label, icon: Icon, isActive }: NavItemProps) {
           )}
         </AnimatePresence>
 
-        {/* Active indicator — mint left border, 2px wide */}
+        {/* Active indicator: mint left border, 2px wide */}
         <AnimatePresence>
           {isActive && (
             <motion.div
@@ -189,7 +189,7 @@ function NavItem({ href, label, icon: Icon, isActive }: NavItemProps) {
           )}
         </AnimatePresence>
 
-        {/* Icon — 20px, tertiary default, accent when active */}
+        {/* Icon: 20px, tertiary default, accent when active */}
         <motion.div
           className="relative z-10"
           animate={isActive ? { scale: [1, 1.1, 1] } : {}}

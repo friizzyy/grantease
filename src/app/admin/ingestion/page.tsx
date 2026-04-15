@@ -183,7 +183,7 @@ export default function IngestionPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-serif text-display-sm text-pulse-text">Ingestion Pipeline</h1>
+          <h1 className="font-bold text-display-sm text-pulse-text">Ingestion Pipeline</h1>
           <p className="text-body text-pulse-muted mt-1">
             Manage grant data sources and run ingestion jobs
           </p>

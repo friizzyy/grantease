@@ -126,7 +126,7 @@ function ProgressRing({ progress, size = 80, strokeWidth = 6 }: {
 
   const getColor = () => {
     if (progress >= 75) return '#40ffaa'
-    if (progress >= 50) return '#34d399'
+    if (progress >= 50) return '#40ffaa'
     if (progress >= 25) return '#fbbf24'
     return 'rgba(255,255,255,0.25)'
   }

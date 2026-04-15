@@ -111,12 +111,12 @@ File name: ${sanitizedFileName}
 Carefully analyze the document and extract ALL available information. Follow these steps:
 
 1. **Identify the Document Type**:
-   - "tax_exempt_letter" — IRS determination letter, 501(c)(3) letter
-   - "financial_statement" — Balance sheet, income statement, audit report
-   - "articles_of_incorporation" — Incorporation documents, bylaws, charter
-   - "annual_report" — Annual report, year-end summary
-   - "budget" — Budget proposal, budget summary, financial plan
-   - "other" — Any other document type
+   - "tax_exempt_letter": IRS determination letter, 501(c)(3) letter
+   - "financial_statement": Balance sheet, income statement, audit report
+   - "articles_of_incorporation": Incorporation documents, bylaws, charter
+   - "annual_report": Annual report, year-end summary
+   - "budget": Budget proposal, budget summary, financial plan
+   - "other": Any other document type
 
 2. **Extract Organization Details**:
    - Organization name (as displayed on document)

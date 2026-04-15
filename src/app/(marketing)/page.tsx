@@ -1,165 +1,330 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Search, Sparkles, PenLine, BookOpen, TrendingUp, Shield, Clock, DollarSign } from 'lucide-react'
 import { HeroSearch } from '@/components/marketing/HeroSearch'
+import { SectionIntro } from '@/components/marketing/SectionIntro'
+import { useReducedMotion } from '@/hooks/useReducedMotion'
+import { fadeIn } from '@/lib/motion/marketing-animations'
 
-const fadeIn = {
-  initial: { opacity: 0, y: 14 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-60px' },
-  transition: { duration: 0.55, ease: [0.25, 0.1, 0.25, 1] },
-}
+const trustLogos = [
+  'Small Business Administration',
+  'Grants.gov',
+  'National Science Foundation',
+  'USDA',
+  'NEA',
+]
 
 export default function HomePage() {
-  const [reduced, setReduced] = useState(false)
-
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setReduced(mq.matches)
-    const h = (e: MediaQueryListEvent) => setReduced(e.matches)
-    mq.addEventListener('change', h)
-    return () => mq.removeEventListener('change', h)
-  }, [])
-
-  const m = (props: Record<string, unknown>) => (reduced ? {} : props)
+  const { m } = useReducedMotion()
 
   return (
     <main className="pt-[60px]">
       {/* ─── HERO ─── */}
-      <section className="relative px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 lg:pt-24 pb-20 sm:pb-28 overflow-hidden">
-        {/* Background warmth */}
+      <section className="relative px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 lg:pt-28 pb-20 sm:pb-28 overflow-hidden">
+        {/* Background: asymmetric glow */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-20%] left-[10%] w-[700px] h-[500px] rounded-full bg-pulse-accent/[0.035] blur-[160px]" />
-          <div className="absolute bottom-[-10%] right-[5%] w-[500px] h-[400px] rounded-full bg-emerald-500/[0.02] blur-[130px]" />
+          <div className="absolute top-[-10%] right-[15%] w-[600px] h-[600px] rounded-full bg-pulse-indigo/[0.03] blur-[180px]" />
+          <div className="absolute bottom-[10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-pulse-indigo/[0.025] blur-[140px]" />
         </div>
 
-        <div className="max-w-5xl mx-auto relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            <span className="text-label text-pulse-accent mb-6 block">Grant Discovery Platform</span>
+        <div className="max-w-6xl mx-auto relative z-10">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left: Copy */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-pulse-indigo/[0.12] border border-pulse-indigo/15 mb-6">
+                <Sparkles className="w-3.5 h-3.5 text-pulse-indigo" />
+                <span className="text-caption font-medium text-pulse-indigo">AI-Powered Grant Discovery</span>
+              </div>
 
-            <h1 className="text-display-hero text-pulse-text mb-5 max-w-[680px]">
-              Find grants.{' '}
-              <span className="text-pulse-text-secondary italic">
-                Finish applications.
-              </span>
-            </h1>
+              <h1 className="text-display-hero text-pulse-text mb-5">
+                Stop searching.{' '}
+                <span className="text-pulse-text-secondary italic">Start winning.</span>
+              </h1>
 
-            <p className="text-body-lg text-pulse-text-secondary max-w-lg mb-10">
-              Search 20,000+ grants. Get matched instantly.
-              AI helps you write every section.
-            </p>
+              <p className="text-body-lg text-pulse-text-secondary max-w-md mb-8">
+                Search 20,000+ grants from 50+ sources. Get matched instantly.
+                AI helps you write every section of your application.
+              </p>
 
-            <HeroSearch />
-          </motion.div>
+              <div className="flex flex-col sm:flex-row items-start gap-4 mb-10">
+                <Link
+                  href="/register"
+                  className="group inline-flex items-center gap-2.5 px-7 py-3.5 bg-pulse-accent text-pulse-bg font-semibold text-body rounded-lg hover:bg-pulse-accent/90 transition-all duration-200 shadow-pulse hover:shadow-pulse-lg"
+                >
+                  Find Your Grants
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+                <Link
+                  href="/how-it-works"
+                  className="inline-flex items-center gap-2 px-5 py-3.5 text-body font-medium text-pulse-text-secondary hover:text-pulse-text transition-colors"
+                >
+                  See how it works
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+
+              {/* Trust bar */}
+              <div className="flex items-center gap-3 text-label-sm text-pulse-text-tertiary">
+                <span className="flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5 text-pulse-indigo" />
+                  No credit card required
+                </span>
+                <span className="w-px h-3 bg-white/[0.08]" />
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-pulse-rose" />
+                  5 min to first match
+                </span>
+              </div>
+            </motion.div>
+
+            {/* Right: HeroSearch (the product) */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
+            >
+              <HeroSearch />
+            </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* ─── VALUE PROPS ─── */}
-      <motion.section
-        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-24 border-t border-white/[0.04] relative"
-        {...m(fadeIn)}
-      >
-        {/* Subtle section wash */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.01] to-transparent pointer-events-none" />
-
-        <div className="max-w-5xl mx-auto relative z-10">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-            {[
-              { num: '01', title: 'Smart matching', desc: 'Every requirement checked against your profile. Only see grants you qualify for.', accent: 'from-pulse-accent/20 to-pulse-accent/5' },
-              { num: '02', title: 'Plain English', desc: 'No jargon. Every grant explained clearly so you know exactly what\'s required.', accent: 'from-emerald-400/20 to-emerald-400/5' },
-              { num: '03', title: 'AI writing help', desc: 'Draft every section with AI. Your vault auto-fills the basics across all apps.', accent: 'from-teal-400/20 to-teal-400/5' },
-              { num: '04', title: 'Keep 100%', desc: 'No percentage fees. No success fees. Every dollar you win goes directly to you.', accent: 'from-pulse-accent/20 to-emerald-400/5' },
-            ].map((item) => (
-              <div
-                key={item.num}
-                className="group relative p-5 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300"
+      {/* ─── DATA SOURCES BAR (social proof) ─── */}
+      <div className="relative bg-pulse-surface/50">
+        <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+            <span className="text-label-sm font-medium uppercase tracking-wider text-pulse-text-tertiary shrink-0">
+              Data from
+            </span>
+            {trustLogos.map((name) => (
+              <span
+                key={name}
+                className="text-body-sm font-medium text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors"
               >
-                {/* Accent top bar */}
-                <div className={`absolute top-0 left-4 right-4 h-px bg-gradient-to-r ${item.accent}`} />
-
-                <span className="text-label-sm text-pulse-accent mb-3 block">{item.num}</span>
-                <h3 className="text-heading-sm text-pulse-text mb-2">{item.title}</h3>
-                <p className="text-body-sm text-pulse-text-tertiary leading-relaxed">{item.desc}</p>
-              </div>
+                {name}
+              </span>
             ))}
           </div>
+        </div>
+        <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+      </div>
 
-          <div className="mt-10 flex items-center gap-6">
-            <Link
-              href="/how-it-works"
-              className="text-body-sm text-pulse-text-secondary hover:text-pulse-accent inline-flex items-center gap-2 transition-colors duration-200"
+      {/* ─── WHAT MAKES THIS DIFFERENT ─── */}
+      <motion.section
+        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-24 relative"
+        {...m(fadeIn)}
+      >
+        <div className="max-w-6xl mx-auto relative z-10">
+          <div className="max-w-lg mb-14">
+            <SectionIntro
+              label="The difference"
+              description="Most grant tools give you a list and say &ldquo;good luck.&rdquo; We match, explain, and help you write, end to end."
             >
-              See how it works
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-            <Link
-              href="/pricing"
-              className="text-body-sm text-pulse-text-secondary hover:text-pulse-accent inline-flex items-center gap-2 transition-colors duration-200"
-            >
-              View pricing
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+              Not another grant database.
+            </SectionIntro>
+          </div>
+
+          {/* Asymmetric grid: 2 tall cards + 2 short cards */}
+          <div className="grid md:grid-cols-2 gap-5">
+            {/* Feature 1: Full width emphasis card */}
+            <div className="group relative p-7 rounded-2xl card-glass-accent md:row-span-2">
+              <div className="flex items-start gap-4 mb-5">
+                <div className="w-11 h-11 rounded-xl bg-pulse-accent/15 flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110">
+                  <Search className="w-5 h-5 text-pulse-accent" />
+                </div>
+                <div>
+                  <h3 className="text-heading text-pulse-text mb-1 group-hover:text-pulse-accent transition-colors duration-200">Eligibility matching</h3>
+                  <p className="text-body-sm text-pulse-text-secondary leading-relaxed">
+                    Every requirement checked against your profile. You only see grants you actually qualify for, not thousands of irrelevant results.
+                  </p>
+                </div>
+              </div>
+              {/* Mini demo visualization */}
+              <div className="space-y-2.5 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                {[
+                  { label: 'Organization type', status: 'Match', color: 'text-pulse-accent' },
+                  { label: 'Revenue under $5M', status: 'Match', color: 'text-pulse-accent' },
+                  { label: 'Located in California', status: 'Match', color: 'text-pulse-accent' },
+                  { label: 'Environmental focus', status: 'Match', color: 'text-pulse-accent' },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center justify-between text-caption">
+                    <span className="text-pulse-text-tertiary">{item.label}</span>
+                    <span className={`font-medium ${item.color}`}>{item.status}</span>
+                  </div>
+                ))}
+                <div className="pt-2 border-t border-white/[0.04] flex items-center justify-between">
+                  <span className="text-caption text-pulse-text-secondary font-medium">Overall match</span>
+                  <span className="text-body-sm font-semibold text-pulse-accent">94%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Feature 2: Gold card for funding */}
+            <div className="group relative p-7 rounded-2xl card-glass-rose">
+              <div className="flex items-start gap-4">
+                <div className="w-11 h-11 rounded-xl bg-pulse-rose-dim flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110">
+                  <DollarSign className="w-5 h-5 text-pulse-rose" />
+                </div>
+                <div>
+                  <h3 className="text-heading text-pulse-text mb-1 group-hover:text-pulse-rose transition-colors duration-200">Keep 100% of awards</h3>
+                  <p className="text-body-sm text-pulse-text-secondary leading-relaxed">
+                    No percentage fees. No success fees. No hidden costs.
+                    Every dollar you win goes to your mission.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Feature 3: Indigo card for AI */}
+            <div className="group relative p-7 rounded-2xl card-glass-accent">
+              <div className="flex items-start gap-4">
+                <div className="w-11 h-11 rounded-xl bg-pulse-accent-dim flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110">
+                  <PenLine className="w-5 h-5 text-pulse-accent" />
+                </div>
+                <div>
+                  <h3 className="text-heading text-pulse-text mb-1 group-hover:text-pulse-accent transition-colors duration-200">AI writes first drafts</h3>
+                  <p className="text-body-sm text-pulse-text-secondary leading-relaxed">
+                    Section-by-section guidance. Your vault auto-fills the basics
+                    so you never retype your EIN or mission statement.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </motion.section>
 
       {/* ─── STATS ─── */}
+      <div className="relative bg-pulse-surface/30">
+        <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+        <motion.section
+          className="px-4 sm:px-6 lg:px-8 py-16 sm:py-20"
+          {...m(fadeIn)}
+        >
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-10 sm:gap-16">
+              {[
+                { value: '$12B+', label: 'Available funding', color: 'text-pulse-rose' },
+                { value: '20K+', label: 'Grants indexed', color: 'text-pulse-accent' },
+                { value: '50+', label: 'Data sources', color: 'text-pulse-accent' },
+                { value: '15 min', label: 'To first match', color: 'text-pulse-accent' },
+              ].map((s) => (
+                <div key={s.label} className="text-center">
+                  <div className={`text-stat ${s.color} tabular-nums`}>{s.value}</div>
+                  <div className="text-label-sm text-pulse-text-tertiary mt-1">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.section>
+        <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+      </div>
+
+      {/* ─── HOW IT WORKS (compact) ─── */}
       <motion.section
-        className="px-4 sm:px-6 lg:px-8 py-14 sm:py-16 border-t border-white/[0.04]"
+        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-24"
         {...m(fadeIn)}
       >
-        <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-14">
+            <SectionIntro
+              label="How it works"
+              align="center"
+              description="Four steps. No grant writing experience needed."
+            >
+              From search to submission
+            </SectionIntro>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { value: '20,000+', label: 'Grants indexed' },
-              { value: '50+', label: 'Data sources' },
-              { value: '$12B+', label: 'Available funding' },
-              { value: '15 min', label: 'To first match' },
-            ].map((s) => (
-              <div key={s.label}>
-                <div className="text-stat text-pulse-accent tabular-nums">{s.value}</div>
-                <div className="text-label-sm text-pulse-text-tertiary mt-1">{s.label}</div>
-              </div>
-            ))}
+              { icon: Search, title: 'Search & match', desc: 'Tell us about your org. See only grants you qualify for.', accent: 'accent' },
+              { icon: BookOpen, title: 'Understand clearly', desc: 'Every grant explained in plain English. No jargon.', accent: 'accent' },
+              { icon: PenLine, title: 'Write with AI', desc: 'Draft every section. Vault auto-fills 90% of basics.', accent: 'rose' },
+              { icon: TrendingUp, title: 'Submit & track', desc: 'Review, submit, and track deadlines in one place.', accent: 'accent' },
+            ].map((step, i) => {
+              const Icon = step.icon
+              const colorMap = {
+                accent: { bg: 'bg-pulse-accent/10', text: 'text-pulse-accent', border: 'border-pulse-accent/20' },
+                rose: { bg: 'bg-pulse-rose-dim', text: 'text-pulse-rose', border: 'border-pulse-rose/20' },
+                indigo: { bg: 'bg-pulse-indigo-dim', text: 'text-pulse-indigo', border: 'border-pulse-indigo/20' },
+              }
+              const colors = colorMap[step.accent as keyof typeof colorMap]
+              return (
+                <div
+                  key={step.title}
+                  className="group relative p-6 rounded-xl card-glass"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={`w-9 h-9 rounded-lg ${colors.bg} flex items-center justify-center transition-transform duration-200 group-hover:scale-110`}>
+                      <Icon className={`w-4.5 h-4.5 ${colors.text}`} />
+                    </div>
+                    <span className={`text-label-sm font-medium tracking-wide ${colors.text} ${colors.border} border px-2 py-0.5 rounded`}>
+                      Step {i + 1}
+                    </span>
+                  </div>
+                  <h3 className="text-heading-sm text-pulse-text mb-1.5 group-hover:text-pulse-accent transition-colors duration-200">{step.title}</h3>
+                  <p className="text-body-sm text-pulse-text-tertiary leading-relaxed">{step.desc}</p>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link
+              href="/how-it-works"
+              className="text-body-sm text-pulse-text-secondary hover:text-pulse-accent inline-flex items-center gap-2 transition-colors duration-200"
+            >
+              Learn more about the process
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
       </motion.section>
 
       {/* ─── CTA ─── */}
       <motion.section
-        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-28 border-t border-white/[0.04] relative overflow-hidden"
+        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-28 relative overflow-hidden"
         {...m(fadeIn)}
       >
-        {/* CTA background glow */}
+        {/* Different glow: rose + mint blend */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-pulse-accent/[0.03] blur-[180px] rounded-full" />
+          <div className="absolute bottom-[-20%] left-[20%] w-[500px] h-[400px] bg-pulse-indigo/[0.025] blur-[180px] rounded-full" />
+          <div className="absolute bottom-[-10%] right-[25%] w-[400px] h-[300px] bg-pulse-indigo/[0.02] blur-[160px] rounded-full" />
         </div>
 
-        <div className="max-w-5xl mx-auto relative z-10">
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
-            <div>
-              <h2 className="text-display-section text-pulse-text mb-3 max-w-md">
-                Ready to find your{' '}
-                <span className="text-pulse-accent">first grant?</span>
-              </h2>
-              <p className="text-body text-pulse-text-tertiary">
-                Free to start &middot; No credit card &middot; 5 minutes to set up
-              </p>
+        <div className="max-w-6xl mx-auto relative z-10">
+          <div className="text-center max-w-xl mx-auto">
+            <h2 className="text-display-section text-pulse-text mb-4">
+              Your next grant is waiting.
+            </h2>
+            <p className="text-body-lg text-pulse-text-secondary mb-8">
+              Join 15,000+ organizations that found funding with Grants By AI.
+              Free to start. No credit card required.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                href="/register"
+                className="group inline-flex items-center gap-2.5 px-8 py-4 bg-pulse-accent text-pulse-bg font-semibold text-body rounded-lg hover:bg-pulse-accent/90 transition-all duration-200 shadow-pulse hover:shadow-pulse-lg"
+              >
+                Get Started Free
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+              <Link
+                href="/pricing"
+                className="text-body-sm text-pulse-text-secondary hover:text-pulse-accent inline-flex items-center gap-2 transition-colors duration-200"
+              >
+                View pricing
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
-            <Link
-              href="/register"
-              className="group inline-flex items-center gap-2.5 px-8 py-4 bg-pulse-accent text-pulse-bg font-semibold text-[15px] rounded-lg hover:bg-pulse-accent/90 transition-all duration-200 shadow-[0_0_30px_rgba(64,255,170,0.15)] hover:shadow-[0_0_40px_rgba(64,255,170,0.25)] shrink-0 self-start lg:self-auto"
-            >
-              Get Started Free
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
           </div>
         </div>
       </motion.section>

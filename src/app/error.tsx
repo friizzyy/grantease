@@ -37,7 +37,7 @@ export default function Error({
             <AlertCircle className="w-8 h-8 text-pulse-error" />
           </motion.div>
 
-          <h1 className="font-serif text-heading-md text-pulse-text mb-2">
+          <h1 className="font-bold text-heading-md text-pulse-text mb-2">
             Something went wrong
           </h1>
 

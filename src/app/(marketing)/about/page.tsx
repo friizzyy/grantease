@@ -1,208 +1,216 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ArrowRight, Target, Users, Lightbulb, Heart } from 'lucide-react'
-
-const fadeIn = {
-  initial: { opacity: 0, y: 14 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-60px' },
-  transition: { duration: 0.55, ease: [0.25, 0.1, 0.25, 1] },
-}
-
-const values = [
-  {
-    icon: Target,
-    title: 'Precision first',
-    description: 'Quality over quantity. Every feature helps you find the right grants.',
-  },
-  {
-    icon: Users,
-    title: 'Universal access',
-    description: 'Tools that work for first-time applicants and experts alike.',
-  },
-  {
-    icon: Lightbulb,
-    title: 'Radical transparency',
-    description: 'Clear information, honest pricing, no hidden catches.',
-  },
-  {
-    icon: Heart,
-    title: 'Real impact',
-    description: 'Every grant won means a project funded, a mission advanced.',
-  },
-]
-
-const timeline = [
-  { year: '2022', title: 'The problem', desc: 'Founders spent 100+ hours searching fragmented databases.' },
-  { year: '2023', title: 'The solution', desc: 'Built Grants By AI, aggregating 20+ sources into one platform.' },
-  { year: '2024', title: 'The growth', desc: 'Expanded to 50+ sources, launched AI matching, 10K users.' },
-  { year: 'Now', title: 'The mission', desc: '15,000+ organizations trust Grants By AI for funding.' },
-]
+import { ArrowRight, Search, PenLine, Calendar, Sparkles } from 'lucide-react'
+import { SectionIntro } from '@/components/marketing/SectionIntro'
+import { BeforeAfterMetrics } from '@/components/marketing/BeforeAfterMetrics'
+import { LiveEligibilityCheck } from '@/components/marketing/LiveEligibilityCheck'
+import { AIWritingSimulator } from '@/components/marketing/AIWritingSimulator'
+import { SubmissionTracker } from '@/components/marketing/SubmissionTracker'
+import { useReducedMotion } from '@/hooks/useReducedMotion'
+import { fadeIn } from '@/lib/motion/marketing-animations'
+import { AnimatedCounter } from '@/components/ui/animated-counter'
 
 export default function AboutPage() {
-  const [reduced, setReduced] = useState(false)
-
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setReduced(mq.matches)
-    const h = (e: MediaQueryListEvent) => setReduced(e.matches)
-    mq.addEventListener('change', h)
-    return () => mq.removeEventListener('change', h)
-  }, [])
-
-  const m = (props: Record<string, unknown>) => (reduced ? {} : props)
+  const { reduced, m } = useReducedMotion()
 
   return (
     <main className="pt-[60px]">
-      {/* ---- HERO ---- */}
-      <section className="relative px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 lg:pt-24 pb-20 sm:pb-28 overflow-hidden">
+      {/* ─── HERO ─── */}
+      <section className="relative px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 lg:pt-32 pb-20 sm:pb-24 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-20%] left-[10%] w-[700px] h-[500px] rounded-full bg-pulse-accent/[0.035] blur-[160px]" />
+          <div className="absolute top-[-10%] left-[20%] w-[600px] h-[500px] rounded-full bg-pulse-indigo/[0.04] blur-[180px]" />
+          <div className="absolute bottom-[5%] right-[10%] w-[400px] h-[300px] rounded-full bg-pulse-accent/[0.03] blur-[140px]" />
         </div>
 
-        <div className="max-w-5xl mx-auto relative z-10">
+        <div className="max-w-4xl mx-auto relative z-10 text-center">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
           >
-            <span className="text-label text-pulse-accent mb-6 block">About Grants By AI</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-pulse-indigo/[0.12] border border-pulse-indigo/15 mb-6">
+              <Sparkles className="w-3.5 h-3.5 text-pulse-indigo" />
+              <span className="text-caption font-medium text-pulse-indigo">Our Mission</span>
+            </div>
 
-            <h1 className="text-display-hero text-pulse-text mb-5 max-w-[680px]">
-              Democratizing access to{' '}
-              <span className="text-pulse-text-secondary italic">funding</span>
+            <h1 className="text-display-hero text-pulse-text mb-5">
+              Grant funding shouldn&apos;t be{' '}
+              <span className="text-gradient italic">this hard.</span>
             </h1>
 
-            <p className="text-body-lg text-pulse-text-secondary max-w-lg mb-10">
-              Finding grants shouldn&apos;t require a dedicated staff member or expensive consultants.
-              We make funding accessible to every organization that deserves it.
-            </p>
+            <div className="h-px w-16 mx-auto bg-gradient-to-r from-transparent via-pulse-indigo/40 to-transparent mb-6" />
 
-            <Link
-              href="/register"
-              className="group inline-flex items-center gap-2.5 px-8 py-4 bg-pulse-accent text-pulse-bg font-semibold text-[15px] rounded-lg hover:bg-pulse-accent/90 transition-all duration-200 shadow-[0_0_30px_rgba(64,255,170,0.15)] hover:shadow-[0_0_40px_rgba(64,255,170,0.25)]"
-            >
-              Join 15K+ Organizations
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
+            <p className="text-body-lg text-pulse-text-secondary max-w-xl mx-auto mb-14">
+              We built Grants By AI because organizations deserve to spend time
+              on their mission, not buried in spreadsheets hunting for funding.
+            </p>
+          </motion.div>
+
+          {/* Stats */}
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+          >
+            {[
+              { value: 12, suffix: 'B+', prefix: '$', label: 'Available grants indexed', color: 'text-pulse-rose', border: 'border-pulse-rose/20' },
+              { value: 20, suffix: 'K+', prefix: '', label: 'Grant programs searchable', color: 'text-pulse-accent', border: 'border-pulse-accent/20' },
+              { value: 15, suffix: 'K+', prefix: '', label: 'Organizations trust us', color: 'text-pulse-accent', border: 'border-pulse-accent/20' },
+            ].map((stat, i) => (
+              <div
+                key={stat.label}
+                className={`p-6 rounded-xl bg-white/[0.02] border ${stat.border} backdrop-blur-sm`}
+              >
+                <div className={`text-stat-sm ${stat.color} tabular-nums mb-1`}>
+                  <AnimatedCounter
+                    value={stat.value}
+                    prefix={stat.prefix}
+                    suffix={stat.suffix}
+                    delay={i * 0.15}
+                  />
+                </div>
+                <p className="text-body-sm text-pulse-text-tertiary">{stat.label}</p>
+              </div>
+            ))}
           </motion.div>
         </div>
       </section>
 
-      {/* ---- STATS ---- */}
+      {/* ─── BEFORE / AFTER: Visual comparison ─── */}
+      <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+
       <motion.section
-        className="px-4 sm:px-6 lg:px-8 py-14 sm:py-16 border-t border-white/[0.04]"
+        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-28"
         {...m(fadeIn)}
       >
         <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12">
-            {[
-              { value: '$12B+', label: 'Available funding' },
-              { value: '20K+', label: 'Grant programs' },
-              { value: '15K+', label: 'Organizations' },
-              { value: '94%', label: 'Match accuracy' },
-            ].map((s) => (
-              <div key={s.label}>
-                <div className="text-stat text-pulse-accent tabular-nums">{s.value}</div>
-                <div className="text-label-sm text-pulse-text-tertiary mt-1">{s.label}</div>
-              </div>
-            ))}
-          </div>
+          <SectionIntro
+            label="The problem"
+            description="Organizations waste hundreds of hours on a process that should take minutes."
+            className="max-w-lg mb-12"
+          >
+            The grant landscape is broken.
+          </SectionIntro>
+
+          <BeforeAfterMetrics />
         </div>
       </motion.section>
 
-      {/* ---- TIMELINE ---- */}
+      {/* ─── HOW WE DO IT: Bento ─── */}
+      <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+
       <motion.section
-        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-24 border-t border-white/[0.04] relative"
-        {...m(fadeIn)}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.01] to-transparent pointer-events-none" />
-
-        <div className="max-w-5xl mx-auto relative z-10">
-          <div className="mb-14">
-            <span className="text-label text-pulse-accent mb-4 block">Our Journey</span>
-            <h2 className="text-display-section text-pulse-text max-w-md">
-              Born from frustration, built with purpose
-            </h2>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {timeline.map((item, i) => (
-              <div
-                key={item.year}
-                className="group relative p-5 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300"
-              >
-                {/* Accent top bar */}
-                <div className={`absolute top-0 left-4 right-4 h-px bg-gradient-to-r ${
-                  i === timeline.length - 1
-                    ? 'from-pulse-accent/30 to-pulse-accent/5'
-                    : 'from-pulse-accent/20 to-pulse-accent/5'
-                }`} />
-
-                <span className="text-label-sm text-pulse-accent mb-3 block">{item.year}</span>
-                <h3 className="text-heading-sm text-pulse-text mb-2">{item.title}</h3>
-                <p className="text-body-sm text-pulse-text-tertiary leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </motion.section>
-
-      {/* ---- VALUES ---- */}
-      <motion.section
-        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-24 border-t border-white/[0.04]"
+        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-28"
         {...m(fadeIn)}
       >
         <div className="max-w-5xl mx-auto">
-          <div className="mb-14">
-            <span className="text-label text-pulse-accent mb-4 block">Our Values</span>
-            <h2 className="text-display-section text-pulse-text max-w-sm">What drives us</h2>
-          </div>
+          <SectionIntro
+            label="Our approach"
+            description='Most grant platforms give you a list and say &ldquo;good luck.&rdquo; We built something better.'
+            className="max-w-lg mb-12"
+          >
+            Three things we do differently.
+          </SectionIntro>
 
-          <div className="grid sm:grid-cols-2 gap-6">
-            {values.map((value) => {
-              const Icon = value.icon
-              return (
-                <div
-                  key={value.title}
-                  className="group relative p-6 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300"
-                >
-                  <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-pulse-accent/20 to-pulse-accent/5" />
-
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-pulse-accent/10 flex items-center justify-center shrink-0">
-                      <Icon className="w-5 h-5 text-pulse-accent" />
-                    </div>
-                    <div>
-                      <h3 className="text-heading-sm text-pulse-text mb-1">{value.title}</h3>
-                      <p className="text-body-sm text-pulse-text-tertiary">{value.description}</p>
-                    </div>
-                  </div>
+          <div className="grid md:grid-cols-2 gap-5">
+            {/* Card 1: Large, spans 2 rows, with LiveEligibilityCheck */}
+            <div className="group md:row-span-2 p-6 sm:p-8 rounded-2xl card-glass-accent overflow-hidden">
+              <div className="mb-6">
+                <div className="w-10 h-10 rounded-xl bg-pulse-accent/15 flex items-center justify-center mb-4">
+                  <Search className="w-5 h-5 text-pulse-accent" />
                 </div>
-              )
-            })}
+                <h3 className="text-heading text-pulse-text mb-2">Intelligent matching</h3>
+                <p className="text-body-sm text-pulse-text-secondary leading-relaxed">
+                  We don&apos;t just search by keyword. Our AI reads every
+                  grant&apos;s full requirements and matches them against your
+                  org profile: size, location, focus area, revenue, and more.
+                </p>
+              </div>
+
+              <LiveEligibilityCheck />
+            </div>
+
+            {/* Card 2: AI writing */}
+            <div className="group p-6 sm:p-8 rounded-2xl card-glass-accent">
+              <div className="w-10 h-10 rounded-xl bg-pulse-accent-dim flex items-center justify-center mb-4">
+                <PenLine className="w-5 h-5 text-pulse-accent" />
+              </div>
+              <h3 className="text-heading text-pulse-text mb-2">
+                AI writing assistant
+              </h3>
+              <p className="text-body-sm text-pulse-text-secondary leading-relaxed mb-5">
+                Draft every section of your application. The AI pulls from your
+                vault so you never retype your mission, EIN, or org history.
+              </p>
+              <AIWritingSimulator compact />
+            </div>
+
+            {/* Card 3: Deadline tracking */}
+            <div className="group p-6 sm:p-8 rounded-2xl card-glass-rose">
+              <div className="w-10 h-10 rounded-xl bg-pulse-rose-dim flex items-center justify-center mb-4">
+                <Calendar className="w-5 h-5 text-pulse-rose" />
+              </div>
+              <h3 className="text-heading text-pulse-text mb-2">
+                Deadline management
+              </h3>
+              <p className="text-body-sm text-pulse-text-secondary leading-relaxed mb-5">
+                Track every deadline, get reminders, and never miss an
+                opportunity. Organize applications by status across your team.
+              </p>
+              <SubmissionTracker compact />
+            </div>
           </div>
         </div>
       </motion.section>
 
-      {/* ---- CTA ---- */}
+      {/* ─── PULL QUOTE ─── */}
+      <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+
       <motion.section
-        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-28 border-t border-white/[0.04] relative overflow-hidden"
+        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-28 relative overflow-hidden"
         {...m(fadeIn)}
       >
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-pulse-accent/[0.03] blur-[180px] rounded-full" />
+          <div className="absolute top-[20%] left-[5%] w-[300px] h-[300px] bg-pulse-indigo/[0.02] blur-[120px] rounded-full" />
+        </div>
+
+        <div className="max-w-3xl mx-auto relative z-10 text-center">
+          <blockquote>
+            <p className="text-heading-lg sm:text-display text-pulse-text leading-snug mb-8">
+              &ldquo;We started this because a $50M nonprofit told us they spend
+              <span className="text-pulse-rose"> 400 hours a year</span> just
+              searching for grants. That&apos;s not a workflow problem.
+              It&apos;s a systems failure.&rdquo;
+            </p>
+          </blockquote>
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-px h-5 bg-pulse-accent/40" />
+            <span className="text-body-sm text-pulse-text-tertiary">
+              The founding team at Grants By AI
+            </span>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* ─── CTA ─── */}
+      <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+
+      <motion.section
+        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-28 relative overflow-hidden"
+        {...m(fadeIn)}
+      >
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute bottom-[-10%] left-[10%] w-[500px] h-[400px] bg-pulse-accent/[0.025] blur-[180px] rounded-full" />
         </div>
 
         <div className="max-w-5xl mx-auto relative z-10">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
             <div>
               <h2 className="text-display-section text-pulse-text mb-3 max-w-md">
-                Ready to find your{' '}
-                <span className="text-pulse-accent">funding?</span>
+                Ready to find your funding?
               </h2>
               <p className="text-body text-pulse-text-tertiary">
                 Join 15,000+ organizations discovering grants with Grants By AI.
@@ -211,7 +219,7 @@ export default function AboutPage() {
             <div className="flex items-center gap-4 shrink-0 self-start lg:self-auto">
               <Link
                 href="/register"
-                className="group inline-flex items-center gap-2.5 px-8 py-4 bg-pulse-accent text-pulse-bg font-semibold text-[15px] rounded-lg hover:bg-pulse-accent/90 transition-all duration-200 shadow-[0_0_30px_rgba(64,255,170,0.15)] hover:shadow-[0_0_40px_rgba(64,255,170,0.25)]"
+                className="group inline-flex items-center gap-2.5 px-8 py-4 bg-pulse-accent text-pulse-bg font-semibold text-body rounded-lg hover:bg-pulse-accent/90 transition-all duration-200 shadow-pulse"
               >
                 Get Started Free
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />

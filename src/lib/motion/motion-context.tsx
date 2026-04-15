@@ -3,16 +3,10 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 
-interface MotionState {
+interface MotionContextValue {
   reducedMotion: boolean
-  scrollY: number
-  scrollVelocity: number
-  mousePosition: { x: number; y: number }
   isNavigating: boolean
   activeRoute: string
-}
-
-interface MotionContextValue extends MotionState {
   setIsNavigating: (value: boolean) => void
 }
 
@@ -21,15 +15,8 @@ const MotionContext = createContext<MotionContextValue | null>(null)
 export function MotionProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [reducedMotion, setReducedMotion] = useState(false)
-  const [scrollY, setScrollY] = useState(0)
-  const [scrollVelocity, setScrollVelocity] = useState(0)
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [isNavigating, setIsNavigating] = useState(false)
   const [activeRoute, setActiveRoute] = useState('')
-
-  const lastScrollY = useRef(0)
-  const lastScrollTime = useRef(Date.now())
-  const rafId = useRef<number | null>(null)
 
   // Check for reduced motion preference
   useEffect(() => {
@@ -41,51 +28,6 @@ export function MotionProvider({ children }: { children: React.ReactNode }) {
     return () => mediaQuery.removeEventListener('change', handler)
   }, [])
 
-  // Track scroll position and velocity
-  useEffect(() => {
-    if (reducedMotion) return
-
-    const handleScroll = () => {
-      if (rafId.current) return
-
-      rafId.current = requestAnimationFrame(() => {
-        const currentScrollY = window.scrollY
-        const currentTime = Date.now()
-        const timeDelta = currentTime - lastScrollTime.current
-
-        if (timeDelta > 0) {
-          const velocity = Math.abs(currentScrollY - lastScrollY.current) / timeDelta
-          setScrollVelocity(velocity)
-        }
-
-        setScrollY(currentScrollY)
-        lastScrollY.current = currentScrollY
-        lastScrollTime.current = currentTime
-        rafId.current = null
-      })
-    }
-
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-      if (rafId.current) cancelAnimationFrame(rafId.current)
-    }
-  }, [reducedMotion])
-
-  // Track mouse position (normalized -1 to 1)
-  useEffect(() => {
-    if (reducedMotion) return
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const x = (e.clientX / window.innerWidth) * 2 - 1
-      const y = (e.clientY / window.innerHeight) * 2 - 1
-      setMousePosition({ x, y })
-    }
-
-    window.addEventListener('mousemove', handleMouseMove, { passive: true })
-    return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [reducedMotion])
-
   // Track route changes
   useEffect(() => {
     setActiveRoute(pathname)
@@ -93,16 +35,13 @@ export function MotionProvider({ children }: { children: React.ReactNode }) {
 
     const timeout = setTimeout(() => {
       setIsNavigating(false)
-    }, 400) // Match page transition duration
+    }, 400)
 
     return () => clearTimeout(timeout)
   }, [pathname])
 
   const value: MotionContextValue = {
     reducedMotion,
-    scrollY,
-    scrollVelocity,
-    mousePosition,
     isNavigating,
     activeRoute,
     setIsNavigating,
@@ -128,16 +67,6 @@ export function useMotion() {
 export function useReducedMotion() {
   const { reducedMotion } = useMotion()
   return reducedMotion
-}
-
-export function useScroll() {
-  const { scrollY, scrollVelocity } = useMotion()
-  return { scrollY, scrollVelocity }
-}
-
-export function useMouse() {
-  const { mousePosition } = useMotion()
-  return mousePosition
 }
 
 export function useNavigation() {

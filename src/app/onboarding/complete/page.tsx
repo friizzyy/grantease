@@ -34,8 +34,8 @@ function Confetti() {
   }, [])
 
   const confettiPieces = useMemo(() => {
-    // Stick to brand palette: mint, emerald, teal
-    const colors = ['#40ffaa', '#34d399', '#2dd4bf', '#6ee7b7', '#5eead4', '#a7f3d0']
+    // Stick to brand palette: mint + teal
+    const colors = ['#40ffaa', '#40ffaa', '#2dd4bf', '#40ffaa', '#5eead4', '#2dd4bf']
 
     return [...Array(50)].map((_, i) => ({
       id: i,

@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import {
@@ -12,30 +11,20 @@ import {
   CheckCircle2,
   Sparkles,
 } from 'lucide-react'
-
-const fadeIn = {
-  initial: { opacity: 0, y: 14 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-60px' },
-  transition: { duration: 0.55, ease: [0.25, 0.1, 0.25, 1] },
-}
+import { SectionIntro } from '@/components/marketing/SectionIntro'
+import { AnimatedStatsBar } from '@/components/marketing/AnimatedStatsBar'
+import { MiniSearchDemo } from '@/components/marketing/MiniSearchDemo'
+import { EligibilityBreakdown } from '@/components/marketing/EligibilityBreakdown'
+import { AIWritingSimulator } from '@/components/marketing/AIWritingSimulator'
+import { SubmissionTracker } from '@/components/marketing/SubmissionTracker'
+import { useReducedMotion } from '@/hooks/useReducedMotion'
+import { fadeIn } from '@/lib/motion/marketing-animations'
 
 export default function HowItWorksPage() {
-  const [reduced, setReduced] = useState(false)
-
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setReduced(mq.matches)
-    const h = (e: MediaQueryListEvent) => setReduced(e.matches)
-    mq.addEventListener('change', h)
-    return () => mq.removeEventListener('change', h)
-  }, [])
-
-  const m = (props: Record<string, unknown>) => (reduced ? {} : props)
+  const { m } = useReducedMotion()
 
   const steps = [
     {
-      num: '01',
       icon: Search,
       title: 'Find your matches',
       desc: 'Tell us about your organization. Our AI searches 20,000+ grants from federal, state, and private sources. You see only the grants you qualify for.',
@@ -44,9 +33,9 @@ export default function HowItWorksPage() {
         'Filter by amount, deadline, or difficulty',
         'Save promising grants for later',
       ],
+      color: 'accent' as const,
     },
     {
-      num: '02',
       icon: BookOpen,
       title: 'Understand before you apply',
       desc: 'Every grant explained in plain English. See what it funds, who qualifies, what documents you need, and how much effort it takes.',
@@ -55,9 +44,9 @@ export default function HowItWorksPage() {
         'Detailed eligibility breakdown',
         'Estimated time to complete',
       ],
+      color: 'accent' as const,
     },
     {
-      num: '03',
       icon: PenLine,
       title: 'Write with AI assistance',
       desc: 'Our AI helps you craft each section. Your vault auto-fills basic info so you never retype your EIN, address, or mission statement.',
@@ -66,10 +55,10 @@ export default function HowItWorksPage() {
         'AI drafts you edit and refine',
         'Vault auto-fills 90% of basics',
       ],
-      accent: true,
+      color: 'rose' as const,
+      callout: 'Professional applications without a $5,000 consultant. Our AI helps you sound professional while keeping your authentic voice.',
     },
     {
-      num: '04',
       icon: Send,
       title: 'Submit and track',
       desc: 'Review your complete application before submitting. Track status, deadlines, and follow-ups all in one place.',
@@ -78,31 +67,44 @@ export default function HowItWorksPage() {
         'Deadline reminders',
         'Status tracking dashboard',
       ],
+      color: 'accent' as const,
     },
   ]
 
+  const colorMap = {
+    accent: { bg: 'bg-pulse-accent/10', text: 'text-pulse-accent', card: 'card-glass-accent', border: 'border-pulse-accent/20', badge: 'bg-pulse-accent text-pulse-bg' },
+    rose: { bg: 'bg-pulse-rose-dim', text: 'text-pulse-rose', card: 'card-glass-rose', border: 'border-pulse-rose/20', badge: 'bg-pulse-rose text-pulse-bg' },
+    indigo: { bg: 'bg-pulse-indigo-dim', text: 'text-pulse-indigo', card: 'card-glass-indigo', border: 'border-pulse-indigo/20', badge: 'bg-pulse-indigo text-pulse-bg' },
+  }
+
   return (
     <main className="pt-[60px]">
-      {/* ---- HERO ---- */}
-      <section className="relative px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 lg:pt-24 pb-20 sm:pb-28 overflow-hidden">
+      {/* ─── HERO ─── */}
+      <section className="relative px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 lg:pt-32 pb-16 sm:pb-20 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-20%] left-[10%] w-[700px] h-[500px] rounded-full bg-pulse-accent/[0.035] blur-[160px]" />
+          <div className="absolute top-[-10%] left-[20%] w-[600px] h-[500px] rounded-full bg-pulse-indigo/[0.04] blur-[180px]" />
+          <div className="absolute bottom-[0%] right-[10%] w-[400px] h-[400px] rounded-full bg-pulse-accent/[0.03] blur-[140px]" />
         </div>
 
-        <div className="max-w-5xl mx-auto relative z-10">
+        <div className="max-w-4xl mx-auto relative z-10 text-center">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
           >
-            <span className="text-label text-pulse-accent mb-6 block">How It Works</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-pulse-indigo/[0.12] border border-pulse-indigo/15 mb-6">
+              <Sparkles className="w-3.5 h-3.5 text-pulse-indigo" />
+              <span className="text-caption font-medium text-pulse-indigo">4-Step Process</span>
+            </div>
 
-            <h1 className="text-display-hero text-pulse-text mb-5 max-w-[680px]">
-              You don&apos;t just find grants.{' '}
-              <span className="text-pulse-text-secondary italic">You finish them.</span>
+            <h1 className="text-display-hero text-pulse-text mb-5">
+              From search to{' '}
+              <span className="text-gradient italic">funded.</span>
             </h1>
 
-            <p className="text-body-lg text-pulse-text-secondary max-w-lg mb-10">
+            <div className="h-px w-16 mx-auto bg-gradient-to-r from-transparent via-pulse-accent/40 to-transparent mb-6" />
+
+            <p className="text-body-lg text-pulse-text-secondary max-w-lg mx-auto">
               Four steps from discovery to funded application.
               No grant writing experience needed.
             </p>
@@ -111,143 +113,110 @@ export default function HowItWorksPage() {
       </section>
 
       {/* ---- STATS BAR ---- */}
-      <motion.section
-        className="px-4 sm:px-6 lg:px-8 py-14 sm:py-16 border-t border-white/[0.04]"
-        {...m(fadeIn)}
-      >
-        <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12">
-            {[
-              { value: '5 min', label: 'Profile setup' },
-              { value: 'Instant', label: 'Grant matches' },
-              { value: 'AI-guided', label: 'Applications' },
-              { value: '100%', label: 'Award is yours' },
-            ].map((s) => (
-              <div key={s.label}>
-                <div className="text-stat-sm text-pulse-accent tabular-nums">{s.value}</div>
-                <div className="text-label-sm text-pulse-text-tertiary mt-1">{s.label}</div>
-              </div>
-            ))}
+      <div className="relative bg-pulse-surface/30">
+        <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+        <motion.section
+          className="px-4 sm:px-6 lg:px-8 py-12 sm:py-14"
+          {...m(fadeIn)}
+        >
+          <div className="max-w-5xl mx-auto">
+            <AnimatedStatsBar />
           </div>
-        </div>
-      </motion.section>
+        </motion.section>
+        <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+      </div>
 
-      {/* ---- STEPS ---- */}
-      <motion.section
-        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-24 border-t border-white/[0.04] relative"
-        {...m(fadeIn)}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.01] to-transparent pointer-events-none" />
+      {/* ---- STEPS: Alternating layout ---- */}
+      <div className="px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+        <div className="max-w-5xl mx-auto space-y-16 sm:space-y-20">
+          {steps.map((step, i) => {
+            const Icon = step.icon
+            const colors = colorMap[step.color]
+            const isReversed = i % 2 === 1
 
-        <div className="max-w-5xl mx-auto relative z-10">
-          <div className="mb-14">
-            <span className="text-label text-pulse-accent mb-4 block">The Process</span>
-            <h2 className="text-display-section text-pulse-text max-w-md">
-              Your path from discovery to funded
-            </h2>
-          </div>
+            return (
+              <motion.div
+                key={step.title}
+                className={`flex flex-col md:flex-row gap-10 md:gap-14 items-center ${isReversed ? 'md:flex-row-reverse' : ''}`}
+                {...m(fadeIn)}
+              >
+                {/* Text side */}
+                <div className={`md:w-1/2 ${isReversed ? 'md:order-2' : ''}`}>
+                  <div className="flex items-center gap-3 mb-5">
+                    <span className={`text-label-sm font-bold px-2.5 py-1 rounded-md ${colors.badge}`}>
+                      Step {i + 1}
+                    </span>
+                  </div>
 
-          <div className="space-y-6">
-            {steps.map((step) => {
-              const Icon = step.icon
-              return (
-                <div
-                  key={step.num}
-                  className={`group relative p-6 sm:p-8 rounded-xl border transition-all duration-300 ${
-                    step.accent
-                      ? 'bg-pulse-accent/[0.03] border-pulse-accent/20 hover:border-pulse-accent/30'
-                      : 'bg-white/[0.02] border-white/[0.05] hover:border-white/[0.1]'
-                  }`}
-                >
-                  {/* Accent top bar */}
-                  <div className={`absolute top-0 left-4 right-4 h-px bg-gradient-to-r ${
-                    step.accent
-                      ? 'from-pulse-accent/30 to-pulse-accent/5'
-                      : 'from-pulse-accent/20 to-pulse-accent/5'
-                  }`} />
+                  <h3 className="text-heading-lg text-pulse-text mb-3">{step.title}</h3>
+                  <p className="text-body text-pulse-text-secondary mb-5">{step.desc}</p>
 
-                  <div className="flex flex-col sm:flex-row sm:items-start gap-5">
-                    {/* Number + icon */}
-                    <div className="flex items-center gap-4 sm:flex-col sm:items-center sm:w-16 shrink-0">
-                      <span className="text-label-sm text-pulse-accent">{step.num}</span>
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        step.accent ? 'bg-pulse-accent/20' : 'bg-pulse-accent/10'
-                      }`}>
-                        <Icon className="w-5 h-5 text-pulse-accent" />
+                  <div className="space-y-2.5">
+                    {step.bullets.map((item) => (
+                      <div key={item} className="flex items-start gap-2.5">
+                        {step.color === 'rose' ? (
+                          <Sparkles className={`w-4 h-4 mt-0.5 shrink-0 ${colors.text}`} />
+                        ) : (
+                          <CheckCircle2 className={`w-4 h-4 mt-0.5 shrink-0 ${colors.text}`} />
+                        )}
+                        <span className="text-body-sm text-pulse-text-tertiary">{item}</span>
                       </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-heading-lg text-pulse-text mb-2">{step.title}</h3>
-                      <p className="text-body text-pulse-text-secondary mb-4 max-w-2xl">{step.desc}</p>
-
-                      <div className="grid sm:grid-cols-3 gap-3">
-                        {step.bullets.map((item, i) => (
-                          <div key={i} className="flex items-start gap-2">
-                            {step.accent ? (
-                              <Sparkles className="w-3.5 h-3.5 mt-0.5 shrink-0 text-pulse-accent" />
-                            ) : (
-                              <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 shrink-0 text-pulse-accent" />
-                            )}
-                            <span className="text-body-sm text-pulse-text-tertiary">{item}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      {step.accent && (
-                        <div className="mt-5 p-4 rounded-lg bg-white/[0.02] border border-white/[0.05]">
-                          <p className="text-body-sm text-pulse-text-secondary">
-                            <span className="text-pulse-accent font-medium">Professional applications without a $5,000 consultant.</span>{' '}
-                            Our AI helps you sound professional while keeping your authentic voice.
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                    ))}
                   </div>
                 </div>
-              )
-            })}
-          </div>
+
+                {/* Visual side */}
+                <div className={`md:w-1/2 ${isReversed ? 'md:order-1' : ''} ${colors.card} rounded-2xl p-6 sm:p-8 hover:scale-[1.02] hover:shadow-lg transition-all duration-300`}>
+                  <div className={`w-12 h-12 rounded-xl ${colors.bg} flex items-center justify-center mb-5`}>
+                    <Icon className={`w-6 h-6 ${colors.text}`} />
+                  </div>
+
+                  {i === 0 && <MiniSearchDemo />}
+                  {i === 1 && <EligibilityBreakdown />}
+                  {i === 2 && <AIWritingSimulator />}
+                  {i === 3 && <SubmissionTracker />}
+                </div>
+              </motion.div>
+            )
+          })}
         </div>
-      </motion.section>
+      </div>
 
       {/* ---- CTA ---- */}
+      <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+
       <motion.section
-        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-28 border-t border-white/[0.04] relative overflow-hidden"
+        className="px-4 sm:px-6 lg:px-8 py-20 sm:py-28 relative overflow-hidden"
         {...m(fadeIn)}
       >
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-pulse-accent/[0.03] blur-[180px] rounded-full" />
+          <div className="absolute bottom-[-15%] left-[30%] w-[600px] h-[400px] bg-pulse-indigo/[0.025] blur-[180px] rounded-full" />
         </div>
 
-        <div className="max-w-5xl mx-auto relative z-10">
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
-            <div>
-              <h2 className="text-display-section text-pulse-text mb-3 max-w-md">
-                Ready to start your{' '}
-                <span className="text-pulse-accent">first application?</span>
-              </h2>
-              <p className="text-body text-pulse-text-tertiary">
-                Free to start &middot; No credit card &middot; 5 minutes to set up
-              </p>
-            </div>
-            <div className="flex items-center gap-4 shrink-0 self-start lg:self-auto">
-              <Link
-                href="/register"
-                className="group inline-flex items-center gap-2.5 px-8 py-4 bg-pulse-accent text-pulse-bg font-semibold text-[15px] rounded-lg hover:bg-pulse-accent/90 transition-all duration-200 shadow-[0_0_30px_rgba(64,255,170,0.15)] hover:shadow-[0_0_40px_rgba(64,255,170,0.25)]"
-              >
-                Get Started Free
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
-              <Link
-                href="/pricing"
-                className="text-body-sm text-pulse-text-secondary hover:text-pulse-accent inline-flex items-center gap-2 transition-colors duration-200"
-              >
-                View pricing
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
+        <div className="max-w-5xl mx-auto relative z-10 text-center">
+          <SectionIntro
+            label="Get started"
+            align="center"
+            description="Free to start. No credit card. 5 minutes to set up."
+            className="mb-8"
+          >
+            Ready to start your first application?
+          </SectionIntro>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/register"
+              className="group inline-flex items-center gap-2.5 px-8 py-4 bg-pulse-accent text-pulse-bg font-semibold text-body rounded-lg hover:bg-pulse-accent/90 transition-all duration-200 shadow-pulse"
+            >
+              Get Started Free
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+            <Link
+              href="/pricing"
+              className="text-body-sm text-pulse-text-secondary hover:text-pulse-accent inline-flex items-center gap-2 transition-colors duration-200"
+            >
+              View pricing
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
       </motion.section>

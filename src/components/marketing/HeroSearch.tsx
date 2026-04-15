@@ -78,7 +78,7 @@ function MatchBar({ score }: { score: number }) {
           transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
         />
       </div>
-      <span className="text-[11px] font-mono font-medium text-pulse-text-secondary tabular-nums">
+      <span className="text-label-sm font-medium text-pulse-text-secondary tabular-nums">
         {score}
       </span>
     </div>
@@ -126,11 +126,11 @@ export function HeroSearch() {
   return (
     <div className="max-w-2xl">
       {/* Card container */}
-      <div className="rounded-xl border border-white/[0.06] bg-[#111113]/80 backdrop-blur-xl shadow-[0_8px_40px_rgba(0,0,0,0.3)] overflow-hidden">
+      <div className="rounded-xl border border-pulse-border bg-pulse-surface/80 backdrop-blur-xl shadow-card overflow-hidden">
         {/* Search input area */}
         <form
           onSubmit={(e) => { e.preventDefault(); if (query.trim()) go() }}
-          className="flex items-center border-b border-white/[0.05]"
+          className="flex items-center border-b border-pulse-border"
         >
           <div className="flex items-center gap-3 flex-1 px-5 py-3.5">
             {isSearching ? (
@@ -144,12 +144,12 @@ export function HeroSearch() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder='Try "climate nonprofit" or "small business"'
-              className="flex-1 bg-transparent text-pulse-text placeholder:text-pulse-text-tertiary/40 focus:outline-none text-[15px]"
+              className="flex-1 bg-transparent text-pulse-text placeholder:text-pulse-text-tertiary/40 focus:outline-none text-body"
             />
           </div>
           <button
             type="submit"
-            className="px-6 py-3.5 bg-pulse-accent text-pulse-bg text-[13px] font-semibold tracking-wide uppercase hover:bg-pulse-accent/90 transition-colors duration-150"
+            className="px-6 py-3.5 bg-pulse-accent text-pulse-bg text-body-sm font-semibold tracking-wide uppercase hover:bg-pulse-accent/90 transition-colors duration-150"
           >
             Search
           </button>
@@ -182,10 +182,10 @@ export function HeroSearch() {
               >
                 {/* Results header */}
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-mono uppercase tracking-wider text-pulse-text-tertiary">
+                  <span className="text-label-sm font-medium uppercase tracking-wider text-pulse-text-tertiary">
                     {hasSearched ? `${results.length} matches` : 'Trending grants'}
                   </span>
-                  <span className="text-[11px] font-mono text-pulse-text-tertiary hidden sm:block">
+                  <span className="text-label-sm font-medium text-pulse-text-tertiary hidden sm:block">
                     Match
                   </span>
                 </div>
@@ -206,16 +206,16 @@ export function HeroSearch() {
                         {/* Grant details */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-[14px] font-medium text-pulse-text truncate group-hover:text-pulse-accent transition-colors duration-150">
+                            <span className="text-body-sm font-medium text-pulse-text truncate group-hover:text-pulse-accent transition-colors duration-150">
                               {grant.name}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className={`inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded ${catClass}`}>
+                            <span className={`inline-flex px-1.5 py-0.5 text-label-sm font-medium rounded ${catClass}`}>
                               {grant.category}
                             </span>
-                            <span className="text-[12px] text-pulse-text-secondary">{grant.amount}</span>
-                            <span className="text-[12px] text-pulse-text-tertiary">&middot; {grant.deadline} left</span>
+                            <span className="text-caption text-pulse-rose/80 font-medium">{grant.amount}</span>
+                            <span className="text-caption text-pulse-text-tertiary">&middot; {grant.deadline} left</span>
                           </div>
                         </div>
 
@@ -224,7 +224,7 @@ export function HeroSearch() {
                           <MatchBar score={grant.match} />
                         </div>
 
-                        <ArrowRight className="w-3.5 h-3.5 text-pulse-text-tertiary/30 group-hover:text-pulse-accent group-hover:translate-x-0.5 transition-all shrink-0" />
+                        <ArrowRight className="w-3.5 h-3.5 text-pulse-text-tertiary/60 group-hover:text-pulse-accent group-hover:translate-x-0.5 transition-all shrink-0" />
                       </motion.button>
                     )
                   })}
@@ -238,12 +238,12 @@ export function HeroSearch() {
         <div className="px-5 py-3 border-t border-white/[0.04] flex items-center justify-between">
           <button
             onClick={() => go()}
-            className="text-[13px] text-pulse-accent font-medium hover:underline underline-offset-2 inline-flex items-center gap-1.5"
+            className="text-body-sm text-pulse-accent font-medium hover:underline underline-offset-2 inline-flex items-center gap-1.5"
           >
             See all 20,000+ grants
             <ArrowRight className="w-3 h-3" />
           </button>
-          <span className="text-[11px] text-pulse-text-tertiary hidden sm:block">
+          <span className="text-label-sm text-pulse-text-tertiary hidden sm:block">
             Free &middot; No account needed to preview
           </span>
         </div>

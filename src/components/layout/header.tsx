@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -36,9 +36,16 @@ export function Header() {
 
   const isHidden = pathname?.startsWith('/app') || pathname?.startsWith('/admin')
 
+  const scrolledRef = useRef(false)
   useEffect(() => {
     if (isHidden) return
-    const handleScroll = () => setScrolled(window.scrollY > 10)
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 10
+      if (isScrolled !== scrolledRef.current) {
+        scrolledRef.current = isScrolled
+        setScrolled(isScrolled)
+      }
+    }
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [isHidden])
@@ -54,9 +61,9 @@ export function Header() {
   return (
     <header
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-500',
+        'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
         scrolled
-          ? 'bg-[#0a0e27]/85 backdrop-blur-2xl shadow-[0_1px_0_rgba(64,255,170,0.06),0_4px_40px_rgba(0,0,0,0.4)]'
+          ? 'bg-pulse-bg/90 backdrop-blur-md shadow-[0_1px_0_rgba(64,255,170,0.06),0_2px_20px_rgba(0,0,0,0.3)]'
           : 'bg-transparent'
       )}
     >
@@ -111,9 +118,9 @@ export function Header() {
             </Link>
             <Link
               href="/register"
-              className="group inline-flex items-center gap-1.5 px-5 py-2 text-[13px] font-semibold text-pulse-bg bg-pulse-accent rounded-lg hover:bg-pulse-accent/90 transition-all duration-200 shadow-[0_0_16px_rgba(64,255,170,0.2)] hover:shadow-[0_0_24px_rgba(64,255,170,0.35)]"
+              className="group inline-flex items-center gap-1.5 px-5 py-2 text-[13px] font-semibold text-pulse-bg bg-pulse-accent rounded-lg hover:bg-pulse-accent/90 transition-all duration-200 shadow-[0_0_20px_rgba(64,255,170,0.2)] hover:shadow-[0_0_20px_rgba(64,255,170,0.35)]"
             >
-              Get Started
+              Get Started Free
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>
@@ -168,7 +175,7 @@ export function Header() {
         {mobileMenuOpen && (
           <motion.div
             id="mobile-menu"
-            className="md:hidden fixed inset-0 top-[60px] z-50 bg-[#0a0e27]/98 backdrop-blur-2xl"
+            className="md:hidden fixed inset-0 top-[60px] z-50 bg-pulse-bg/98 backdrop-blur-md"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -213,7 +220,7 @@ export function Header() {
                 </Link>
                 <Link
                   href="/register"
-                  className="block text-center px-6 py-3 text-sm font-semibold text-pulse-bg bg-pulse-accent rounded-xl shadow-[0_0_20px_rgba(64,255,170,0.2)]"
+                  className="block text-center px-6 py-3 text-sm font-semibold text-pulse-bg bg-pulse-accent rounded-xl shadow-[0_0_20px_rgba(64,255,170,0.2)] hover:shadow-[0_0_20px_rgba(64,255,170,0.35)]"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Get Started Free

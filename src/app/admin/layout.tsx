@@ -33,7 +33,7 @@ export default function AdminLayout({
               <div className="h-4 w-px bg-pulse-border" />
               <div className="flex items-center gap-2">
                 <Settings className="h-5 w-5 text-pulse-accent" />
-                <span className="font-serif text-lg text-pulse-text">Admin</span>
+                <span className="font-semibold text-lg text-pulse-text">Admin</span>
               </div>
             </div>
             

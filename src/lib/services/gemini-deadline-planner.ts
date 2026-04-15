@@ -112,8 +112,8 @@ Create a comprehensive deadline-driven action plan that:
 1. **Prioritizes grants** by deadline urgency weighted by match score (higher match + closer deadline = higher priority)
 2. **Creates a weekly plan** that fits within ${availableHoursPerWeek} hours/week
 3. **Identifies warnings** about overlapping deadlines, insufficient time, or grants at risk
-4. **Suggests quick wins** — small tasks that can be completed immediately
-5. **Accounts for in-progress applications** — factor workspace status into time estimates
+4. **Suggests quick wins**: small tasks that can be completed immediately
+5. **Accounts for in-progress applications**: factor workspace status into time estimates
 
 Urgency levels:
 - critical: < 7 days until deadline
@@ -134,7 +134,7 @@ Return as JSON:
       "daysUntilDeadline": 14,
       "urgency": "urgent",
       "matchScore": 85,
-      "recommendedAction": "Start narrative section immediately — strong match, tight deadline",
+      "recommendedAction": "Start narrative section immediately, strong match, tight deadline",
       "estimatedHoursNeeded": 20
     }
   ],
@@ -154,10 +154,10 @@ Return as JSON:
   ],
   "overallAdvice": "Focus on the top 2 grants this month. Your strongest match is X, but Y has the tightest deadline.",
   "warnings": [
-    "Two grants have deadlines within 3 days of each other — you may need to choose one"
+    "Two grants have deadlines within 3 days of each other, you may need to choose one"
   ],
   "quickWins": [
-    "Gather organizational documents (EIN, 501c3 letter) — needed for multiple applications"
+    "Gather organizational documents (EIN, 501c3 letter), needed for multiple applications"
   ]
 }
 \`\`\`

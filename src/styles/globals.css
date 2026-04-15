@@ -1,39 +1,10 @@
+/* ==================== FONTS ==================== */
+@import url('https://fonts.cdnfonts.com/css/space-grotesk');
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* ==================== FONTS ==================== */
-@font-face {
-  font-family: 'Instrument Serif';
-  src: url('https://fonts.gstatic.com/s/instrumentserif/v4/jizBRFtNs2ka5fXjeivQ4LroWlx-2zIZj1bIkNo.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Instrument Serif';
-  src: url('https://fonts.gstatic.com/s/instrumentserif/v4/jizHRFtNs2ka5fXjeivQ4LroWlx-6zATi3TNgNq55w.woff2') format('woff2');
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Geist Mono';
-  src: url('https://fonts.gstatic.com/s/geistmono/v1/Q5y9_q6Fj-1GFMNsCWSb.woff2') format('woff2');
-  font-weight: 400 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Inter';
-  src: url('https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiJ-Ek-_EeA.woff2') format('woff2');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
 
 /* ==================== BASE STYLES ==================== */
 :root {
@@ -42,6 +13,8 @@
   --pulse-elevated: #1a1a1d;
   --pulse-border: rgba(255, 255, 255, 0.06);
   --pulse-accent: #40ffaa;
+  --pulse-rose: #40ffaa;
+  --pulse-indigo: #2dd4bf;
   --pulse-text: #fafafa;
 }
 
@@ -52,13 +25,16 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  /* Native macOS/trackpad momentum handles smooth scrolling.
+     CSS smooth-scroll adds a second layer that causes freeze/jump
+     on quick direction changes. Only use JS { behavior: 'smooth' }
+     for programmatic scrolls like anchor links. */
 }
 
 body {
   background: var(--pulse-bg);
   color: var(--pulse-text);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Source Sans 3', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -107,7 +83,7 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: 
+  background-image:
     linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
   background-size: 60px 60px;
@@ -173,11 +149,9 @@ body {
 /* ==================== TYPOGRAPHY SYSTEM ==================== */
 
 /*
- * Font Hierarchy:
- * - Display (font-serif): Hero headlines, page titles, major section headings
- * - Headings (font-sans): Card titles, section subheadings, feature titles
- * - Body (font-sans): Paragraphs, descriptions, content text
- * - Labels (font-mono): Eyebrows, badges, technical labels, stats
+ * Two-font system:
+ * - Space Grotesk (display): Hero headlines, page titles, section headings, stats
+ * - Source Sans 3 (body): Paragraphs, descriptions, labels, buttons, UI elements
  */
 
 /* Text gradient for accent headings */
@@ -190,70 +164,71 @@ body {
 
 /* Display Typography - For hero headlines and page titles */
 .text-display-hero {
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(2.5rem, 5.5vw, 4.25rem);
   line-height: 1.05;
-  letter-spacing: -0.03em;
-  font-weight: 400;
+  letter-spacing: -0.035em;
+  font-weight: 700;
 }
 
 .text-display-page {
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(2rem, 4vw, 2.875rem);
   line-height: 1.15;
-  letter-spacing: -0.02em;
-  font-weight: 400;
+  letter-spacing: -0.025em;
+  font-weight: 700;
 }
 
 .text-display-section {
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(1.75rem, 3vw, 2.375rem);
   line-height: 1.2;
-  letter-spacing: -0.02em;
-  font-weight: 400;
+  letter-spacing: -0.025em;
+  font-weight: 700;
 }
 
 /* Heading Typography - For cards and subsections */
 .text-heading-lg {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 1.25rem;
   line-height: 1.4;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   font-weight: 600;
 }
 
 .text-heading {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 1.125rem;
   line-height: 1.4;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   font-weight: 600;
 }
 
 .text-heading-sm {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 1rem;
   line-height: 1.4;
+  letter-spacing: -0.01em;
   font-weight: 600;
 }
 
 /* Body Typography - For paragraphs and descriptions */
 .text-body-lg {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Source Sans 3', system-ui, sans-serif;
   font-size: 1.125rem;
-  line-height: 1.7;
+  line-height: 1.65;
   font-weight: 400;
 }
 
 .text-body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Source Sans 3', system-ui, sans-serif;
   font-size: 1rem;
   line-height: 1.6;
   font-weight: 400;
 }
 
 .text-body-sm {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Source Sans 3', system-ui, sans-serif;
   font-size: 0.875rem;
   line-height: 1.5;
   font-weight: 400;
@@ -261,7 +236,7 @@ body {
 
 /* Label Typography - For eyebrows, badges, technical text */
 .text-label {
-  font-family: 'Geist Mono', 'JetBrains Mono', monospace;
+  font-family: 'Source Sans 3', system-ui, sans-serif;
   font-size: 0.75rem;
   line-height: 1.4;
   letter-spacing: 0.05em;
@@ -270,29 +245,29 @@ body {
 }
 
 .text-label-sm {
-  font-family: 'Geist Mono', 'JetBrains Mono', monospace;
+  font-family: 'Source Sans 3', system-ui, sans-serif;
   font-size: 0.65rem;
   line-height: 1.3;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   font-weight: 500;
 }
 
 /* Stat/Number Typography - For displaying large numbers */
 .text-stat {
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(2rem, 4vw, 3.25rem);
   line-height: 1.1;
-  letter-spacing: -0.02em;
-  font-weight: 400;
+  letter-spacing: -0.025em;
+  font-weight: 700;
 }
 
 .text-stat-sm {
-  font-family: 'Instrument Serif', Georgia, serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 1.5rem;
   line-height: 1.2;
-  letter-spacing: -0.01em;
-  font-weight: 400;
+  letter-spacing: -0.015em;
+  font-weight: 700;
 }
 
 /* ==================== CARD STYLES ==================== */
@@ -307,6 +282,76 @@ body {
   border-color: rgba(64, 255, 170, 0.2);
   box-shadow: 0 0 40px rgba(64, 255, 170, 0.08);
   transform: translateY(-2px);
+}
+
+/* Glass card: subtle glassmorphism for marketing sections */
+.card-glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-glass:hover {
+  border-color: rgba(64, 255, 170, 0.2);
+  box-shadow: 0 0 30px rgba(64, 255, 170, 0.06);
+  transform: translateY(-2px);
+}
+
+/* Glass card accent: for highlighted cards (Pro tier, CTA, etc.) */
+.card-glass-accent {
+  background: rgba(64, 255, 170, 0.04);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(64, 255, 170, 0.15);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-glass-accent:hover {
+  border-color: rgba(64, 255, 170, 0.25);
+  box-shadow: 0 0 30px rgba(64, 255, 170, 0.08);
+  transform: translateY(-2px);
+}
+
+/* Glass card rose: for funding/pricing/value elements */
+.card-glass-rose {
+  background: rgba(64, 255, 170, 0.04);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(64, 255, 170, 0.12);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-glass-rose:hover {
+  border-color: rgba(64, 255, 170, 0.25);
+  box-shadow: 0 0 30px rgba(64, 255, 170, 0.08);
+  transform: translateY(-2px);
+}
+
+/* Glass card indigo: for trust/info/category elements */
+.card-glass-indigo {
+  background: rgba(45, 212, 191, 0.04);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(45, 212, 191, 0.12);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-glass-indigo:hover {
+  border-color: rgba(45, 212, 191, 0.25);
+  box-shadow: 0 0 30px rgba(45, 212, 191, 0.08);
+  transform: translateY(-2px);
+}
+
+/* Rose text gradient */
+.text-gradient-rose {
+  background: linear-gradient(135deg, #40ffaa 0%, #00d4aa 50%, #40ffaa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Section separator: gradient fade instead of 1px line */
+.section-separator {
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.06), transparent);
 }
 
 /* ==================== BUTTON BASE ==================== */
@@ -424,14 +469,9 @@ select:-webkit-autofill:active {
 }
 
 /* Gradient text shimmer for headlines */
-@keyframes text-shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-
 .text-shimmer {
   background-size: 200% auto;
-  animation: text-shimmer 4s linear infinite;
+  animation: shimmer 4s linear infinite;
 }
 
 /* Orb drift animation */
@@ -567,6 +607,39 @@ select:-webkit-autofill:active {
 .reveal-up {
   animation: reveal-up 0.6s ease-out forwards;
 }
+
+/* ─── Performance-friendly CSS animations (replaces infinite Framer Motion) ─── */
+
+@keyframes orbit-cw {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes orbit-ccw {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes pulse-ring {
+  0% { opacity: 0.6; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes badge-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.animate-orbit-cw { animation: orbit-cw 8s linear infinite; }
+.animate-orbit-ccw { animation: orbit-ccw 12s linear infinite; }
+.animate-pulse-ring { animation: pulse-ring 1.5s ease-out infinite; }
+.animate-cursor-blink { animation: cursor-blink 1s step-end infinite; }
+.animate-badge-pulse { animation: badge-pulse 1.6s ease-in-out infinite; }
 
 .reveal-delay-1 { animation-delay: 0.1s; opacity: 0; }
 .reveal-delay-2 { animation-delay: 0.2s; opacity: 0; }

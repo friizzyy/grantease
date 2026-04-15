@@ -8,7 +8,7 @@ import { Agentation } from 'agentation'
 export const metadata: Metadata = {
   metadataBase: new URL('https://grantsby.ai'),
   title: {
-    default: 'Grants By AI — Discover Agricultural Grants',
+    default: 'Grants By AI | Discover Agricultural Grants',
     template: '%s | Grants By AI',
   },
   description: 'AI-powered grant discovery platform for farmers and agricultural businesses. Find matching grants, track deadlines, and streamline applications.',
@@ -19,12 +19,12 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://grantsby.ai',
     siteName: 'Grants By AI',
-    title: 'Grants By AI — Discover Agricultural Grants',
+    title: 'Grants By AI | Discover Agricultural Grants',
     description: 'AI-powered grant discovery platform for farmers and agricultural businesses.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Grants By AI — Discover Agricultural Grants',
+    title: 'Grants By AI | Discover Agricultural Grants',
     description: 'AI-powered grant discovery for farmers and agricultural businesses.',
   },
   robots: {
@@ -46,16 +46,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <head>
-        {/* Preconnect to font services */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        {/* Load fonts */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
       <body className="min-h-screen bg-pulse-bg text-pulse-text antialiased font-sans">
         <SessionProvider>
           <MotionProvider>

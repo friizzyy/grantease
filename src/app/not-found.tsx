@@ -17,7 +17,7 @@ export default function NotFound() {
       >
         <GlassCard className="p-8 text-center">
           <motion.div
-            className="text-7xl font-serif text-pulse-accent mb-4"
+            className="text-7xl font-bold text-pulse-accent mb-4"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
@@ -25,7 +25,7 @@ export default function NotFound() {
             404
           </motion.div>
 
-          <h1 className="font-serif text-heading-md text-pulse-text mb-2">
+          <h1 className="font-bold text-heading-md text-pulse-text mb-2">
             Page not found
           </h1>
 

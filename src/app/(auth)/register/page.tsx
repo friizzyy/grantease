@@ -121,8 +121,8 @@ export default function RegisterPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
     >
-      {/* Card with subtle border */}
-      <Card className="overflow-hidden relative bg-white/[0.02] border border-white/[0.06] backdrop-blur-sm">
+      {/* Card with glass effect */}
+      <Card className="overflow-hidden relative bg-white/[0.03] border border-white/[0.07] backdrop-blur-md shadow-[0_8px_40px_rgba(0,0,0,0.2)]">
         <CardHeader className="text-center relative z-10 pb-2">
           <motion.div
             className="flex items-center justify-center gap-2 mb-5"
@@ -398,7 +398,7 @@ export default function RegisterPage() {
             transition={{ delay: 0.5 }}
           >
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/[0.06]" />
+              <div className="w-full h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
             </div>
             <div className="relative flex justify-center text-xs">
               <span className="px-3 bg-pulse-bg text-pulse-text-tertiary">
@@ -451,6 +451,21 @@ export default function RegisterPage() {
               Sign in
             </Link>
           </motion.p>
+
+          {/* Security badges */}
+          <motion.div
+            className="mt-4 flex items-center justify-center gap-4 text-label-sm text-pulse-text-tertiary"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.65 }}
+          >
+            <span className="flex items-center gap-1.5">
+              <Lock className="w-3 h-3 text-pulse-indigo" />
+              Encrypted
+            </span>
+            <span className="w-px h-3 bg-white/[0.06]" />
+            <span className="text-pulse-rose/70">No credit card required</span>
+          </motion.div>
         </CardContent>
       </Card>
     </motion.div>

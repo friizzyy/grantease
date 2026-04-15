@@ -16,28 +16,17 @@ export function PulseGridBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const glowState = useRef<GlowState>({ x: 0.5, y: 0.4, targetX: 0.5, targetY: 0.4, intensity: 1 })
 
-  // Use motion context for reactivity
-  let motionState = {
-    reducedMotion: false,
-    scrollY: 0,
-    scrollVelocity: 0,
-    mousePosition: { x: 0, y: 0 },
-  }
+  // Scroll/mouse tracked via refs — no React re-renders
+  const scrollRef = useRef({ y: 0, velocity: 0, lastY: 0, lastTime: Date.now() })
+  const mouseRef = useRef({ x: 0, y: 0 })
 
+  let reducedMotion = false
   try {
     const motion = useMotion()
-    motionState = {
-      reducedMotion: motion.reducedMotion,
-      scrollY: motion.scrollY,
-      scrollVelocity: motion.scrollVelocity,
-      mousePosition: motion.mousePosition,
-    }
+    reducedMotion = motion.reducedMotion
   } catch {
-    // MotionProvider not available yet, use defaults
+    // MotionProvider not available yet
   }
-
-  const { reducedMotion, scrollY, scrollVelocity, mousePosition } = motionState
-
 
   useEffect(() => {
     if (reducedMotion) return
@@ -50,6 +39,27 @@ export function PulseGridBackground() {
 
     let animationId: number
     let time = 0
+
+    // Lightweight scroll/mouse listeners that only write to refs
+    const handleScroll = () => {
+      const now = Date.now()
+      const currentY = window.scrollY
+      const dt = now - scrollRef.current.lastTime
+      if (dt > 0) {
+        scrollRef.current.velocity = Math.abs(currentY - scrollRef.current.lastY) / dt
+      }
+      scrollRef.current.y = currentY
+      scrollRef.current.lastY = currentY
+      scrollRef.current.lastTime = now
+    }
+
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseRef.current.x = (e.clientX / window.innerWidth) * 2 - 1
+      mouseRef.current.y = (e.clientY / window.innerHeight) * 2 - 1
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('mousemove', handleMouseMove, { passive: true })
 
     const resize = () => {
       const dpr = window.devicePixelRatio || 1
@@ -65,33 +75,34 @@ export function PulseGridBackground() {
       const width = window.innerWidth
       const height = window.innerHeight
 
+      // Read from refs (no React involvement)
+      const scrollY = scrollRef.current.y
+      const scrollVelocity = scrollRef.current.velocity
+      const mousePosition = mouseRef.current
+
       ctx.clearRect(0, 0, width, height)
 
-      // Calculate scroll-based parallax offset
       const parallaxOffset = scrollY * 0.05
-
-      // Calculate scroll velocity effect (grid fades at high velocity)
       const velocityFade = clamp(1 - scrollVelocity * 0.5, 0.3, 1)
 
-      // Update glow position with smooth interpolation (follows mouse)
+      // Decay velocity naturally
+      scrollRef.current.velocity *= 0.95
+
       const glow = glowState.current
       glow.targetX = 0.5 + mousePosition.x * 0.2
       glow.targetY = 0.4 + mousePosition.y * 0.15
       glow.x = lerp(glow.x, glow.targetX, 0.03)
       glow.y = lerp(glow.y, glow.targetY, 0.03)
 
-      // Calculate edge intensity (increases near scroll boundaries)
       const scrollProgress = scrollY / (document.documentElement.scrollHeight - window.innerHeight || 1)
       const edgeIntensity = 1 + Math.sin(scrollProgress * Math.PI) * 0.3
 
-
-      // Draw subtle grid with parallax
+      // Draw grid
       const gridSize = 60
       const gridOpacity = 0.02 * velocityFade
       ctx.strokeStyle = `rgba(255, 255, 255, ${gridOpacity})`
       ctx.lineWidth = 0.5
 
-      // Vertical lines with wave effect
       for (let x = -gridSize; x <= width + gridSize; x += gridSize) {
         const waveOffset = Math.sin(time + x * 0.01) * 3
         ctx.beginPath()
@@ -100,7 +111,6 @@ export function PulseGridBackground() {
         ctx.stroke()
       }
 
-      // Horizontal lines with wave effect
       for (let y = -gridSize; y <= height + gridSize; y += gridSize) {
         const waveOffset = Math.cos(time + y * 0.01) * 3
         const adjustedY = ((y - parallaxOffset) % gridSize + gridSize) % gridSize + Math.floor((y - parallaxOffset) / gridSize) * gridSize
@@ -110,7 +120,7 @@ export function PulseGridBackground() {
         ctx.stroke()
       }
 
-      // Draw pulsing accent points at intersections
+      // Draw accent points
       const pulseBase = 0.03 + Math.sin(time * 2) * 0.02
       const pulseAlpha = pulseBase * velocityFade * edgeIntensity
 
@@ -120,7 +130,6 @@ export function PulseGridBackground() {
           const offsetY = Math.cos(time + y * 0.01) * 2
           const adjustedY = y - (parallaxOffset % (gridSize * 3))
 
-          // Distance from glow center affects point brightness
           const dx = (x / width) - glow.x
           const dy = (adjustedY / height) - glow.y
           const dist = Math.sqrt(dx * dx + dy * dy)
@@ -133,7 +142,7 @@ export function PulseGridBackground() {
         }
       }
 
-      // Draw ambient glow that follows mouse
+      // Draw ambient glow
       const glowX = glow.x * width + Math.sin(time * 0.5) * 30
       const glowY = glow.y * height + Math.cos(time * 0.3) * 20
 
@@ -150,7 +159,7 @@ export function PulseGridBackground() {
       ctx.fillStyle = gradient
       ctx.fillRect(0, 0, width, height)
 
-      // Secondary glow for depth
+      // Secondary glow
       const secondaryGlowX = width - glowX * 0.5
       const secondaryGlowY = height - glowY * 0.3
 
@@ -173,12 +182,13 @@ export function PulseGridBackground() {
     window.addEventListener('resize', resize)
     return () => {
       window.removeEventListener('resize', resize)
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('mousemove', handleMouseMove)
       cancelAnimationFrame(animationId)
     }
-  }, [reducedMotion, scrollY, scrollVelocity, mousePosition])
+  }, [reducedMotion]) // Only re-run if reduced motion preference changes
 
   if (reducedMotion) {
-    // Fallback for reduced motion - static gradient
     return (
       <>
         <div className="fixed inset-0 z-0 pointer-events-none">
@@ -191,7 +201,6 @@ export function PulseGridBackground() {
               `
             }}
           />
-          {/* Static grid pattern */}
           <div
             className="absolute inset-0 opacity-[0.02]"
             style={{

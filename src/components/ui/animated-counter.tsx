@@ -114,7 +114,7 @@ export function StatBlock({
         )}
 
         {/* Value */}
-        <div className="font-serif text-4xl md:text-5xl font-medium text-pulse-text mb-2 tracking-tight">
+        <div className="text-4xl md:text-5xl font-bold text-pulse-text mb-2 tracking-tight">
           <AnimatedCounter
             value={value}
             suffix={suffix}
