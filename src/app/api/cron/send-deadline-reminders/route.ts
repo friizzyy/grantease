@@ -125,7 +125,7 @@ async function processUserDeadlines(
     errors: string[]
   }
 ): Promise<void> {
-  const appUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://grantsbyai.com'
+  const appUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://grantsby.ai'
 
   // Calculate the deadline window
   const windowEnd = new Date(now)

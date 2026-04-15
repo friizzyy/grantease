@@ -3,6 +3,8 @@ import { hash } from 'bcryptjs'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { rateLimiters, getClientIdentifier, rateLimitExceededResponse } from '@/lib/rate-limit'
+import { sendEmail, renderWelcomeEmail, isEmailConfigured } from '@/lib/services/email-service'
+import { createEmailVerifyToken } from '@/lib/email-tokens'
 
 const registerSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -36,7 +38,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { name, email, password, organization } = validationResult.data
+    const { name, password, organization } = validationResult.data
+    // Normalize email: emails are case-insensitive by spec (RFC 5321), but DB
+    // comparisons are case-sensitive — normalize on write so lookups are consistent.
+    const email = validationResult.data.email.toLowerCase().trim()
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -50,16 +55,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Hash password
+    // Hash password (cost 12 — takes ~250ms, good balance vs throughput)
     const passwordHash = await hash(password, 12)
 
     // Create user
     const user = await prisma.user.create({
       data: {
-        name,
+        name: name.trim(),
         email,
         passwordHash,
-        organization,
+        organization: organization?.trim() || null,
       },
       select: {
         id: true,
@@ -69,6 +74,24 @@ export async function POST(request: NextRequest) {
         createdAt: true,
       },
     })
+
+    // Fire-and-forget: send welcome + verification email.
+    // Failure here must NOT block signup — user can request a new verify link later.
+    if (isEmailConfigured()) {
+      const appUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+      const verifyToken = createEmailVerifyToken(user.id, user.email)
+      const verificationUrl = `${appUrl}/api/auth/verify-email?token=${encodeURIComponent(verifyToken)}`
+      const rendered = renderWelcomeEmail(user.name || 'there', verificationUrl)
+
+      sendEmail({
+        to: user.email,
+        subject: rendered.subject,
+        html: rendered.html,
+        text: rendered.text,
+      }).catch((err) => {
+        console.error('[register] welcome email failed (non-fatal):', err)
+      })
+    }
 
     return NextResponse.json(
       { message: 'Account created successfully', user },

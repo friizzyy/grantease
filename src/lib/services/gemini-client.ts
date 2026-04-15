@@ -13,6 +13,29 @@ export const GEMINI_MODEL = 'gemini-2.0-flash'
 /** Max retries for transient failures */
 const MAX_RETRIES = 2
 const BASE_DELAY_MS = 1000
+/** Hard cap on any single Gemini call — prevents hung requests from blocking serverless functions. */
+const REQUEST_TIMEOUT_MS = 30_000
+
+/**
+ * Wrap a promise with a timeout. Rejects if the promise doesn't settle
+ * within `ms`. Used to bound the tail latency of Gemini calls so a stalled
+ * upstream doesn't hold a user's request or tie up a serverless instance.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, label = 'Gemini'): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(`${label} request timed out after ${ms}ms`)), ms)
+    promise.then(
+      v => {
+        clearTimeout(t)
+        resolve(v)
+      },
+      e => {
+        clearTimeout(t)
+        reject(e)
+      }
+    )
+  })
+}
 
 /**
  * Token usage metadata from a Gemini API response
@@ -130,16 +153,20 @@ export async function generateTextWithUsage(prompt: string, _useProModel = false
 
   try {
     const response = await withRetry(() =>
-      ai.models.generateContent({
-        model: GEMINI_MODEL,
-        contents: prompt,
-        config: {
-          temperature: 0.3,
-          topP: 0.8,
-          topK: 40,
-          maxOutputTokens: 4096,
-        },
-      })
+      withTimeout(
+        ai.models.generateContent({
+          model: GEMINI_MODEL,
+          contents: prompt,
+          config: {
+            temperature: 0.3,
+            topP: 0.8,
+            topK: 40,
+            maxOutputTokens: 4096,
+          },
+        }),
+        REQUEST_TIMEOUT_MS,
+        'Gemini text'
+      )
     )
 
     const usage = extractUsageFromResponse(response)
@@ -171,16 +198,20 @@ export async function generateJSONWithUsage<T>(prompt: string, _useProModel = fa
 
   try {
     const response = await withRetry(() =>
-      ai.models.generateContent({
-        model: GEMINI_MODEL,
-        contents: prompt,
-        config: {
-          temperature: 0.3,
-          topP: 0.9,
-          maxOutputTokens: 4096,
-          responseMimeType: 'application/json',
-        },
-      })
+      withTimeout(
+        ai.models.generateContent({
+          model: GEMINI_MODEL,
+          contents: prompt,
+          config: {
+            temperature: 0.3,
+            topP: 0.9,
+            maxOutputTokens: 4096,
+            responseMimeType: 'application/json',
+          },
+        }),
+        REQUEST_TIMEOUT_MS,
+        'Gemini JSON'
+      )
     )
 
     const usage = extractUsageFromResponse(response)

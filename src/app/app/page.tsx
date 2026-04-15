@@ -364,6 +364,70 @@ export default function AppDashboard() {
   const urgentCount = upcomingDeadlines.filter(d => d.urgent || (d.daysLeft !== null && d.daysLeft <= 14)).length
   const lastActivity = formatTimeAgo(recentActivity.lastSavedGrant) || formatTimeAgo(recentActivity.lastWorkspaceUpdate)
 
+  // Determine the single next best action for this user based on their state.
+  // Priority order: onboarding → urgent deadline → empty vault → no saved grants → fill vault → open workspace → keep browsing
+  const nextAction: { title: string; description: string; href: string; label: string; icon: typeof Sparkles; tone: 'accent' | 'urgent' | 'neutral' } | null = (() => {
+    if (!user.hasCompletedOnboarding) return null // Already shown by onboarding CTA below
+    if (urgentCount > 0) {
+      return {
+        title: `${urgentCount} deadline${urgentCount > 1 ? 's' : ''} within 2 weeks`,
+        description: 'Review your saved grants that are closing soon — don\'t miss these.',
+        href: '/app/saved',
+        label: 'Review urgent',
+        icon: Clock,
+        tone: 'urgent',
+      }
+    }
+    if (vaultPct < 40) {
+      return {
+        title: 'Set up your Vault to auto-fill applications',
+        description: 'Applications take 3× longer when you start from scratch. Fill your Vault once, reuse it forever.',
+        href: '/app/vault',
+        label: 'Complete Vault',
+        icon: Shield,
+        tone: 'accent',
+      }
+    }
+    if (stats.savedGrants === 0) {
+      return {
+        title: 'Find your first matching grant',
+        description: `We've matched ${stats.totalGrantsAvailable.toLocaleString()} grants against your profile. Save the ones worth applying to.`,
+        href: '/app/discover',
+        label: 'Discover grants',
+        icon: Search,
+        tone: 'accent',
+      }
+    }
+    if (vaultPct < 80) {
+      return {
+        title: `Vault is ${vaultPct}% ready`,
+        description: 'Finish your Vault so applications prefill themselves. Most fields only need to be entered once.',
+        href: '/app/vault',
+        label: 'Finish Vault',
+        icon: Shield,
+        tone: 'accent',
+      }
+    }
+    if (stats.workspaces === 0 && stats.savedGrants > 0) {
+      return {
+        title: 'Start your first application',
+        description: 'Turn a saved grant into a workspace to track progress, notes, and documents.',
+        href: '/app/saved',
+        label: 'Pick a grant',
+        icon: FileText,
+        tone: 'accent',
+      }
+    }
+    return {
+      title: 'Keep the momentum going',
+      description: `${stats.totalGrantsAvailable.toLocaleString()} grants available. Discover fresh matches weekly.`,
+      href: '/app/discover',
+      label: 'Browse more',
+      icon: Sparkles,
+      tone: 'neutral',
+    }
+  })()
+
   return (
     <div className="px-4 md:px-8 lg:px-10 py-8 max-w-[1200px] mx-auto">
       {/* Header */}
@@ -412,6 +476,50 @@ export default function AppDashboard() {
             <Button size="sm" asChild>
               <Link href="/onboarding/step-1">
                 Get Started
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Link>
+            </Button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Next Best Action — single prioritized "what should I do next?" prompt */}
+      {nextAction && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className={`mb-6 p-5 rounded-xl border ${
+            nextAction.tone === 'urgent'
+              ? 'border-red-500/20 bg-red-500/[0.04]'
+              : nextAction.tone === 'accent'
+                ? 'border-pulse-accent/20 bg-pulse-accent/[0.04]'
+                : 'border-white/[0.08] bg-white/[0.02]'
+          }`}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
+              nextAction.tone === 'urgent'
+                ? 'bg-red-500/10 text-red-400'
+                : nextAction.tone === 'accent'
+                  ? 'bg-pulse-accent/10 text-pulse-accent'
+                  : 'bg-white/[0.04] text-pulse-text-tertiary'
+            }`}>
+              <nextAction.icon className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-label text-pulse-text-tertiary mb-1">Recommended next step</p>
+              <h2 className="text-heading-sm text-pulse-text mb-1">{nextAction.title}</h2>
+              <p className="text-body-sm text-pulse-text-secondary">{nextAction.description}</p>
+            </div>
+            <Button
+              size="sm"
+              asChild
+              variant={nextAction.tone === 'urgent' ? 'outline' : 'default'}
+              className={nextAction.tone === 'urgent' ? 'border-red-500/30 text-red-400 hover:bg-red-500/10' : ''}
+            >
+              <Link href={nextAction.href}>
+                {nextAction.label}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </Button>

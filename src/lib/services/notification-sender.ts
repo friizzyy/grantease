@@ -318,7 +318,7 @@ function renderGenericNotificationEmail(
   message: string,
   userName: string
 ): { subject: string; html: string; text: string } {
-  const appUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://grantsbyai.com'
+  const appUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://grantsby.ai'
 
   const subject = title
 

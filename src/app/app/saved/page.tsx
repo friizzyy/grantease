@@ -185,10 +185,13 @@ function SavedGrantCard({
                 >
                   <button
                     role="menuitem"
-                    className="w-full px-4 py-2 text-left text-sm text-pulse-text hover:bg-pulse-surface flex items-center gap-2"
+                    disabled
+                    title="Collections coming soon"
+                    className="w-full px-4 py-2 text-left text-sm text-pulse-text-tertiary flex items-center gap-2 opacity-50 cursor-not-allowed"
                   >
                     <FolderOpen className="w-4 h-4" />
                     Move to collection
+                    <span className="ml-auto text-[10px] uppercase tracking-wider text-pulse-text-tertiary">Soon</span>
                   </button>
                   <Link
                     href="/app/workspace"

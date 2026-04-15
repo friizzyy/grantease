@@ -7,7 +7,7 @@
  * Environment variables:
  *   RESEND_API_KEY - Resend API key (primary provider)
  *   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS - SMTP fallback
- *   EMAIL_FROM - Default sender address (default: "Grants By AI <notifications@grantsbyai.com>")
+ *   EMAIL_FROM - Default sender address (default: "Grants By AI <notifications@grantsby.ai>")
  */
 
 // ============= TYPES =============
@@ -53,10 +53,10 @@ interface WeeklyDigestData {
 
 // ============= CONFIGURATION =============
 
-const DEFAULT_FROM = 'Grants By AI <notifications@grantsbyai.com>'
+const DEFAULT_FROM = 'Grants By AI <notifications@grantsby.ai>'
 const RESEND_API_URL = 'https://api.resend.com/emails'
 const UNSUBSCRIBE_URL_PLACEHOLDER = '{{unsubscribe_url}}'
-const APP_URL = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://grantsbyai.com'
+const APP_URL = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://grantsby.ai'
 
 // ============= BRAND COLORS =============
 
@@ -599,6 +599,209 @@ Open dashboard: ${APP_URL}/app
 ---
 Manage preferences: ${APP_URL}/app/settings
 Unsubscribe: ${UNSUBSCRIBE_URL_PLACEHOLDER}`
+
+  return { subject, html, text }
+}
+
+/**
+ * Render welcome email sent immediately after signup.
+ * Warm greeting, quick orientation, and next-step CTA.
+ */
+export function renderWelcomeEmail(
+  userName: string,
+  verificationUrl?: string
+): { subject: string; html: string; text: string } {
+  const subject = 'Welcome to Grants By AI'
+  const firstName = userName.split(' ')[0] || userName
+
+  const verifyBlock = verificationUrl
+    ? `
+      <div style="background-color:${COLORS.bgCardAlt};border:1px solid ${COLORS.border};border-radius:10px;padding:20px;margin:24px 0;">
+        <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:${COLORS.accent};text-transform:uppercase;letter-spacing:0.6px;">One quick step</p>
+        <p style="margin:0 0 16px;font-size:14px;color:${COLORS.textMuted};line-height:1.6;">
+          Confirm your email so we can send match alerts and deadline reminders. The link expires in 24 hours.
+        </p>
+        <a href="${escapeHtml(verificationUrl)}" style="display:inline-block;background-color:${COLORS.accent};color:${COLORS.bgDark};font-size:14px;font-weight:600;padding:10px 22px;border-radius:8px;text-decoration:none;">
+          Confirm email
+        </a>
+      </div>`
+    : ''
+
+  const bodyContent = `
+    <h2 style="margin:0 0 12px;font-size:22px;font-weight:700;color:${COLORS.text};">
+      Welcome aboard, ${escapeHtml(firstName)} 👋
+    </h2>
+    <p style="margin:0 0 20px;font-size:15px;color:${COLORS.textMuted};line-height:1.6;">
+      Grants By AI helps you find, track, and win grants faster — with a little help from AI. Here's how to get the most out of your first week:
+    </p>
+
+    ${verifyBlock}
+
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:8px 0 24px;">
+      <tr>
+        <td style="padding:12px 0;border-bottom:1px solid ${COLORS.border};">
+          <p style="margin:0 0 4px;font-size:15px;font-weight:600;color:${COLORS.text};">
+            <span style="color:${COLORS.accent};">1.</span> &nbsp;Finish your profile
+          </p>
+          <p style="margin:0;font-size:14px;color:${COLORS.textMuted};line-height:1.5;">
+            Tell us about your org, funding goals, and focus areas. Better profile = better matches.
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:12px 0;border-bottom:1px solid ${COLORS.border};">
+          <p style="margin:0 0 4px;font-size:15px;font-weight:600;color:${COLORS.text};">
+            <span style="color:${COLORS.accent};">2.</span> &nbsp;Explore the Discover page
+          </p>
+          <p style="margin:0;font-size:14px;color:${COLORS.textMuted};line-height:1.5;">
+            Live grants from federal, state, and foundation sources, ranked by fit.
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:12px 0;">
+          <p style="margin:0 0 4px;font-size:15px;font-weight:600;color:${COLORS.text};">
+            <span style="color:${COLORS.accent};">3.</span> &nbsp;Save a search
+          </p>
+          <p style="margin:0;font-size:14px;color:${COLORS.textMuted};line-height:1.5;">
+            We'll email you the moment a new matching grant is posted. No hunting required.
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin:0;text-align:center;">
+      <a href="${APP_URL}/app" style="display:inline-block;background-color:${COLORS.accent};color:${COLORS.bgDark};font-size:15px;font-weight:600;padding:13px 36px;border-radius:8px;text-decoration:none;">
+        Open your dashboard
+      </a>
+    </p>
+
+    <p style="margin:28px 0 0;font-size:13px;color:${COLORS.textDim};line-height:1.6;text-align:center;">
+      Questions? Just reply to this email — a real human reads every message.
+    </p>`
+
+  const html = emailLayout(subject, 'Your AI-powered grant search starts here.', bodyContent)
+
+  const text = `Welcome aboard, ${firstName}!
+
+Grants By AI helps you find, track, and win grants faster — with a little help from AI.
+
+${verificationUrl ? `First, confirm your email (link expires in 24 hours):\n${verificationUrl}\n\n` : ''}Here's how to get the most out of your first week:
+
+1. Finish your profile — better profile, better matches
+2. Explore the Discover page — live grants ranked by fit
+3. Save a search — we'll email you when new matches post
+
+Open your dashboard: ${APP_URL}/app
+
+Questions? Reply to this email — a real human reads every message.
+
+---
+Manage preferences: ${APP_URL}/app/settings
+Unsubscribe: ${UNSUBSCRIBE_URL_PLACEHOLDER}`
+
+  return { subject, html, text }
+}
+
+/**
+ * Render email verification link. Sent when a user needs to (re-)confirm their address.
+ */
+export function renderEmailVerificationEmail(
+  userName: string,
+  verificationUrl: string
+): { subject: string; html: string; text: string } {
+  const subject = 'Confirm your email for Grants By AI'
+  const firstName = userName.split(' ')[0] || userName
+
+  const bodyContent = `
+    <h2 style="margin:0 0 12px;font-size:20px;font-weight:700;color:${COLORS.text};">
+      Confirm your email, ${escapeHtml(firstName)}
+    </h2>
+    <p style="margin:0 0 24px;font-size:15px;color:${COLORS.textMuted};line-height:1.6;">
+      Click the button below to verify your email address. This keeps your account secure and lets us send match alerts & deadline reminders.
+    </p>
+
+    <p style="margin:0 0 28px;text-align:center;">
+      <a href="${escapeHtml(verificationUrl)}" style="display:inline-block;background-color:${COLORS.accent};color:${COLORS.bgDark};font-size:15px;font-weight:600;padding:13px 40px;border-radius:8px;text-decoration:none;">
+        Confirm email
+      </a>
+    </p>
+
+    <div style="background-color:${COLORS.bgCardAlt};border:1px solid ${COLORS.border};border-radius:8px;padding:16px;margin:0 0 20px;">
+      <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:${COLORS.textMuted};text-transform:uppercase;letter-spacing:0.5px;">Or copy this link</p>
+      <p style="margin:0;font-size:12px;color:${COLORS.textMuted};word-break:break-all;font-family:ui-monospace,Menlo,Monaco,monospace;">
+        ${escapeHtml(verificationUrl)}
+      </p>
+    </div>
+
+    <p style="margin:0;font-size:13px;color:${COLORS.textDim};line-height:1.6;">
+      This link expires in 24 hours. If you didn't create a Grants By AI account, you can safely ignore this email.
+    </p>`
+
+  const html = emailLayout(subject, 'One click to verify your email on Grants By AI.', bodyContent)
+
+  const text = `Confirm your email, ${firstName}
+
+Click this link to verify your email address for Grants By AI:
+
+${verificationUrl}
+
+This link expires in 24 hours. If you didn't create a Grants By AI account, you can safely ignore this email.`
+
+  return { subject, html, text }
+}
+
+/**
+ * Render password reset email. Token-bearing link expires in 1 hour.
+ */
+export function renderPasswordResetEmail(
+  userName: string,
+  resetUrl: string
+): { subject: string; html: string; text: string } {
+  const subject = 'Reset your Grants By AI password'
+  const firstName = userName.split(' ')[0] || userName
+
+  const bodyContent = `
+    <h2 style="margin:0 0 12px;font-size:20px;font-weight:700;color:${COLORS.text};">
+      Reset your password
+    </h2>
+    <p style="margin:0 0 24px;font-size:15px;color:${COLORS.textMuted};line-height:1.6;">
+      Hi ${escapeHtml(firstName)} — we received a request to reset the password on your Grants By AI account. Click below to choose a new one.
+    </p>
+
+    <p style="margin:0 0 28px;text-align:center;">
+      <a href="${escapeHtml(resetUrl)}" style="display:inline-block;background-color:${COLORS.accent};color:${COLORS.bgDark};font-size:15px;font-weight:600;padding:13px 40px;border-radius:8px;text-decoration:none;">
+        Reset password
+      </a>
+    </p>
+
+    <div style="background-color:${COLORS.bgCardAlt};border:1px solid ${COLORS.border};border-radius:8px;padding:16px;margin:0 0 20px;">
+      <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:${COLORS.textMuted};text-transform:uppercase;letter-spacing:0.5px;">Or copy this link</p>
+      <p style="margin:0;font-size:12px;color:${COLORS.textMuted};word-break:break-all;font-family:ui-monospace,Menlo,Monaco,monospace;">
+        ${escapeHtml(resetUrl)}
+      </p>
+    </div>
+
+    <div style="border-top:1px solid ${COLORS.border};padding-top:16px;margin-top:8px;">
+      <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:${COLORS.text};">Didn't request this?</p>
+      <p style="margin:0;font-size:13px;color:${COLORS.textDim};line-height:1.6;">
+        Your password hasn't changed. This link expires in 1 hour and can only be used once. If you're worried about account access, reply to this email and we'll look into it.
+      </p>
+    </div>`
+
+  const html = emailLayout(subject, 'Reset your Grants By AI password — link expires in 1 hour.', bodyContent)
+
+  const text = `Reset your password
+
+Hi ${firstName},
+
+We received a request to reset the password on your Grants By AI account. Use this link to choose a new one:
+
+${resetUrl}
+
+This link expires in 1 hour and can only be used once.
+
+Didn't request this? Your password hasn't changed — you can safely ignore this email. If you're worried, reply to this email and we'll look into it.`
 
   return { subject, html, text }
 }

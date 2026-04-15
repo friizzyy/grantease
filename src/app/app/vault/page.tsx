@@ -43,6 +43,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { GlassCard } from '@/components/ui/glass-card'
+import { FieldHelp } from '@/components/ui/field-help'
 import { useToastActions } from '@/components/ui/toast-provider'
 
 interface VaultData {
@@ -195,6 +196,7 @@ function EditableField({
   type = 'text',
   placeholder,
   multiline = false,
+  help,
 }: {
   label: string
   value: string | null | undefined
@@ -203,6 +205,7 @@ function EditableField({
   type?: string
   placeholder?: string
   multiline?: boolean
+  help?: React.ReactNode
 }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value || '')
@@ -262,7 +265,10 @@ function EditableField({
     <div className="group">
       <div className="flex items-start justify-between">
         <div>
-          <label className="text-xs font-medium text-pulse-text-secondary">{label}</label>
+          <label className="text-xs font-medium text-pulse-text-secondary flex items-center gap-1.5">
+            {label}
+            {help && <FieldHelp>{help}</FieldHelp>}
+          </label>
           <p className="text-sm text-pulse-text mt-0.5">
             {value || <span className="italic text-pulse-text-tertiary">Not set</span>}
           </p>
@@ -532,21 +538,13 @@ export default function VaultPage() {
 
   // Handle document upload (opens file picker)
   const handleUploadDocument = () => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = '.pdf,.doc,.docx,.txt,.png,.jpg,.jpeg'
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0]
-      if (!file) return
-
-      // For now, show a toast explaining file storage is not set up
-      // In production, this would upload to S3/Cloudinary and then call the API
-      toast.info(
-        'Upload coming soon',
-        'File storage integration is being set up. For now, you can link to documents stored elsewhere.'
-      )
-    }
-    input.click()
+    // Document storage (S3/Cloudinary) isn't wired yet. In the meantime, the AI
+    // Import flow (handleImportDocument) extracts data from a single document
+    // without persisting the file — direct users to that path instead.
+    toast.info(
+      'File storage coming soon',
+      'For now, use "Import from document" to extract organization details from a PDF or image — your data is saved, but the file itself is not stored.'
+    )
   }
 
   // Handle AI document import
@@ -576,13 +574,22 @@ export default function VaultPage() {
           reader.readAsDataURL(file)
         })
 
+        const allowedMime = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp']
+        if (!allowedMime.includes(file.type)) {
+          throw new Error('Unsupported file type. Please upload PDF, PNG, JPEG, or WebP.')
+        }
+        const maxBytes = 7_500_000 // ~7.5MB of raw bytes -> ~10MB base64 (API cap)
+        if (file.size > maxBytes) {
+          throw new Error('File too large. Max 7.5MB per document.')
+        }
+
         const response = await fetch('/api/vault/import-document', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             fileName: file.name,
-            fileType: file.type,
-            fileData: base64,
+            mimeType: file.type,
+            content: base64,
           }),
         })
 
@@ -592,11 +599,18 @@ export default function VaultPage() {
         }
 
         const data = await response.json()
-        // Add selected=true by default
-        const fields = (data.fields || []).map((f: { name: string; value: string; confidence: number }) => ({
-          ...f,
-          selected: true,
-        }))
+        // API returns { result: { suggestedVaultUpdates: {...}, documentType, confidence }, processingTime }
+        // Convert the suggestedVaultUpdates map into the UI's field-list shape.
+        const suggestions = data?.result?.suggestedVaultUpdates ?? {}
+        const confidence = data?.result?.confidence ?? 0.8
+        const fields = Object.entries(suggestions)
+          .filter(([, value]) => value != null && value !== '')
+          .map(([name, value]) => ({
+            name,
+            value: String(value),
+            confidence,
+            selected: true,
+          }))
         setImportResult({ fields })
       } catch (err) {
         setImportResult({
@@ -818,6 +832,12 @@ export default function VaultPage() {
                 name="ein"
                 onSave={handleSaveField}
                 placeholder="XX-XXXXXXX"
+                help={
+                  <>
+                    Your <strong>Employer Identification Number</strong> — a 9-digit tax ID from the IRS.
+                    Used by nonprofits, LLCs, and corporations. Stored encrypted.
+                  </>
+                }
               />
               <EditableField
                 label="UEI Number"
@@ -825,6 +845,12 @@ export default function VaultPage() {
                 name="ueiNumber"
                 onSave={handleSaveField}
                 placeholder="SAM.gov UEI"
+                help={
+                  <>
+                    <strong>Unique Entity Identifier</strong> — a 12-character ID from SAM.gov, required for federal grants.
+                    Skip if you only apply to state or private grants.
+                  </>
+                }
               />
               <EditableField
                 label="Year Founded"

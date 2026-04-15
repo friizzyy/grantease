@@ -80,6 +80,19 @@ interface Grant {
   contact: { name?: string; email?: string; phone?: string } | null
   requirements: string[]
   status: string
+  relatedGrants?: RelatedGrant[]
+}
+
+interface RelatedGrant {
+  id: string
+  title: string
+  sponsor: string
+  amountMin: number | null
+  amountMax: number | null
+  amountText: string | null
+  deadlineDate: string | null
+  categories: string[]
+  fundingDisplay: string
 }
 
 // AI Match data from discover page
@@ -1642,6 +1655,49 @@ export default function GrantDetailPage({ params }: { params: Promise<{ id: stri
           </motion.div>
         </div>
       </div>
+
+      {/* Related Grants */}
+      {grant.relatedGrants && grant.relatedGrants.length > 0 && (
+        <motion.section
+          aria-labelledby="related-grants-heading"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="mt-8"
+        >
+          <div className="flex items-end justify-between mb-4">
+            <div>
+              <h2 id="related-grants-heading" className="text-lg font-semibold text-pulse-text">Related grants you might like</h2>
+              <p className="text-sm text-pulse-text-tertiary">Similar opportunities in the same categories</p>
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
+            {grant.relatedGrants.map((rg) => {
+              const days = rg.deadlineDate ? Math.ceil((new Date(rg.deadlineDate).getTime() - Date.now()) / 86400000) : null
+              return (
+                <Link
+                  key={rg.id}
+                  href={`/app/grants/${encodeURIComponent(rg.id)}`}
+                  className="block p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:border-pulse-accent/30 hover:bg-pulse-accent/[0.02] transition-all group"
+                >
+                  <h3 className="text-sm font-medium text-pulse-text group-hover:text-pulse-accent transition-colors line-clamp-2 mb-1">
+                    {rg.title}
+                  </h3>
+                  <p className="text-xs text-pulse-text-tertiary mb-3 line-clamp-1">{rg.sponsor}</p>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-pulse-text-secondary font-medium">{rg.fundingDisplay}</span>
+                    {days !== null && days > 0 && (
+                      <span className={`tabular-nums ${days <= 14 ? 'text-red-400' : days <= 30 ? 'text-orange-400' : 'text-pulse-text-tertiary'}`}>
+                        {days}d left
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        </motion.section>
+      )}
 
       {/* Bottom CTA */}
       {grant.url && (

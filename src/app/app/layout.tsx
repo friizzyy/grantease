@@ -1,9 +1,14 @@
+import type { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { MobileNav } from '@/components/layout/mobile-nav'
 import { PulseGridBackground } from '@/components/pulse-grid/background'
 import { PageTransition } from '@/components/motion/page-transition'
+
+export const metadata: Metadata = {
+  title: 'Dashboard',
+}
 
 export default async function AppLayout({
   children,

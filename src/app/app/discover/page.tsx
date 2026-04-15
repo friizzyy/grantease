@@ -281,6 +281,7 @@ function GrantCard({
             <button
               onClick={handleSave}
               disabled={saving}
+              aria-label={isSaved ? 'Unsave this grant' : 'Save this grant'}
               className={`p-2 rounded-lg transition-all ${
                 isSaved
                   ? 'bg-pulse-accent/10 text-pulse-accent'
@@ -772,6 +773,8 @@ function DiscoverPageContent() {
   const [userProfile, setUserProfile] = useState<UserProfileData | null>(null)
   const [showSaveSearchModal, setShowSaveSearchModal] = useState(false)
   const [sourcesInitialized, setSourcesInitialized] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
   const limit = 20
 
   // AI Search state
@@ -940,8 +943,13 @@ function DiscoverPageContent() {
     query?: string,
     overrideFilters?: { agency: string; status: string; state: string },
     overrideSources?: string[],
+    append = false,
   ) => {
-    setLoading(true)
+    if (append) {
+      setLoadingMore(true)
+    } else {
+      setLoading(true)
+    }
     setError(null)
 
     const effectiveFilters = overrideFilters || filters
@@ -955,6 +963,7 @@ function DiscoverPageContent() {
       params.set('status', effectiveFilters.status)
       params.set('sources', effectiveSources.length > 0 ? effectiveSources.join(',') : 'grants-gov')
       params.set('limit', String(limit))
+      if (append) params.set('offset', String(grants.length))
       params.set('useProfile', 'true')
 
       const response = await fetch(`/api/grants/unified-search?${params}`)
@@ -964,18 +973,26 @@ function DiscoverPageContent() {
       }
 
       const data = await response.json()
-      setGrants(data.grants || [])
+      if (append) {
+        setGrants(prev => [...prev, ...(data.grants || [])])
+      } else {
+        setGrants(data.grants || [])
+      }
       setTotal(data.totalCount || 0)
+      setHasMore(data.hasMore ?? false)
       setSourceCounts(data.sources || [])
       setAiMatchResults(null)
     } catch (err) {
       console.error('Error fetching grants:', err)
-      setError('Unable to load grants. Please try again.')
-      setGrants([])
-      setTotal(0)
-      setSourceCounts([])
+      if (!append) {
+        setError('Unable to load grants. Please try again.')
+        setGrants([])
+        setTotal(0)
+        setSourceCounts([])
+      }
     } finally {
       setLoading(false)
+      setLoadingMore(false)
     }
   }
 
@@ -1689,10 +1706,27 @@ function DiscoverPageContent() {
         </div>
       )}
 
-      {/* End of results indicator */}
-      {!isProfileMode && grants.length > 0 && grants.length >= total && (
+      {/* Load More / End of results */}
+      {!isProfileMode && !isAiSearchMode && grants.length > 0 && (
         <div className="flex items-center justify-center mt-8">
-          <span className="text-label-sm text-pulse-text-tertiary">Showing all {grants.length} results</span>
+          {hasMore ? (
+            <Button
+              variant="outline"
+              onClick={() => fetchGeneralGrants(searchQuery, undefined, undefined, true)}
+              disabled={loadingMore}
+              className="min-w-[180px]"
+            >
+              {loadingMore ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Loading…</>
+              ) : (
+                <>Load More ({grants.length} of {total})</>
+              )}
+            </Button>
+          ) : (
+            <span className="text-label-sm text-pulse-text-tertiary">
+              Showing all {grants.length} result{grants.length !== 1 ? 's' : ''}
+            </span>
+          )}
         </div>
       )}
 

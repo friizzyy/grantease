@@ -15,6 +15,7 @@ const envSchema = z.object({
   // ── NextAuth ──
   NEXTAUTH_URL: z.string().url().default('http://localhost:3000'),
   NEXTAUTH_SECRET: z.string().min(1, 'NEXTAUTH_SECRET is required'),
+  FIELD_ENCRYPTION_KEY: z.string().regex(/^[0-9a-fA-F]{64}$/, 'FIELD_ENCRYPTION_KEY must be 64 hex chars (32 bytes). Generate with: openssl rand -hex 32').optional(),
 
   // ── OAuth Providers (optional — only enabled if both ID and SECRET are set) ──
   GOOGLE_CLIENT_ID: z.string().optional(),

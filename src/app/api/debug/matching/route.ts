@@ -89,12 +89,12 @@ export async function GET(request: NextRequest) {
     isAdmin = true
   } else {
     const session = await getServerSession(authOptions)
-    if (session?.user?.id) {
-      // Check if user is admin (you may want to add this to your User model)
-      // For now, allow authenticated users in development
-      if (process.env.NODE_ENV === 'development') {
-        isAdmin = true
-      }
+    // Only users with explicit admin role may access debug tracing (never dev-fallback in prod)
+    if (session?.user?.role === 'admin') {
+      isAdmin = true
+    } else if (process.env.NODE_ENV === 'development' && session?.user?.id) {
+      // Dev-only fallback: any authenticated user in development
+      isAdmin = true
     }
   }
 

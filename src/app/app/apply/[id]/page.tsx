@@ -10,7 +10,7 @@
  * - Auto-save
  */
 
-import { useState, useEffect, useCallback, use } from 'react'
+import { useState, useEffect, useCallback, useRef, use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -39,6 +39,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { GlassCard } from '@/components/ui/glass-card'
+import { FieldHelp } from '@/components/ui/field-help'
 import { useToastActions } from '@/components/ui/toast-provider'
 
 // Application steps
@@ -163,9 +164,25 @@ function ProgressSteps({
   completedSteps: Set<number>
   onStepClick: (step: number) => void
 }) {
+  const currentStepInfo = STEPS[currentStep]
   return (
     <div className="mb-8">
-      <div className="flex items-center justify-between relative">
+      {/* Mobile-first: compact "Step X of Y — Label" heading + progress bar */}
+      <div className="md:hidden mb-3">
+        <div className="flex items-center justify-between text-xs mb-2">
+          <span className="text-pulse-text-tertiary">Step {currentStep + 1} of {STEPS.length}</span>
+          <span className="text-pulse-accent font-medium">{currentStepInfo?.label}</span>
+        </div>
+        <div className="h-1.5 rounded-full bg-pulse-border overflow-hidden">
+          <div
+            className="h-full bg-pulse-accent transition-all duration-500"
+            style={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Tablet/desktop: full stepper with icons */}
+      <div className="hidden md:flex items-center justify-between relative">
         {/* Progress line */}
         <div className="absolute left-0 right-0 top-5 h-0.5 bg-pulse-border" />
         <div
@@ -183,9 +200,11 @@ function ProgressSteps({
               key={step.id}
               onClick={() => onStepClick(index)}
               className="relative z-10 flex flex-col items-center group"
+              aria-label={`Go to step ${index + 1}: ${step.label}`}
+              aria-current={isActive ? 'step' : undefined}
             >
               <div className={`
-                w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all
+                w-10 h-10 rounded-full flex items-center justify-center transition-all
                 ${isActive
                   ? 'bg-pulse-accent text-pulse-bg ring-4 ring-pulse-accent/20'
                   : isCompleted
@@ -200,7 +219,7 @@ function ProgressSteps({
                 )}
               </div>
               <span className={`
-                mt-2 text-xs font-medium hidden md:block
+                mt-2 text-xs font-medium
                 ${isActive ? 'text-pulse-accent' : 'text-pulse-text-tertiary'}
               `}>
                 {step.label}
@@ -365,6 +384,7 @@ function FormInput({
   placeholder,
   required,
   fromVault,
+  help,
 }: {
   label: string
   name: string
@@ -374,12 +394,14 @@ function FormInput({
   placeholder?: string
   required?: boolean
   fromVault?: boolean
+  help?: React.ReactNode
 }) {
   return (
     <div>
       <label className="flex items-center gap-2 text-sm font-medium text-pulse-text mb-2">
         {label}
         {required && <span className="text-pulse-error">*</span>}
+        {help && <FieldHelp>{help}</FieldHelp>}
         {fromVault && (
           <Badge variant="outline" className="text-[10px] px-1.5 py-0">
             From Vault
@@ -550,6 +572,12 @@ function OrganizationStep({
           onChange={onChange}
           placeholder="XX-XXXXXXX"
           fromVault={!!vaultData?.ein && formData.ein === vaultData.ein}
+          help={
+            <>
+              Your <strong>Employer Identification Number</strong> — a 9-digit tax ID assigned by the IRS.
+              Nonprofits, LLCs, and corporations have one. Individuals may not need this.
+            </>
+          }
         />
         <FormInput
           label="UEI Number"
@@ -558,6 +586,12 @@ function OrganizationStep({
           onChange={onChange}
           placeholder="12 character UEI"
           fromVault={!!vaultData?.ueiNumber && formData.ueiNumber === vaultData.ueiNumber}
+          help={
+            <>
+              <strong>Unique Entity Identifier</strong> — a 12-character ID from SAM.gov, required for most federal grants.
+              If you don&apos;t have one, you can skip this for private or state grants.
+            </>
+          }
         />
         <div className="md:col-span-2">
           <FormInput
@@ -1045,6 +1079,12 @@ export default function ApplyPage({ params }: { params: Promise<{ id: string }> 
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [applicationId, setApplicationId] = useState<string | null>(null)
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hasHydrated = useRef(false)
+  const applicationIdRef = useRef<string | null>(null)
+  useEffect(() => { applicationIdRef.current = applicationId }, [applicationId])
 
   // Load grant and vault data
   useEffect(() => {
@@ -1114,43 +1154,93 @@ export default function ApplyPage({ params }: { params: Promise<{ id: string }> 
     setFormData(prev => ({ ...prev, [name]: value }))
   }, [])
 
-  // Save application
-  const handleSave = async () => {
-    setIsSaving(true)
-    try {
-      if (applicationId) {
-        // Update existing application
-        await fetch(`/api/applications/${applicationId}`, {
+  // Core save function — silent=true suppresses toasts (for auto-save)
+  const persist = useCallback(async (data: ApplicationFormData, silent: boolean) => {
+    const currentAppId = applicationIdRef.current
+    if (currentAppId) {
+      const res = await fetch(`/api/applications/${currentAppId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_form', formData: data }),
+      })
+      if (!res.ok) throw new Error('Failed to save')
+    } else {
+      const response = await fetch('/api/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ grantId: id }),
+      })
+      if (!response.ok) throw new Error('Failed to create application')
+      const json = await response.json()
+      if (json.application) {
+        setApplicationId(json.application.id)
+        applicationIdRef.current = json.application.id
+        const patchRes = await fetch(`/api/applications/${json.application.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'update_form', formData }),
+          body: JSON.stringify({ action: 'update_form', formData: data }),
         })
-      } else {
-        // Create new application
-        const response = await fetch('/api/applications', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ grantId: id }),
-        })
-        const data = await response.json()
-        if (data.application) {
-          setApplicationId(data.application.id)
-          // Update with form data
-          await fetch(`/api/applications/${data.application.id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'update_form', formData }),
-          })
-        }
+        if (!patchRes.ok) throw new Error('Failed to save')
       }
-      toast.success('Saved', 'Your progress has been saved')
+    }
+    setLastSavedAt(new Date())
+    if (!silent) toast.success('Saved', 'Your progress has been saved')
+  }, [id, toast])
+
+  // Manual save (button)
+  const handleSave = useCallback(async () => {
+    setIsSaving(true)
+    try {
+      await persist(formData, false)
     } catch (error) {
       console.error('Save error:', error)
       toast.error('Failed to save', 'Please try again')
     } finally {
       setIsSaving(false)
     }
-  }
+  }, [formData, persist, toast])
+
+  // Auto-save: debounced 2s after last change, skipped during initial hydration
+  useEffect(() => {
+    if (isLoading) return
+    if (!hasHydrated.current) {
+      hasHydrated.current = true
+      return
+    }
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
+    setAutoSaveStatus('idle')
+    autoSaveTimer.current = setTimeout(async () => {
+      setAutoSaveStatus('saving')
+      try {
+        await persist(formData, true)
+        setAutoSaveStatus('saved')
+      } catch (error) {
+        console.error('Auto-save failed:', error)
+        setAutoSaveStatus('error')
+      }
+    }, 2000)
+    return () => {
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
+    }
+  }, [formData, isLoading, persist])
+
+  // Flush on unload
+  useEffect(() => {
+    const handler = () => {
+      if (autoSaveTimer.current) {
+        clearTimeout(autoSaveTimer.current)
+        // Best-effort synchronous save using sendBeacon
+        const currentAppId = applicationIdRef.current
+        if (currentAppId && typeof navigator !== 'undefined' && navigator.sendBeacon) {
+          const body = JSON.stringify({ action: 'update_form', formData })
+          const blob = new Blob([body], { type: 'application/json' })
+          navigator.sendBeacon(`/api/applications/${currentAppId}`, blob)
+        }
+      }
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [formData])
 
   // Navigate steps
   const goNext = () => {
@@ -1217,19 +1307,27 @@ export default function ApplyPage({ params }: { params: Promise<{ id: string }> 
               </p>
             )}
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSave}
-            disabled={isSaving}
-          >
-            {isSaving ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4 mr-2" />
-            )}
-            Save Progress
-          </Button>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-pulse-text-tertiary hidden sm:inline-flex items-center gap-1.5" aria-live="polite">
+              {autoSaveStatus === 'saving' && (<><Loader2 className="w-3 h-3 animate-spin" />Saving…</>)}
+              {autoSaveStatus === 'saved' && lastSavedAt && (<><CheckCircle2 className="w-3 h-3 text-pulse-accent" />Saved {lastSavedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</>)}
+              {autoSaveStatus === 'error' && (<><AlertCircle className="w-3 h-3 text-pulse-error" />Auto-save failed</>)}
+              {autoSaveStatus === 'idle' && lastSavedAt && (<>Last saved {lastSavedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</>)}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSave}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Save Progress
+            </Button>
+          </div>
         </div>
       </motion.div>
 
@@ -1296,18 +1394,39 @@ export default function ApplyPage({ params }: { params: Promise<{ id: string }> 
               <ArrowRight className="w-4 h-4 ml-2 shrink-0" />
             </Button>
           ) : (
-            <Button
-              className="bg-gradient-to-r from-pulse-accent to-pulse-accent/80 w-full sm:w-auto"
-              onClick={() => {
-                handleSave()
-                if (grant?.url) {
-                  window.open(grant.url, '_blank')
-                }
-              }}
-            >
-              <Check className="w-4 h-4 mr-2" />
-              Complete & Apply
-            </Button>
+            (() => {
+              const missingRequired: string[] = []
+              if (!formData.contactName) missingRequired.push('Contact name')
+              if (!formData.contactEmail) missingRequired.push('Contact email')
+              if (!formData.organizationName) missingRequired.push('Organization name')
+              if (!formData.projectTitle) missingRequired.push('Project title')
+              if (!formData.projectSummary) missingRequired.push('Project summary')
+              if (!formData.amountRequested) missingRequired.push('Amount requested')
+              const canSubmit = missingRequired.length === 0
+              return (
+                <div className="flex flex-col sm:items-end gap-2 w-full sm:w-auto">
+                  {!canSubmit && (
+                    <div className="text-xs text-pulse-error flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>Missing: {missingRequired.slice(0, 3).join(', ')}{missingRequired.length > 3 ? `, +${missingRequired.length - 3} more` : ''}</span>
+                    </div>
+                  )}
+                  <Button
+                    className="bg-gradient-to-r from-pulse-accent to-pulse-accent/80 w-full sm:w-auto"
+                    disabled={!canSubmit}
+                    onClick={() => {
+                      handleSave()
+                      if (grant?.url) {
+                        window.open(grant.url, '_blank')
+                      }
+                    }}
+                  >
+                    <Check className="w-4 h-4 mr-2" />
+                    Complete & Apply
+                  </Button>
+                </div>
+              )
+            })()
           )}
         </div>
       </div>

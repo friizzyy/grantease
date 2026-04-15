@@ -12,7 +12,7 @@
  * - Real API integration
  */
 
-import { useState, useEffect, useCallback, use } from 'react'
+import { useState, useEffect, useCallback, useRef, use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -531,6 +531,43 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
     fetchWorkspace()
   }, [fetchWorkspace])
 
+  // ── Auto-save: debounce 3s after any change, skip initial hydration ──
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hydrated = useRef(false)
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+
+  useEffect(() => {
+    if (isLoading || !workspace) return
+    if (!hydrated.current) { hydrated.current = true; return }
+    if (!hasUnsavedChanges) return
+
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
+    setAutoSaveStatus('idle')
+
+    autoSaveTimer.current = setTimeout(async () => {
+      setAutoSaveStatus('saving')
+      try {
+        const res = await fetch(`/api/user/workspaces/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: workspace.status,
+            checklist: workspace.checklist,
+            notes,
+          }),
+        })
+        if (!res.ok) throw new Error('Auto-save failed')
+        setHasUnsavedChanges(false)
+        setAutoSaveStatus('saved')
+      } catch {
+        setAutoSaveStatus('error')
+      }
+    }, 3000)
+
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notes, workspace?.status, workspace?.checklist, hasUnsavedChanges, isLoading])
+
   if (isLoading) {
     return <WorkspaceSkeleton />
   }
@@ -836,19 +873,26 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: 
                     {workspace.grant.title}
                   </Link>
                 </div>
-                <Button onClick={handleSave} disabled={isSaving || !hasUnsavedChanges}>
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Changes
-                    </>
-                  )}
-                </Button>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-pulse-text-tertiary hidden sm:inline-flex items-center gap-1.5" aria-live="polite">
+                    {autoSaveStatus === 'saving' && (<><Loader2 className="w-3 h-3 animate-spin" />Auto-saving…</>)}
+                    {autoSaveStatus === 'saved' && (<><CheckCircle className="w-3 h-3 text-pulse-accent" />Saved</>)}
+                    {autoSaveStatus === 'error' && (<><AlertCircle className="w-3 h-3 text-pulse-error" />Auto-save failed</>)}
+                  </span>
+                  <Button onClick={handleSave} disabled={isSaving || !hasUnsavedChanges}>
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
 
               {/* Meta Row */}

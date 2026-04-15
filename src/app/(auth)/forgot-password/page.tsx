@@ -67,17 +67,35 @@ export default function ForgotPasswordPage() {
             >
               <CheckCircle2 className="w-8 h-8 text-pulse-accent" />
             </motion.div>
-            <CardTitle className="text-display-section text-pulse-text">Check your email</CardTitle>
+            <CardTitle className="text-display-section text-pulse-text">Request received</CardTitle>
             <CardDescription className="text-body-sm text-pulse-text-secondary mt-2">
-              We&apos;ve sent password reset instructions to{' '}
-              <span className="text-pulse-text font-medium">{email}</span>
+              {process.env.NEXT_PUBLIC_EMAIL_ENABLED === 'true' ? (
+                <>
+                  We&apos;ve sent password reset instructions to{' '}
+                  <span className="text-pulse-text font-medium">{email}</span>
+                </>
+              ) : (
+                <>
+                  If an account exists for <span className="text-pulse-text font-medium">{email}</span>, a member of our team will help you reset it.
+                </>
+              )}
             </CardDescription>
           </CardHeader>
 
           <CardContent className="relative z-10 space-y-4">
-            <p className="text-body-sm text-pulse-text-secondary text-center">
-              If you don&apos;t see the email, check your spam folder. The link will expire in 1 hour.
-            </p>
+            {process.env.NEXT_PUBLIC_EMAIL_ENABLED === 'true' ? (
+              <p className="text-body-sm text-pulse-text-secondary text-center">
+                If you don&apos;t see the email, check your spam folder. The link will expire in 1 hour.
+              </p>
+            ) : (
+              <div className="rounded-lg border border-pulse-border/50 bg-pulse-surface/40 p-3 text-body-sm text-pulse-text-secondary text-center">
+                Our automated reset emails are temporarily unavailable. Please contact{' '}
+                <a href="mailto:support@grantsby.ai" className="text-pulse-accent hover:underline">
+                  support@grantsby.ai
+                </a>
+                {' '}and we&apos;ll reset your password manually within one business day.
+              </div>
+            )}
 
             <div className="space-y-3">
               <Button

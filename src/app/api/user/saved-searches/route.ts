@@ -14,6 +14,7 @@ const createSearchSchema = z.object({
 
 const updateSearchSchema = z.object({
   id: z.string().min(1, 'Search ID is required').max(200),
+  name: z.string().min(1).max(200).optional(),
   alertEnabled: z.boolean().optional(),
   alertFreq: z.enum(['daily', 'weekly']).optional(),
 })
@@ -149,7 +150,7 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const { id, alertEnabled, alertFreq } = validated.data
+    const { id, name, alertEnabled, alertFreq } = validated.data
 
     // Verify ownership
     const existing = await prisma.savedSearch.findFirst({
@@ -166,6 +167,7 @@ export async function PATCH(request: NextRequest) {
     const updated = await prisma.savedSearch.update({
       where: { id },
       data: {
+        name: name ?? existing.name,
         alertEnabled: alertEnabled ?? existing.alertEnabled,
         alertFreq: alertFreq || existing.alertFreq,
       },

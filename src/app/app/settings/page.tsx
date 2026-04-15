@@ -274,7 +274,38 @@ function SettingsPageContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deletePassword, setDeletePassword] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
   const { success, error: showError } = useToastActions()
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm !== 'DELETE MY ACCOUNT') {
+      showError('Confirmation mismatch', 'Type exactly: DELETE MY ACCOUNT')
+      return
+    }
+    setIsDeleting(true)
+    try {
+      const res = await fetch('/api/user/account', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          password: deletePassword || undefined,
+          confirmation: 'DELETE MY ACCOUNT',
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to delete account')
+      }
+      success('Account deleted', 'Signing you out…')
+      setTimeout(() => signOut({ callbackUrl: '/' }), 500)
+    } catch (err) {
+      showError('Delete failed', err instanceof Error ? err.message : 'Please try again')
+      setIsDeleting(false)
+    }
+  }
 
   // Refs for scrolling to specific fields
   const fieldRefs = useRef<Record<string, HTMLDivElement | null>>({})
@@ -1411,27 +1442,37 @@ function SettingsPageContent() {
                               <p className="text-sm text-pulse-text-tertiary">Add an extra layer of security</p>
                             </div>
                           </div>
-                          <Button variant="outline" size="sm">
-                            Enable
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled
+                            title="Two-factor authentication is coming soon"
+                          >
+                            Coming soon
                           </Button>
                         </div>
                       </div>
                     </GlassCard>
 
                     <GlassCard className="p-6 border-pulse-error/20">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-4 flex-wrap">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg bg-pulse-error/10 border border-pulse-error/20 flex items-center justify-center">
                             <AlertCircle className="w-4 h-4 text-pulse-error" />
                           </div>
                           <div>
                             <h3 className="text-sm font-medium text-pulse-text">Delete Account</h3>
-                            <p className="text-xs text-pulse-text-tertiary">Permanently remove your account and all data</p>
+                            <p className="text-xs text-pulse-text-tertiary">Permanently remove your account and all data. This cannot be undone.</p>
                           </div>
                         </div>
-                        <Button variant="ghost" size="sm" className="text-pulse-error hover:bg-pulse-error/10 text-xs">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowDeleteModal(true)}
+                          className="text-pulse-error hover:bg-pulse-error/10 text-xs"
+                        >
                           <Trash2 className="w-3 h-3 mr-1.5" />
-                          Delete
+                          Delete my account
                         </Button>
                       </div>
                     </GlassCard>
@@ -1476,9 +1517,13 @@ function SettingsPageContent() {
                         </div>
                       </div>
 
-                      <Button className="w-full">
+                      <Button
+                        className="w-full"
+                        disabled
+                        title="Paid plans are coming soon"
+                      >
                         <Zap className="w-4 h-4 mr-2" />
-                        Upgrade to Pro - $29/month
+                        Pro Plan — Coming Soon
                       </Button>
                     </GlassCard>
 
@@ -1524,6 +1569,100 @@ function SettingsPageContent() {
           </div>
         )}
       </div>
+
+      {/* Delete Account Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Delete account confirmation"
+            onClick={() => !isDeleting && setShowDeleteModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md"
+            >
+              <GlassCard className="p-6 border-pulse-error/30">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-pulse-error/10 border border-pulse-error/30 flex items-center justify-center shrink-0">
+                    <AlertCircle className="w-5 h-5 text-pulse-error" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-pulse-text">Delete your account?</h2>
+                    <p className="text-sm text-pulse-text-secondary mt-1">
+                      This permanently removes your profile, saved grants, searches, workspaces, Vault data, and applications. This cannot be undone.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4 mb-5">
+                  <div>
+                    <label className="block text-xs font-medium text-pulse-text-secondary mb-1.5">
+                      Confirm your password
+                    </label>
+                    <input
+                      type="password"
+                      value={deletePassword}
+                      onChange={(e) => setDeletePassword(e.target.value)}
+                      placeholder="Password"
+                      autoComplete="current-password"
+                      className="w-full px-3 py-2 rounded-lg bg-pulse-surface border border-pulse-border text-pulse-text placeholder:text-pulse-text-tertiary focus:outline-none focus:border-pulse-error"
+                    />
+                    <p className="text-xs text-pulse-text-tertiary mt-1">Leave blank if you signed up with Google or GitHub.</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-pulse-text-secondary mb-1.5">
+                      Type <span className="font-mono text-pulse-error">DELETE MY ACCOUNT</span> to confirm
+                    </label>
+                    <input
+                      type="text"
+                      value={deleteConfirm}
+                      onChange={(e) => setDeleteConfirm(e.target.value)}
+                      placeholder="DELETE MY ACCOUNT"
+                      autoComplete="off"
+                      className="w-full px-3 py-2 rounded-lg bg-pulse-surface border border-pulse-border text-pulse-text placeholder:text-pulse-text-tertiary focus:outline-none focus:border-pulse-error font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 justify-end">
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setShowDeleteModal(false)
+                      setDeleteConfirm('')
+                      setDeletePassword('')
+                    }}
+                    disabled={isDeleting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="default"
+                    onClick={handleDeleteAccount}
+                    disabled={isDeleting || deleteConfirm !== 'DELETE MY ACCOUNT'}
+                    className="bg-pulse-error hover:bg-pulse-error/90 text-white"
+                  >
+                    {isDeleting ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Deleting…</>
+                    ) : (
+                      <><Trash2 className="w-4 h-4 mr-2" />Delete permanently</>
+                    )}
+                  </Button>
+                </div>
+              </GlassCard>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

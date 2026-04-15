@@ -180,6 +180,7 @@ export async function GET(request: NextRequest) {
     const status = (searchParams.get('status') || 'open') as GrantSearchParams['status']
     const category = searchParams.get('category') || undefined
     const limit = Math.min(parseInt(searchParams.get('limit') || '25'), 100)
+    const offset = Math.max(0, parseInt(searchParams.get('offset') || '0'))
     const useProfileParam = searchParams.get('useProfile')
 
     // Get user profile if logged in
@@ -275,12 +276,14 @@ export async function GET(request: NextRequest) {
         })
     }
 
-    // Apply global limit to combined results
-    const paginatedGrants = processedGrants.slice(0, limit)
+    // Apply offset + limit for pagination
+    const paginatedGrants = processedGrants.slice(offset, offset + limit)
+    const hasMore = offset + limit < processedGrants.length
 
     return NextResponse.json({
       grants: paginatedGrants,
       totalCount: processedGrants.length,
+      hasMore,
       sources: [{
         name: 'gemini-ai',
         label: 'Gemini AI Discovery',

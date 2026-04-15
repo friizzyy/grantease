@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
+import { safeJsonParse } from '@/lib/api-utils'
+import { calculateScore, type UserProfileForScoring, type GrantForScoring } from '@/lib/scoring/engine'
+import type { EntityType, IndustryTag, BudgetRange, PurposeTag } from '@/lib/constants/taxonomy'
 import crypto from 'crypto'
 import { z } from 'zod'
 
@@ -48,42 +51,108 @@ export async function GET() {
     }
     const userId = session.user.id
 
-    const savedGrants = await prisma.savedGrant.findMany({
-      where: { userId },
-      include: {
-        grant: {
-          select: {
-            id: true,
-            sourceId: true,
-            sourceName: true,
-            title: true,
-            sponsor: true,
-            summary: true,
-            categories: true,
-            eligibility: true,
-            locations: true,
-            amountMin: true,
-            amountMax: true,
-            amountText: true,
-            deadlineDate: true,
-            deadlineType: true,
-            url: true,
-            status: true,
+    const [savedGrants, profile] = await Promise.all([
+      prisma.savedGrant.findMany({
+        where: { userId },
+        include: {
+          grant: {
+            select: {
+              id: true,
+              sourceId: true,
+              sourceName: true,
+              title: true,
+              sponsor: true,
+              summary: true,
+              aiSummary: true,
+              description: true,
+              categories: true,
+              eligibility: true,
+              locations: true,
+              amountMin: true,
+              amountMax: true,
+              amountText: true,
+              deadlineDate: true,
+              deadlineType: true,
+              url: true,
+              status: true,
+              qualityScore: true,
+              purposeTags: true,
+              fundingType: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    })
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.userProfile.findUnique({ where: { userId } }),
+    ])
 
-    // Parse JSON fields and format response
-    const grants = savedGrants.map(sg => ({
-      savedAt: sg.createdAt,
-      notes: sg.notes,
-      ...sg.grant,
-      categories: JSON.parse(sg.grant.categories || '[]'),
-      eligibility: JSON.parse(sg.grant.eligibility || '[]'),
-      locations: JSON.parse(sg.grant.locations || '[]'),
-    }))
+    // Build a scoring profile if onboarding data exists
+    const scoringProfile: UserProfileForScoring | null = profile ? (() => {
+      const attrs = safeJsonParse<Record<string, unknown>>(profile.industryAttributes, {})
+      const prefs = safeJsonParse<Record<string, unknown>>(profile.grantPreferences, {})
+      return {
+        entityType: (profile.entityType as EntityType) || null,
+        state: profile.state,
+        industryTags: safeJsonParse<IndustryTag[]>(profile.industryTags, []),
+        certifications: Array.isArray(attrs.certifications) ? attrs.certifications as string[] : [],
+        sizeBand: profile.sizeBand,
+        annualBudget: (profile.annualBudget as BudgetRange) || null,
+        goals: Array.isArray(attrs.goals) ? attrs.goals as string[] : [],
+        grantPreferences: {
+          preferredSize: (prefs.preferredSize as string) || null,
+          timeline: (prefs.timeline as 'immediate' | 'quarter' | 'year' | 'flexible') || null,
+          complexity: (prefs.complexity as 'simple' | 'moderate' | 'complex') || null,
+        },
+      }
+    })() : null
+
+    // Parse JSON fields, compute match score for each grant
+    const grants = savedGrants.map(sg => {
+      const categories = safeJsonParse<string[]>(sg.grant.categories || '[]', [])
+      const eligibilityRaw = safeJsonParse<string[] | { tags?: string[]; rawText?: string }>(sg.grant.eligibility || '[]', [])
+      const eligibilityTags = Array.isArray(eligibilityRaw) ? eligibilityRaw : (eligibilityRaw.tags || [])
+      const locationsRaw = safeJsonParse<Array<string | { type: string; value?: string }>>(sg.grant.locations || '[]', [])
+      const locations = locationsRaw.map(l => typeof l === 'string' ? { type: 'state', value: l } : l)
+      const purposeTags = safeJsonParse<PurposeTag[]>(sg.grant.purposeTags || '[]', [])
+
+      let matchScore: number | null = null
+      if (scoringProfile) {
+        const forScoring: GrantForScoring = {
+          id: sg.grant.id,
+          title: sg.grant.title,
+          sponsor: sg.grant.sponsor,
+          summary: sg.grant.summary,
+          description: sg.grant.description,
+          aiSummary: sg.grant.aiSummary,
+          categories,
+          eligibility: { tags: eligibilityTags },
+          locations,
+          amountMin: sg.grant.amountMin,
+          amountMax: sg.grant.amountMax,
+          amountText: sg.grant.amountText,
+          fundingType: sg.grant.fundingType,
+          purposeTags,
+          deadlineDate: sg.grant.deadlineDate,
+          qualityScore: sg.grant.qualityScore ?? undefined,
+          status: sg.grant.status,
+        }
+        try {
+          matchScore = calculateScore(scoringProfile, forScoring).totalScore
+        } catch {
+          matchScore = null
+        }
+      }
+
+      return {
+        savedAt: sg.createdAt,
+        notes: sg.notes,
+        ...sg.grant,
+        categories,
+        eligibility: eligibilityTags,
+        locations: locations.map(l => l.value || l.type),
+        matchScore,
+      }
+    })
 
     return NextResponse.json({ grants })
   } catch (error) {

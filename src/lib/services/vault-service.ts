@@ -7,6 +7,7 @@
 
 import { prisma } from '@/lib/db'
 import { safeJsonParse } from '@/lib/api-utils'
+import { encryptFields, decryptFields, VAULT_SENSITIVE_FIELDS } from '@/lib/crypto/field-encryption'
 import type { UserVault as PrismaUserVault } from '@prisma/client'
 import type {
   ParsedUserVault,
@@ -108,9 +109,12 @@ export async function updateVault(
     updateData.populationsServed = JSON.stringify(data.populationsServed)
   }
 
+  // Encrypt sensitive fields before storing
+  const encrypted = encryptFields(updateData, VAULT_SENSITIVE_FIELDS)
+
   const updated = await prisma.userVault.update({
     where: { id: vault.id },
-    data: updateData,
+    data: encrypted,
   })
 
   return parseVault(updated)
@@ -411,8 +415,10 @@ export async function calculateVaultCompleteness(userId: string): Promise<VaultC
 // ============= HELPER FUNCTIONS =============
 
 function parseVault(vault: PrismaUserVault): ParsedUserVault {
+  // Decrypt sensitive fields; falls back to plaintext for legacy rows
+  const decrypted = decryptFields(vault as unknown as Record<string, unknown>, VAULT_SENSITIVE_FIELDS)
   return {
-    ...vault,
+    ...(decrypted as unknown as PrismaUserVault),
     certifications: safeJsonParse<CertificationType[]>(vault.certifications || '[]', []),
     keyPersonnel: safeJsonParse<KeyPerson[]>(vault.keyPersonnel || '[]', []),
     boardMembers: safeJsonParse<BoardMember[]>(vault.boardMembers || '[]', []),
@@ -517,7 +523,7 @@ export async function initializeVaultFromProfile(userId: string): Promise<Parsed
   if (Object.keys(updateData).length > 0) {
     const updated = await prisma.userVault.update({
       where: { id: vault.id },
-      data: updateData,
+      data: encryptFields(updateData, VAULT_SENSITIVE_FIELDS),
     })
     return parseVault(updated)
   }

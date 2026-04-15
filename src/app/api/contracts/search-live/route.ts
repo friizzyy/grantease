@@ -1,23 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { rateLimiters, rateLimitExceededResponse } from '@/lib/rate-limit'
 import { searchGrantsByKeyword } from '@/lib/services/gemini-grant-discovery'
+import { z } from 'zod'
+
+const querySchema = z.object({
+  q: z.string().max(500).default('government contracts'),
+  state: z.string().max(20).optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(25),
+})
 
 /**
  * GET /api/contracts/search-live
  *
  * Search for contract opportunities using Gemini AI.
- *
- * Query params:
- * - q: Search keyword
- * - state: Filter by state
- * - limit: Max results (default: 25, max: 50)
+ * Authenticated + rate-limited — this calls an expensive AI backend.
  */
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams
+    // Require an authenticated user: this endpoint burns AI budget.
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    const keyword = searchParams.get('q') || 'government contracts'
-    const state = searchParams.get('state') || undefined
-    const limit = Math.min(parseInt(searchParams.get('limit') || '25'), 50)
+    // Per-user AI rate limit (20/min)
+    const rateLimit = rateLimiters.ai(session.user.id)
+    if (!rateLimit.allowed) {
+      return rateLimitExceededResponse(rateLimit.resetAt)
+    }
+
+    const parsed = querySchema.safeParse(Object.fromEntries(request.nextUrl.searchParams))
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid query', details: parsed.error.flatten() },
+        { status: 400 }
+      )
+    }
+    const { q: keyword, state, limit } = parsed.data
 
     // Use Gemini to search for contracts
     const { grants } = await searchGrantsByKeyword(
@@ -53,13 +74,9 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Contract search error:', error)
-
-    const message = error instanceof Error ? error.message : 'Unknown error'
-
     return NextResponse.json(
       {
         error: 'Failed to search contracts',
-        message,
         contracts: [],
         total: 0,
       },

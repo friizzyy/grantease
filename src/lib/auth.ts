@@ -21,8 +21,11 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Please enter your email and password')
         }
 
+        // Normalize email to match how we store it at registration time.
+        const email = credentials.email.toLowerCase().trim()
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email },
         })
 
         if (!user || !user.passwordHash) {

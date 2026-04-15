@@ -279,8 +279,73 @@ export async function GET(
       }))
     }
 
+    // ========== RELATED GRANTS ==========
+    // Find up to 4 open grants sharing at least one category (cheap shallow query,
+    // excludes the current grant and limits to 12 candidates for ranking).
+    let relatedGrants: Array<{
+      id: string
+      title: string
+      sponsor: string
+      amountMin: number | null
+      amountMax: number | null
+      amountText: string | null
+      deadlineDate: Date | null
+      categories: string[]
+      fundingDisplay: string
+    }> = []
+    try {
+      if (categories.length > 0) {
+        const candidates = await prisma.grant.findMany({
+          where: {
+            id: { not: grant.id },
+            status: 'open',
+            OR: categories.slice(0, 3).map(cat => ({
+              categories: { contains: cat },
+            })),
+          },
+          select: {
+            id: true,
+            title: true,
+            sponsor: true,
+            amountMin: true,
+            amountMax: true,
+            amountText: true,
+            deadlineDate: true,
+            categories: true,
+          },
+          take: 12,
+          orderBy: { deadlineDate: 'asc' },
+        })
+        // Rank by overlap of categories with current grant, then by deadline
+        const currentCatSet = new Set(categories.map(c => c.toLowerCase()))
+        relatedGrants = candidates
+          .map(c => {
+            const cats = safeJsonParse<string[]>(c.categories, [])
+            const overlap = cats.filter(x => currentCatSet.has(x.toLowerCase())).length
+            return { ...c, cats, overlap }
+          })
+          .sort((a, b) => b.overlap - a.overlap)
+          .slice(0, 4)
+          .map(c => ({
+            id: c.id,
+            title: c.title,
+            sponsor: c.sponsor,
+            amountMin: c.amountMin,
+            amountMax: c.amountMax,
+            amountText: c.amountText,
+            deadlineDate: c.deadlineDate,
+            categories: c.cats,
+            fundingDisplay: formatFundingDisplay(c.amountMin, c.amountMax, c.amountText),
+          }))
+      }
+    } catch (err) {
+      // Related grants are a nice-to-have — never let this break the detail response
+      console.warn('[Grant Detail] Related grants query failed:', err)
+    }
+
     return NextResponse.json({
       ...baseResponse,
+      relatedGrants,
 
       // Eligibility assessment
       appliesToUser,
