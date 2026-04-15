@@ -31,6 +31,8 @@ interface ProfileData {
   industryTags?: string[]
   sizeBand?: string | null
   annualBudget?: string | null
+  goals?: string[]
+  certifications?: string[]
   confidenceScore?: number
   onboardingCompleted?: boolean
 }
@@ -96,6 +98,17 @@ function getMissingFields(profile: ProfileData | null): MissingField[] {
       impact: 'high',
       description: 'Helps match grants to your mission',
       settingsField: 'industryTags',
+    })
+  }
+
+  if (!profile.goals || profile.goals.length === 0) {
+    missing.push({
+      key: 'goals',
+      label: 'Funding Goals',
+      icon: <Target className="w-4 h-4" />,
+      impact: 'high',
+      description: 'Funding goals improve match accuracy by up to 15%',
+      settingsField: 'goals',
     })
   }
 

@@ -3,30 +3,33 @@
 /**
  * ONBOARDING STEP 4
  * -----------------
- * "A few more details"
- * Dynamic questions based on selected industries
+ * "What do you need funding for?"
+ * Primary: Funding goals (maps to GOALS_TO_PURPOSE for scoring — +15 points)
+ * Secondary: Industry-specific questions (max 2) if relevant
  */
 
 import { useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, Check, ChevronRight } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Target, Check } from 'lucide-react'
 import { useOnboarding } from '@/lib/contexts/OnboardingContext'
 import { OnboardingLayout, OptionChip, StepNavigation } from '@/components/onboarding'
-import { INDUSTRY_QUESTIONS } from '@/lib/types/onboarding'
+import { FUNDING_GOALS, INDUSTRY_QUESTIONS } from '@/lib/types/onboarding'
 
 export default function OnboardingStep4() {
   const router = useRouter()
   const {
     state,
+    toggleGoal,
     setIndustryAttribute,
+    canProceed,
   } = useOnboarding()
 
-  // Get relevant questions based on selected industries
+  // Get relevant industry questions (max 2, down from 3)
   const relevantQuestions = useMemo(() => {
     return INDUSTRY_QUESTIONS.filter(q =>
       q.appliesTo.some(industry => state.industryTags.includes(industry))
-    ).slice(0, 3) // Max 3 questions
+    ).slice(0, 2)
   }, [state.industryTags])
 
   const handleToggleOption = (questionId: string, optionValue: string, isMulti: boolean) => {
@@ -71,71 +74,6 @@ export default function OnboardingStep4() {
     router.push('/app')
   }
 
-  // If no relevant questions, show empty state
-  if (relevantQuestions.length === 0) {
-    return (
-      <OnboardingLayout
-        currentStep={4}
-        showSkipAll
-        onSkipAll={handleSkipAll}
-      >
-        <div className="text-center py-12">
-          {/* Success icon */}
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            className="relative w-24 h-24 mx-auto mb-8"
-          >
-            <div className="absolute inset-0 bg-pulse-accent/20 rounded-full blur-xl" />
-            <div className="relative w-full h-full rounded-full bg-gradient-to-br from-pulse-accent to-emerald-500 flex items-center justify-center">
-              <Sparkles className="w-10 h-10 text-white" />
-            </div>
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-display-section text-pulse-text mb-4"
-          >
-            Looking good!
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-body-lg text-pulse-text-secondary max-w-md mx-auto mb-10"
-          >
-            We have enough information to find great grants for you. Let&apos;s finish up with a few preferences.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <button
-              onClick={handleContinue}
-              className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-pulse-accent text-pulse-bg font-semibold text-lg hover:bg-pulse-accent/90 shadow-lg shadow-pulse-accent/25 transition-all"
-            >
-              <span>Continue to Preferences</span>
-              <ChevronRight className="w-5 h-5" />
-            </button>
-
-            <button
-              onClick={handleBack}
-              className="block mx-auto mt-6 text-body-sm text-pulse-text-tertiary hover:text-pulse-text-secondary transition-colors"
-            >
-              Go back
-            </button>
-          </motion.div>
-        </div>
-      </OnboardingLayout>
-    )
-  }
-
   return (
     <OnboardingLayout
       currentStep={4}
@@ -150,89 +88,141 @@ export default function OnboardingStep4() {
       >
         <span className="text-label text-pulse-accent mb-4 block">Step 04</span>
         <h1 className="text-display-section text-pulse-text mb-3">
-          A few more details
+          What do you need funding for?
         </h1>
         <p className="text-body text-pulse-text-secondary">
-          These help us fine-tune your grant recommendations.
+          Select up to 5 goals. This is the most important factor for finding relevant grants.
         </p>
       </motion.div>
 
-      {/* Dynamic questions */}
-      <div className="space-y-6">
-        {relevantQuestions.map((question, index) => (
+      <div className="space-y-8">
+        {/* Primary: Funding Goals */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pulse-accent to-emerald-500 p-[1px]">
+              <div className="w-full h-full rounded-xl bg-pulse-bg flex items-center justify-center">
+                <Target className="w-5 h-5 text-pulse-accent" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-heading-sm text-pulse-text">Funding goals</h3>
+              <p className="text-body-sm text-pulse-text-tertiary">
+                {state.goals.length > 0
+                  ? `${state.goals.length} of 5 selected`
+                  : 'Select at least 1'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            {FUNDING_GOALS.map((goal) => (
+              <OptionChip
+                key={goal.value}
+                label={goal.label}
+                icon={goal.icon}
+                isSelected={state.goals.includes(goal.value)}
+                onClick={() => toggleGoal(goal.value)}
+                disabled={!state.goals.includes(goal.value) && state.goals.length >= 5}
+              />
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Secondary: Industry-specific questions (if any) */}
+        {relevantQuestions.length > 0 && (
           <motion.div
-            key={question.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 + index * 0.1 }}
-            className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05]"
+            transition={{ delay: 0.2 }}
           >
-            <h3 className="text-heading-sm text-pulse-text mb-5">
-              {question.question}
-            </h3>
+            <div className="border-t border-white/[0.05] pt-8">
+              <p className="text-label-sm text-pulse-text-tertiary mb-6 uppercase tracking-wider">
+                Additional details for your industries
+              </p>
 
-            {/* Boolean question */}
-            {question.type === 'boolean' && (
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => handleBooleanToggle(question.id, true)}
-                  className={`flex-1 px-5 py-4 rounded-xl border transition-all duration-300 ${
-                    state.industryAttributes[question.id] === true
-                      ? 'bg-pulse-accent/[0.06] border-pulse-accent/30'
-                      : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.04]'
-                  }`}
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    {state.industryAttributes[question.id] === true && (
-                      <div className="w-5 h-5 rounded-full bg-pulse-accent flex items-center justify-center">
-                        <Check className="w-3 h-3 text-white" strokeWidth={3} />
+              <div className="space-y-6">
+                {relevantQuestions.map((question, index) => (
+                  <motion.div
+                    key={question.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.25 + index * 0.1 }}
+                    className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05]"
+                  >
+                    <h3 className="text-heading-sm text-pulse-text mb-5">
+                      {question.question}
+                    </h3>
+
+                    {/* Boolean question */}
+                    {question.type === 'boolean' && (
+                      <div className="flex gap-4">
+                        <button
+                          type="button"
+                          onClick={() => handleBooleanToggle(question.id, true)}
+                          className={`flex-1 px-5 py-4 rounded-xl border transition-all duration-300 ${
+                            state.industryAttributes[question.id] === true
+                              ? 'bg-pulse-accent/[0.06] border-pulse-accent/30'
+                              : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.04]'
+                          }`}
+                        >
+                          <span className="flex items-center justify-center gap-2">
+                            {state.industryAttributes[question.id] === true && (
+                              <div className="w-5 h-5 rounded-full bg-pulse-accent flex items-center justify-center">
+                                <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                              </div>
+                            )}
+                            <span className={state.industryAttributes[question.id] === true ? 'text-pulse-text font-semibold' : 'text-pulse-text-secondary'}>
+                              Yes
+                            </span>
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleBooleanToggle(question.id, false)}
+                          className={`flex-1 px-5 py-4 rounded-xl border transition-all duration-300 ${
+                            state.industryAttributes[question.id] === false
+                              ? 'bg-pulse-accent/[0.06] border-pulse-accent/30'
+                              : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.04]'
+                          }`}
+                        >
+                          <span className="flex items-center justify-center gap-2">
+                            {state.industryAttributes[question.id] === false && (
+                              <div className="w-5 h-5 rounded-full bg-pulse-accent flex items-center justify-center">
+                                <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                              </div>
+                            )}
+                            <span className={state.industryAttributes[question.id] === false ? 'text-pulse-text font-semibold' : 'text-pulse-text-secondary'}>
+                              No
+                            </span>
+                          </span>
+                        </button>
                       </div>
                     )}
-                    <span className={state.industryAttributes[question.id] === true ? 'text-pulse-text font-semibold' : 'text-pulse-text-secondary'}>
-                      Yes
-                    </span>
-                  </span>
-                </button>
 
-                <button
-                  type="button"
-                  onClick={() => handleBooleanToggle(question.id, false)}
-                  className={`flex-1 px-5 py-4 rounded-xl border transition-all duration-300 ${
-                    state.industryAttributes[question.id] === false
-                      ? 'bg-pulse-accent/[0.06] border-pulse-accent/30'
-                      : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.04]'
-                  }`}
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    {state.industryAttributes[question.id] === false && (
-                      <div className="w-5 h-5 rounded-full bg-pulse-accent flex items-center justify-center">
-                        <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                    {/* Multi-select or single-select options */}
+                    {(question.type === 'multi' || question.type === 'single') && question.options && (
+                      <div className="flex flex-wrap gap-3">
+                        {question.options.map((option) => (
+                          <OptionChip
+                            key={option.value}
+                            label={option.label}
+                            isSelected={isOptionSelected(question.id, option.value)}
+                            onClick={() => handleToggleOption(question.id, option.value, question.type === 'multi')}
+                          />
+                        ))}
                       </div>
                     )}
-                    <span className={state.industryAttributes[question.id] === false ? 'text-pulse-text font-semibold' : 'text-pulse-text-secondary'}>
-                      No
-                    </span>
-                  </span>
-                </button>
-              </div>
-            )}
-
-            {/* Multi-select or single-select options */}
-            {(question.type === 'multi' || question.type === 'single') && question.options && (
-              <div className="flex flex-wrap gap-3">
-                {question.options.map((option) => (
-                  <OptionChip
-                    key={option.value}
-                    label={option.label}
-                    isSelected={isOptionSelected(question.id, option.value)}
-                    onClick={() => handleToggleOption(question.id, option.value, question.type === 'multi')}
-                  />
+                  </motion.div>
                 ))}
               </div>
-            )}
+            </div>
           </motion.div>
-        ))}
+        )}
       </div>
 
       {/* Hint */}
@@ -242,12 +232,12 @@ export default function OnboardingStep4() {
         transition={{ delay: 0.5 }}
         className="mt-8 text-center text-body-sm text-pulse-text-tertiary"
       >
-        All questions are optional. Skip if none apply to you.
+        Industry-specific questions are optional. Goals are used for grant matching.
       </motion.p>
 
       {/* Navigation */}
       <StepNavigation
-        canContinue
+        canContinue={canProceed()}
         onContinue={handleContinue}
         onBack={handleBack}
         onSkip={handleSkip}

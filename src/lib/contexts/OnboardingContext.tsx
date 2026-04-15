@@ -29,10 +29,13 @@ type OnboardingAction =
   | { type: 'SET_GEOGRAPHY'; country: string; state: string | null }
   | { type: 'SET_INDUSTRY_TAGS'; industryTags: string[] }
   | { type: 'TOGGLE_INDUSTRY_TAG'; tag: string }
+  | { type: 'SET_COMPANY_NAME'; companyName: string }
   | { type: 'SET_SIZE_BAND'; sizeBand: SizeBand }
   | { type: 'SET_STAGE'; stage: Stage }
   | { type: 'SET_BUDGET'; budget: BudgetRange }
+  | { type: 'TOGGLE_GOAL'; goal: string }
   | { type: 'SET_INDUSTRY_ATTRIBUTE'; key: string; value: string | string[] | boolean }
+  | { type: 'TOGGLE_CERTIFICATION'; certification: string }
   | { type: 'SET_GRANT_PREFERENCE'; key: keyof OnboardingState['grantPreferences']; value: GrantPreferenceValue }
   | { type: 'LOAD_STATE'; state: OnboardingState }
   | { type: 'RESET' }
@@ -58,6 +61,9 @@ function onboardingReducer(state: OnboardingState, action: OnboardingAction): On
         : [...state.industryTags, action.tag]
       return { ...state, industryTags: tags }
 
+    case 'SET_COMPANY_NAME':
+      return { ...state, companyName: action.companyName }
+
     case 'SET_SIZE_BAND':
       return { ...state, sizeBand: action.sizeBand }
 
@@ -67,6 +73,14 @@ function onboardingReducer(state: OnboardingState, action: OnboardingAction): On
     case 'SET_BUDGET':
       return { ...state, annualBudget: action.budget }
 
+    case 'TOGGLE_GOAL':
+      const goals = state.goals.includes(action.goal)
+        ? state.goals.filter(g => g !== action.goal)
+        : state.goals.length < 5
+        ? [...state.goals, action.goal]
+        : state.goals
+      return { ...state, goals }
+
     case 'SET_INDUSTRY_ATTRIBUTE':
       return {
         ...state,
@@ -75,6 +89,12 @@ function onboardingReducer(state: OnboardingState, action: OnboardingAction): On
           [action.key]: action.value,
         },
       }
+
+    case 'TOGGLE_CERTIFICATION':
+      const certs = state.certifications.includes(action.certification)
+        ? state.certifications.filter(c => c !== action.certification)
+        : [...state.certifications, action.certification]
+      return { ...state, certifications: certs }
 
     case 'SET_GRANT_PREFERENCE':
       return {
@@ -110,12 +130,15 @@ interface OnboardingContextType {
   setIndustryTags: (tags: string[]) => void
   toggleIndustryTag: (tag: string) => void
   // Step 3
+  setCompanyName: (name: string) => void
   setSizeBand: (sizeBand: SizeBand) => void
   setStage: (stage: Stage) => void
   setBudget: (budget: BudgetRange) => void
   // Step 4
+  toggleGoal: (goal: string) => void
   setIndustryAttribute: (key: string, value: string | string[] | boolean) => void
   // Step 5
+  toggleCertification: (certification: string) => void
   setGrantPreference: (key: keyof OnboardingState['grantPreferences'], value: GrantPreferenceValue) => void
   // Utilities
   loadState: (state: OnboardingState) => void
@@ -162,6 +185,10 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // Step 3 setters
+  const setCompanyName = useCallback((companyName: string) => {
+    dispatch({ type: 'SET_COMPANY_NAME', companyName })
+  }, [])
+
   const setSizeBand = useCallback((sizeBand: SizeBand) => {
     dispatch({ type: 'SET_SIZE_BAND', sizeBand })
   }, [])
@@ -174,12 +201,20 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_BUDGET', budget })
   }, [])
 
-  // Step 4 setter
+  // Step 4 setters
+  const toggleGoal = useCallback((goal: string) => {
+    dispatch({ type: 'TOGGLE_GOAL', goal })
+  }, [])
+
   const setIndustryAttribute = useCallback((key: string, value: string | string[] | boolean) => {
     dispatch({ type: 'SET_INDUSTRY_ATTRIBUTE', key, value })
   }, [])
 
-  // Step 5 setter
+  // Step 5 setters
+  const toggleCertification = useCallback((certification: string) => {
+    dispatch({ type: 'TOGGLE_CERTIFICATION', certification })
+  }, [])
+
   const setGrantPreference = useCallback((key: keyof OnboardingState['grantPreferences'], value: GrantPreferenceValue) => {
     dispatch({ type: 'SET_GRANT_PREFERENCE', key, value })
   }, [])
@@ -201,11 +236,11 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       case 2:
         return state.industryTags.length > 0
       case 3:
-        // Size/stage questions are optional
+        // Size/budget questions are optional
         return true
       case 4:
-        // Industry questions are optional
-        return true
+        // At least 1 funding goal required
+        return state.goals.length > 0
       case 5:
         // Preferences are optional
         return true
@@ -217,13 +252,13 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   // Calculate overall progress percentage
   const getProgress = useCallback(() => {
     let completed = 0
-    let total = 5
+    const total = 5
 
     if (state.entityType) completed++
     if (state.industryTags.length > 0) completed++
-    if (state.sizeBand || state.stage) completed++
-    if (Object.keys(state.industryAttributes).length > 0) completed++
-    if (state.grantPreferences.preferredSize || state.grantPreferences.timeline) completed++
+    if (state.sizeBand || state.annualBudget || state.companyName) completed++
+    if (state.goals.length > 0) completed++
+    if (state.grantPreferences.preferredSize || state.grantPreferences.timeline || state.certifications.length > 0) completed++
 
     return Math.round((completed / total) * 100)
   }, [state])
@@ -237,10 +272,13 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     setGeography,
     setIndustryTags,
     toggleIndustryTag,
+    setCompanyName,
     setSizeBand,
     setStage,
     setBudget,
+    toggleGoal,
     setIndustryAttribute,
+    toggleCertification,
     setGrantPreference,
     loadState,
     reset,

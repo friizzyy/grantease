@@ -4,17 +4,16 @@
  * ONBOARDING STEP 3
  * -----------------
  * "Tell us about your organization"
- * Organization size, stage, budget details
+ * Organization name (optional), size, budget details
  */
 
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Users, TrendingUp, DollarSign, Check } from 'lucide-react'
+import { Users, DollarSign, Check, Building2 } from 'lucide-react'
 import { useOnboarding } from '@/lib/contexts/OnboardingContext'
 import { OnboardingLayout, OptionCard, StepNavigation } from '@/components/onboarding'
 import {
   SIZE_BANDS,
-  STAGES,
   BUDGET_RANGES,
 } from '@/lib/types/onboarding'
 
@@ -22,8 +21,8 @@ export default function OnboardingStep3() {
   const router = useRouter()
   const {
     state,
+    setCompanyName,
     setSizeBand,
-    setStage,
     setBudget,
   } = useOnboarding()
 
@@ -45,7 +44,6 @@ export default function OnboardingStep3() {
 
   // Determine which questions to show based on entity type
   const showTeamSize = ['nonprofit', 'small_business', 'for_profit', 'educational', 'government'].includes(state.entityType || '')
-  const showStage = ['nonprofit', 'small_business', 'for_profit', 'individual'].includes(state.entityType || '')
   const showBudget = ['nonprofit', 'small_business', 'for_profit', 'educational', 'government', 'tribal'].includes(state.entityType || '')
   const isIndividual = state.entityType === 'individual'
 
@@ -71,6 +69,36 @@ export default function OnboardingStep3() {
       </motion.div>
 
       <div className="space-y-10">
+        {/* Organization/Project Name (optional) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pulse-accent to-emerald-500 p-[1px]">
+              <div className="w-full h-full rounded-xl bg-pulse-bg flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-pulse-accent" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-heading-sm text-pulse-text">
+                {isIndividual ? "What's your project called?" : "What's your organization called?"}
+              </h3>
+              <p className="text-body-sm text-pulse-text-tertiary">Optional — helps personalize AI matching</p>
+            </div>
+          </div>
+
+          <input
+            type="text"
+            value={state.companyName}
+            onChange={(e) => setCompanyName(e.target.value)}
+            placeholder={isIndividual ? 'e.g., My Research Project' : 'e.g., Green Valley Farm'}
+            maxLength={200}
+            className="w-full px-5 py-4 rounded-xl border border-white/[0.08] bg-white/[0.02] text-pulse-text placeholder:text-pulse-text-tertiary focus:border-pulse-accent/40 focus:bg-pulse-accent/[0.02] focus:outline-none transition-all duration-300"
+          />
+        </motion.div>
+
         {/* Team/Organization Size */}
         <AnimatePresence>
           {showTeamSize && (
@@ -78,7 +106,7 @@ export default function OnboardingStep3() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              transition={{ delay: 0.1 }}
+              transition={{ delay: 0.15 }}
             >
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-500 p-[1px]">
@@ -110,45 +138,6 @@ export default function OnboardingStep3() {
           )}
         </AnimatePresence>
 
-        {/* Stage */}
-        <AnimatePresence>
-          {showStage && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-[1px]">
-                  <div className="w-full h-full rounded-xl bg-pulse-bg flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-emerald-400" />
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-heading-sm text-pulse-text">
-                    {isIndividual ? 'Where are you in your journey?' : 'Organization stage'}
-                  </h3>
-                  <p className="text-body-sm text-pulse-text-tertiary">Some grants target specific stages</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {STAGES.map((stage) => (
-                  <OptionCard
-                    key={stage.value}
-                    label={stage.label}
-                    description={stage.description}
-                    isSelected={state.stage === stage.value}
-                    onClick={() => setStage(stage.value)}
-                    size="compact"
-                  />
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Budget */}
         <AnimatePresence>
           {showBudget && !isIndividual && (
@@ -156,7 +145,7 @@ export default function OnboardingStep3() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.25 }}
             >
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pulse-accent to-emerald-500 p-[1px]">

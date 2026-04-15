@@ -50,6 +50,8 @@ import {
   X,
   Plus,
   Loader2,
+  ShieldCheck,
+  Crosshair,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -72,6 +74,8 @@ import {
   BUDGET_RANGES,
   GRANT_SIZE_PREFERENCES,
   TIMELINE_PREFERENCES,
+  FUNDING_GOALS,
+  ONBOARDING_CERTIFICATIONS,
   US_STATES,
   EntityType,
   SizeBand,
@@ -331,6 +335,8 @@ function SettingsPageContent() {
     annualBudget: '' as BudgetRange | '',
     onboardingCompleted: false,
     confidenceScore: 0,
+    goals: [] as string[],
+    certifications: [] as string[],
     grantPreferences: {
       preferredSize: '' as GrantSizePreference | '',
       timeline: '' as TimelinePreference | '',
@@ -376,6 +382,7 @@ function SettingsPageContent() {
 
       if (profileData.profile) {
         const p = profileData.profile
+        const attrs = p.industryAttributes || {}
         setOnboardingProfile({
           entityType: p.entityType || '',
           state: p.state || '',
@@ -385,6 +392,8 @@ function SettingsPageContent() {
           annualBudget: p.annualBudget || '',
           onboardingCompleted: p.onboardingCompleted || false,
           confidenceScore: p.confidenceScore || 0,
+          goals: Array.isArray(attrs.goals) ? attrs.goals as string[] : [],
+          certifications: Array.isArray(attrs.certifications) ? attrs.certifications as string[] : [],
           grantPreferences: p.grantPreferences || {
             preferredSize: '',
             timeline: '',
@@ -454,6 +463,10 @@ function SettingsPageContent() {
           stage: onboardingProfile.stage || undefined,
           annualBudget: onboardingProfile.annualBudget || undefined,
           grantPreferences: onboardingProfile.grantPreferences,
+          industryAttributes: {
+            goals: onboardingProfile.goals,
+            certifications: onboardingProfile.certifications,
+          },
         }),
       })
 
@@ -1009,6 +1022,151 @@ function SettingsPageContent() {
                             </SelectContent>
                           </Select>
                         </InfoCard>
+                      </div>
+
+                      {/* Funding Goals */}
+                      <div
+                        ref={(el) => { fieldRefs.current['goals'] = el }}
+                        className={`mb-6 p-4 -m-4 rounded-xl transition-all ${
+                          highlightedField === 'goals'
+                            ? 'ring-2 ring-pulse-accent/30 bg-pulse-accent/5'
+                            : ''
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-3">
+                          <Crosshair className="w-4 h-4 text-pulse-accent" />
+                          <span className="text-xs font-medium text-pulse-text-tertiary uppercase tracking-wider">Funding Goals</span>
+                          {onboardingProfile.goals.length > 0 && (
+                            <span className="text-xs text-pulse-text-tertiary">({onboardingProfile.goals.length}/5)</span>
+                          )}
+                          {highlightedField === 'goals' && (
+                            <span className="ml-auto text-xs bg-pulse-accent/20 text-pulse-accent px-2 py-0.5 rounded-full">
+                              Update this
+                            </span>
+                          )}
+                        </div>
+                        {onboardingProfile.goals.length === 0 && !isEditingMatching && (
+                          <p className="text-sm text-pulse-text-tertiary">No funding goals set — add goals to improve grant matching by up to 15%</p>
+                        )}
+                        <div className="flex flex-wrap gap-2">
+                          {isEditingMatching ? (
+                            FUNDING_GOALS.map((goal) => {
+                              const isSelected = onboardingProfile.goals.includes(goal.value)
+                              const isDisabled = !isSelected && onboardingProfile.goals.length >= 5
+                              return (
+                                <motion.button
+                                  key={goal.value}
+                                  onClick={() => {
+                                    if (isSelected) {
+                                      setOnboardingProfile({
+                                        ...onboardingProfile,
+                                        goals: onboardingProfile.goals.filter(g => g !== goal.value),
+                                      })
+                                    } else if (!isDisabled) {
+                                      setOnboardingProfile({
+                                        ...onboardingProfile,
+                                        goals: [...onboardingProfile.goals, goal.value],
+                                      })
+                                    }
+                                  }}
+                                  disabled={isDisabled}
+                                  className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+                                    isSelected
+                                      ? 'bg-pulse-accent/10 border border-pulse-accent/20 text-pulse-accent'
+                                      : isDisabled
+                                        ? 'bg-white/[0.02] border border-white/[0.04] text-pulse-text-tertiary opacity-50 cursor-not-allowed'
+                                        : 'bg-white/[0.03] border border-white/[0.06] text-pulse-text-secondary hover:border-white/[0.1]'
+                                  }`}
+                                  whileHover={!isDisabled ? { scale: 1.02 } : {}}
+                                  whileTap={!isDisabled ? { scale: 0.98 } : {}}
+                                >
+                                  {goal.label}
+                                </motion.button>
+                              )
+                            })
+                          ) : (
+                            onboardingProfile.goals.map((goalValue) => {
+                              const goal = FUNDING_GOALS.find(g => g.value === goalValue)
+                              return (
+                                <span
+                                  key={goalValue}
+                                  className="px-3 py-1.5 rounded-lg bg-pulse-accent/10 border border-pulse-accent/20 text-sm text-pulse-accent"
+                                >
+                                  {goal?.label || goalValue}
+                                </span>
+                              )
+                            })
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Certifications */}
+                      <div
+                        ref={(el) => { fieldRefs.current['certifications'] = el }}
+                        className={`mb-6 p-4 -m-4 rounded-xl transition-all ${
+                          highlightedField === 'certifications'
+                            ? 'ring-2 ring-pulse-accent/30 bg-pulse-accent/5'
+                            : ''
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-3">
+                          <ShieldCheck className="w-4 h-4 text-pulse-accent" />
+                          <span className="text-xs font-medium text-pulse-text-tertiary uppercase tracking-wider">Certifications</span>
+                          {highlightedField === 'certifications' && (
+                            <span className="ml-auto text-xs bg-pulse-accent/20 text-pulse-accent px-2 py-0.5 rounded-full">
+                              Update this
+                            </span>
+                          )}
+                        </div>
+                        {onboardingProfile.certifications.length === 0 && !isEditingMatching && (
+                          <p className="text-sm text-pulse-text-tertiary">None set — certifications unlock specialized grant categories</p>
+                        )}
+                        <div className="flex flex-wrap gap-2">
+                          {isEditingMatching ? (
+                            ONBOARDING_CERTIFICATIONS.map((cert) => {
+                              const isSelected = onboardingProfile.certifications.includes(cert.value)
+                              return (
+                                <motion.button
+                                  key={cert.value}
+                                  onClick={() => {
+                                    if (isSelected) {
+                                      setOnboardingProfile({
+                                        ...onboardingProfile,
+                                        certifications: onboardingProfile.certifications.filter(c => c !== cert.value),
+                                      })
+                                    } else {
+                                      setOnboardingProfile({
+                                        ...onboardingProfile,
+                                        certifications: [...onboardingProfile.certifications, cert.value],
+                                      })
+                                    }
+                                  }}
+                                  className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+                                    isSelected
+                                      ? 'bg-pulse-accent/10 border border-pulse-accent/20 text-pulse-accent'
+                                      : 'bg-white/[0.03] border border-white/[0.06] text-pulse-text-secondary hover:border-white/[0.1]'
+                                  }`}
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                >
+                                  {cert.label}
+                                </motion.button>
+                              )
+                            })
+                          ) : (
+                            onboardingProfile.certifications.map((certValue) => {
+                              const cert = ONBOARDING_CERTIFICATIONS.find(c => c.value === certValue)
+                              return (
+                                <span
+                                  key={certValue}
+                                  className="px-3 py-1.5 rounded-lg bg-pulse-accent/10 border border-pulse-accent/20 text-sm text-pulse-accent"
+                                >
+                                  {cert?.label || certValue}
+                                </span>
+                              )
+                            })
+                          )}
+                        </div>
                       </div>
 
                       {/* Grant Preferences */}

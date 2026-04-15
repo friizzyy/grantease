@@ -89,6 +89,8 @@ export interface UserProfile {
   sizeBand?: string | null
   annualBudget?: string | null
   goals?: string[]
+  certifications?: string[]
+  companyName?: string | null
   grantPreferences?: {
     preferredSize?: string | null
     timeline?: 'immediate' | 'quarter' | 'year' | 'flexible' | null
@@ -265,7 +267,7 @@ export async function runDiscoveryPipeline(
     entityType: profile.entityType,
     state: profile.state,
     industryTags: profile.industryTags,
-    certifications: [],
+    certifications: profile.certifications || [],
     sizeBand: profile.sizeBand,
     annualBudget: profile.annualBudget,
   }
@@ -684,6 +686,19 @@ export async function loadUserProfile(userId: string): Promise<UserProfile | nul
     return null
   }
 
+  const industryAttrs = safeJsonParse<Record<string, unknown>>(dbProfile.industryAttributes, {})
+
+  // Extract goals — stored as industryAttributes.goals array
+  const rawGoals = industryAttrs.goals
+  const goals = Array.isArray(rawGoals) ? rawGoals as string[] : []
+
+  // Extract certifications — stored as industryAttributes.certifications array
+  const rawCerts = industryAttrs.certifications
+  const certifications = Array.isArray(rawCerts) ? rawCerts as string[] : []
+
+  // Get companyName from User.organization (loaded separately if needed)
+  // For now, we pass null — it's enrichment-only context for AI
+
   return {
     id: dbProfile.id,
     userId: dbProfile.userId,
@@ -692,10 +707,8 @@ export async function loadUserProfile(userId: string): Promise<UserProfile | nul
     industryTags: safeJsonParse<IndustryTag[]>(dbProfile.industryTags, []),
     sizeBand: dbProfile.sizeBand,
     annualBudget: dbProfile.annualBudget,
-    goals: safeJsonParse<string[]>(
-      (safeJsonParse<Record<string, unknown>>(dbProfile.industryAttributes, {})).goals as string || '[]',
-      []
-    ),
+    goals,
+    certifications,
     grantPreferences: safeJsonParse(dbProfile.grantPreferences, {
       preferredSize: null,
       timeline: null,

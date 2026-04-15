@@ -557,6 +557,18 @@ export const CERTIFICATION_LABELS: Record<CertificationType, string> = {
   tribal_owned: 'Tribally-Owned Business',
 }
 
+// Map user certifications to eligibility tags for grant matching
+export const CERTIFICATION_TO_ELIGIBILITY: Record<string, EligibilityTag[]> = {
+  woman_owned: ['Woman-Owned'],
+  veteran_owned: ['Veteran', 'Veteran-Owned'],
+  minority_owned: ['Minority-Owned', 'Socially Disadvantaged'],
+  disabled_owned: ['Disabled-Owned', 'Veteran', 'Veteran-Owned'],
+  small_disadvantaged: ['Socially Disadvantaged', 'Minority-Owned'],
+  lgbtq_owned: ['Socially Disadvantaged'],
+  tribal_owned: ['Tribal', 'Tribal Organization', 'Native American'],
+  organic: ['Agricultural Producer', 'Farmer'],
+}
+
 // ============= SIZE BANDS =============
 
 export const SIZE_BANDS = ['solo', 'micro', 'small', 'medium', 'large'] as const

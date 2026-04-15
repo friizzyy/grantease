@@ -274,18 +274,22 @@ export async function PATCH(request: NextRequest) {
 
 /**
  * Calculate confidence score based on profile completeness
+ * Weights reflect actual scoring engine impact:
+ *   entityType=20pts, state=15pts, industryTags=25pts, goals=15pts,
+ *   annualBudget=10pts, sizeBand=5pts, certifications=eligibility unlock
  */
 function calculateConfidenceScore(profile: Record<string, unknown>): number {
   let score = 0
   const weights = {
-    entityType: 0.2,
-    state: 0.1,
-    industryTags: 0.2,
-    sizeBand: 0.1,
-    stage: 0.1,
-    annualBudget: 0.1,
-    industryAttributes: 0.1,
-    grantPreferences: 0.1,
+    entityType: 0.18,
+    state: 0.12,
+    industryTags: 0.20,
+    goals: 0.15,
+    sizeBand: 0.08,
+    annualBudget: 0.08,
+    certifications: 0.07,
+    grantPreferences: 0.07,
+    stage: 0.05,
   }
 
   if (profile.entityType) score += weights.entityType
@@ -298,10 +302,14 @@ function calculateConfidenceScore(profile: Record<string, unknown>): number {
   if (profile.stage) score += weights.stage
   if (profile.annualBudget) score += weights.annualBudget
 
+  // Extract goals and certifications from industryAttributes
   const attrs = profile.industryAttributes && typeof profile.industryAttributes === 'object' && !Array.isArray(profile.industryAttributes)
     ? profile.industryAttributes as Record<string, unknown>
     : {}
-  if (Object.keys(attrs).length > 0) score += weights.industryAttributes
+  const goals = Array.isArray(attrs.goals) ? attrs.goals : []
+  if (goals.length > 0) score += weights.goals
+  const certs = Array.isArray(attrs.certifications) ? attrs.certifications : []
+  if (certs.length > 0) score += weights.certifications
 
   const prefs = profile.grantPreferences && typeof profile.grantPreferences === 'object' && !Array.isArray(profile.grantPreferences)
     ? profile.grantPreferences as Record<string, unknown>

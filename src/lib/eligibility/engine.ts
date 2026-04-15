@@ -11,7 +11,9 @@ import {
   EntityType,
   IndustryTag,
   GeographyScope,
+  EligibilityTag,
   ENTITY_TO_ELIGIBILITY_TAGS,
+  CERTIFICATION_TO_ELIGIBILITY,
   INDUSTRY_POSITIVE_KEYWORDS,
   INDUSTRY_EXCLUSION_KEYWORDS,
   CATEGORY_TO_INDUSTRY,
@@ -77,6 +79,36 @@ export interface FullEligibilityResult {
   failedFilters: string[]
   warnings: string[]
   suggestions: string[]
+}
+
+// ============= HELPERS =============
+
+/**
+ * Build the full set of eligibility tags for a user by unioning
+ * entity-based tags with certification-based tags.
+ */
+export function expandEligibilityTags(profile: UserProfileForEligibility): EligibilityTag[] {
+  const tags = new Set<EligibilityTag>()
+
+  // Entity-based tags
+  if (profile.entityType) {
+    const entityTags = ENTITY_TO_ELIGIBILITY_TAGS[profile.entityType] || []
+    for (const tag of entityTags) {
+      tags.add(tag)
+    }
+  }
+
+  // Certification-based tags
+  if (profile.certifications && profile.certifications.length > 0) {
+    for (const cert of profile.certifications) {
+      const certTags = CERTIFICATION_TO_ELIGIBILITY[cert] || []
+      for (const tag of certTags) {
+        tags.add(tag)
+      }
+    }
+  }
+
+  return Array.from(tags)
 }
 
 // ============= HARD FILTERS =============
@@ -181,8 +213,8 @@ export function checkEntityEligibility(
     }
   }
 
-  // Get compatible eligibility tags for user's entity type
-  const userCompatibleTags = ENTITY_TO_ELIGIBILITY_TAGS[profile.entityType] || []
+  // Get compatible eligibility tags: entity-based + certification-based
+  const userCompatibleTags = expandEligibilityTags(profile)
 
   // Normalize function to handle underscores, hyphens, and spaces consistently
   const normalize = (s: string) => s.toLowerCase().replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim()

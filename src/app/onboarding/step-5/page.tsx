@@ -4,22 +4,21 @@
  * ONBOARDING STEP 5
  * -----------------
  * "Last step: Your preferences"
- * Grant size, timeline, complexity preferences
+ * Certifications (unlocks eligibility categories), grant size, timeline
  */
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { DollarSign, Calendar, Layers, ArrowRight, Loader2 } from 'lucide-react'
+import { DollarSign, Calendar, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react'
 import { useOnboarding } from '@/lib/contexts/OnboardingContext'
-import { OnboardingLayout, OptionCard } from '@/components/onboarding'
+import { OnboardingLayout, OptionCard, OptionChip } from '@/components/onboarding'
 import {
   GRANT_SIZE_PREFERENCES,
   TIMELINE_PREFERENCES,
-  COMPLEXITY_PREFERENCES,
+  ONBOARDING_CERTIFICATIONS,
   GrantSizePreference,
   TimelinePreference,
-  ComplexityPreference,
 } from '@/lib/types/onboarding'
 
 export default function OnboardingStep5() {
@@ -27,12 +26,39 @@ export default function OnboardingStep5() {
   const [isLoading, setIsLoading] = useState(false)
   const {
     state,
+    toggleCertification,
     setGrantPreference,
   } = useOnboarding()
 
   const handleComplete = async () => {
     setIsLoading(true)
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Save profile to API before navigating
+    try {
+      await fetch('/api/user/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          entityType: state.entityType,
+          country: state.country,
+          state: state.state,
+          industryTags: state.industryTags,
+          sizeBand: state.sizeBand,
+          stage: state.stage,
+          annualBudget: state.annualBudget,
+          industryAttributes: {
+            ...state.industryAttributes,
+            goals: state.goals,
+            certifications: state.certifications,
+          },
+          grantPreferences: state.grantPreferences,
+          onboardingStep: 5,
+          onboardingCompleted: true,
+          organization: state.companyName || undefined,
+        }),
+      })
+    } catch (error) {
+      console.error('Error saving profile:', error)
+    }
     router.push('/onboarding/complete')
   }
 
@@ -42,6 +68,30 @@ export default function OnboardingStep5() {
 
   const handleSkip = () => {
     setIsLoading(true)
+    // Still save what we have
+    fetch('/api/user/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        entityType: state.entityType,
+        country: state.country,
+        state: state.state,
+        industryTags: state.industryTags,
+        sizeBand: state.sizeBand,
+        stage: state.stage,
+        annualBudget: state.annualBudget,
+        industryAttributes: {
+          ...state.industryAttributes,
+          goals: state.goals,
+          certifications: state.certifications,
+        },
+        grantPreferences: state.grantPreferences,
+        onboardingStep: 5,
+        onboardingCompleted: true,
+        organization: state.companyName || undefined,
+      }),
+    }).catch(console.error)
+
     setTimeout(() => {
       router.push('/onboarding/complete')
     }, 500)
@@ -73,11 +123,41 @@ export default function OnboardingStep5() {
       </motion.div>
 
       <div className="space-y-10">
-        {/* Grant Size Preference */}
+        {/* Certifications */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
+        >
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pulse-accent to-emerald-500 p-[1px]">
+              <div className="w-full h-full rounded-xl bg-pulse-bg flex items-center justify-center">
+                <ShieldCheck className="w-5 h-5 text-pulse-accent" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-heading-sm text-pulse-text">Do any of these apply to you?</h3>
+              <p className="text-body-sm text-pulse-text-tertiary">Optional — unlocks specialized grants</p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            {ONBOARDING_CERTIFICATIONS.map((cert) => (
+              <OptionChip
+                key={cert.value}
+                label={cert.label}
+                isSelected={state.certifications.includes(cert.value)}
+                onClick={() => toggleCertification(cert.value)}
+              />
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Grant Size Preference */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
         >
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-[1px]">
@@ -108,7 +188,7 @@ export default function OnboardingStep5() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.3 }}
         >
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-500 p-[1px]">
@@ -129,37 +209,6 @@ export default function OnboardingStep5() {
                 description={pref.description}
                 isSelected={state.grantPreferences.timeline === pref.value}
                 onClick={() => setGrantPreference('timeline', pref.value as TimelinePreference)}
-                size="compact"
-              />
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Complexity Preference */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pulse-accent to-emerald-500 p-[1px]">
-              <div className="w-full h-full rounded-xl bg-pulse-bg flex items-center justify-center">
-                <Layers className="w-5 h-5 text-pulse-accent" />
-              </div>
-            </div>
-            <div>
-              <h3 className="text-heading-sm text-pulse-text">Application complexity preference</h3>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            {COMPLEXITY_PREFERENCES.map((pref) => (
-              <OptionCard
-                key={pref.value}
-                label={pref.label}
-                description={pref.description}
-                isSelected={state.grantPreferences.complexity === pref.value}
-                onClick={() => setGrantPreference('complexity', pref.value as ComplexityPreference)}
                 size="compact"
               />
             ))}

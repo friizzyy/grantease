@@ -100,6 +100,11 @@ function buildProfileContext(profile: UserProfileForScoring): string {
     parts.push(`Funding Goals: ${sanitizePromptArray(profile.goals)}`)
   }
 
+  // Certifications
+  if (profile.certifications && profile.certifications.length > 0) {
+    parts.push(`Certifications: ${sanitizePromptArray(profile.certifications)}`)
+  }
+
   return parts.join('\n')
 }
 

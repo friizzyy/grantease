@@ -52,7 +52,7 @@ export const SIZE_BANDS: { value: SizeBand; label: string; description: string }
   { value: 'large', label: 'Large', description: '50+ people' },
 ]
 
-// Organization stages
+// Organization stages (kept for backward compat, no longer collected in onboarding)
 export type Stage = 'idea' | 'early' | 'growth' | 'established'
 
 export const STAGES: { value: Stage; label: string; description: string }[] = [
@@ -60,6 +60,31 @@ export const STAGES: { value: Stage; label: string; description: string }[] = [
   { value: 'early', label: 'Early stage', description: 'Recently started, under 2 years' },
   { value: 'growth', label: 'Growth stage', description: '2-5 years, expanding' },
   { value: 'established', label: 'Established', description: '5+ years, stable operations' },
+]
+
+// Funding goals — maps to GOALS_TO_PURPOSE in taxonomy.ts for scoring
+export const FUNDING_GOALS: { value: string; label: string; icon: string }[] = [
+  { value: 'equipment', label: 'Equipment & Supplies', icon: 'Wrench' },
+  { value: 'expansion', label: 'Growth & Expansion', icon: 'TrendingUp' },
+  { value: 'sustainability', label: 'Sustainability & Conservation', icon: 'Leaf' },
+  { value: 'workforce', label: 'Hiring & Training', icon: 'Users' },
+  { value: 'research', label: 'Research & Innovation', icon: 'Lightbulb' },
+  { value: 'marketing', label: 'Marketing & Outreach', icon: 'Megaphone' },
+  { value: 'facilities', label: 'Facilities & Construction', icon: 'Building' },
+  { value: 'operations', label: 'Operating Expenses', icon: 'DollarSign' },
+  { value: 'planning', label: 'Planning & Technical Assistance', icon: 'ClipboardList' },
+]
+
+// Certifications collected during onboarding
+export const ONBOARDING_CERTIFICATIONS: { value: string; label: string }[] = [
+  { value: 'woman_owned', label: 'Woman-Owned' },
+  { value: 'veteran_owned', label: 'Veteran-Owned' },
+  { value: 'minority_owned', label: 'Minority-Owned' },
+  { value: 'disabled_owned', label: 'Service-Disabled Veteran' },
+  { value: 'small_disadvantaged', label: 'Small Disadvantaged Business' },
+  { value: 'lgbtq_owned', label: 'LGBTQ-Owned' },
+  { value: 'tribal_owned', label: 'Tribally-Owned' },
+  { value: 'organic', label: 'USDA Organic Certified' },
 ]
 
 // Budget ranges
@@ -94,7 +119,7 @@ export const TIMELINE_PREFERENCES: { value: TimelinePreference; label: string; d
   { value: 'flexible', label: 'Flexible', description: 'No specific timeline' },
 ]
 
-// Complexity tolerance
+// Complexity tolerance (kept for backward compat, no longer collected in onboarding)
 export type ComplexityPreference = 'simple' | 'moderate' | 'any'
 
 export const COMPLEXITY_PREFERENCES: { value: ComplexityPreference; label: string; description: string }[] = [
@@ -285,12 +310,15 @@ export interface OnboardingState {
   // Step 2
   industryTags: string[]
   // Step 3
+  companyName: string
   sizeBand: SizeBand | null
   stage: Stage | null
   annualBudget: BudgetRange | null
   // Step 4
+  goals: string[]
   industryAttributes: Record<string, string | string[] | boolean>
   // Step 5
+  certifications: string[]
   grantPreferences: {
     preferredSize: GrantSizePreference | null
     timeline: TimelinePreference | null
@@ -305,10 +333,13 @@ export const DEFAULT_ONBOARDING_STATE: OnboardingState = {
   country: 'US',
   state: null,
   industryTags: [],
+  companyName: '',
   sizeBand: null,
   stage: null,
   annualBudget: null,
+  goals: [],
   industryAttributes: {},
+  certifications: [],
   grantPreferences: {
     preferredSize: null,
     timeline: null,
@@ -369,8 +400,7 @@ export interface UserProfile {
 
 // Extended onboarding state with AI features
 export interface OnboardingStateExtended extends OnboardingState {
-  // AI-powered profile data
-  companyName?: string
+  // AI-powered profile data (companyName already in OnboardingState)
   companyWebsite?: string
   companyDescription?: string
   aiProfile?: {

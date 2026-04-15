@@ -50,6 +50,8 @@ interface UserProfileData {
   industryTags?: string[]
   sizeBand?: string | null
   annualBudget?: string | null
+  goals?: string[]
+  certifications?: string[]
   confidenceScore?: number
   onboardingCompleted?: boolean
 }
@@ -822,12 +824,15 @@ function DiscoverPageContent() {
         if (profileResponse.ok) {
           const profileData = await profileResponse.json()
           if (profileData.profile) {
+            const attrs = profileData.profile.industryAttributes || {}
             setUserProfile({
               entityType: profileData.profile.entityType,
               state: profileData.profile.state,
               industryTags: profileData.profile.industryTags || [],
               sizeBand: profileData.profile.sizeBand,
               annualBudget: profileData.profile.annualBudget,
+              goals: Array.isArray(attrs.goals) ? attrs.goals : [],
+              certifications: Array.isArray(attrs.certifications) ? attrs.certifications : [],
               confidenceScore: profileData.profile.confidenceScore,
               onboardingCompleted: profileData.profile.onboardingCompleted,
             })
