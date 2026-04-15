@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
+import { safeJsonParse } from '@/lib/api-utils'
 import { z } from 'zod'
 
 const updateCollectionSchema = z.object({
@@ -53,9 +54,9 @@ export async function GET(
       ...item,
       grant: {
         ...item.grant,
-        categories: JSON.parse(item.grant.categories || '[]'),
-        eligibility: JSON.parse(item.grant.eligibility || '[]'),
-        locations: JSON.parse(item.grant.locations || '[]'),
+        categories: safeJsonParse<string[]>(item.grant.categories || '[]', []),
+        eligibility: safeJsonParse<string[]>(item.grant.eligibility || '[]', []),
+        locations: safeJsonParse<string[]>(item.grant.locations || '[]', []),
       },
     }))
 

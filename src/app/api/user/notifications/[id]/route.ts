@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
+import { safeJsonParse } from '@/lib/api-utils'
 import { z } from 'zod'
 
 const updateNotificationSchema = z.object({
@@ -40,7 +41,7 @@ export async function GET(
     return NextResponse.json({
       notification: {
         ...notification,
-        metadata: notification.metadata ? JSON.parse(notification.metadata) : null,
+        metadata: notification.metadata ? safeJsonParse<Record<string, unknown>>(notification.metadata, {}) : null,
       },
     })
   } catch (error) {
@@ -105,7 +106,7 @@ export async function PATCH(
     return NextResponse.json({
       notification: {
         ...notification,
-        metadata: notification.metadata ? JSON.parse(notification.metadata) : null,
+        metadata: notification.metadata ? safeJsonParse<Record<string, unknown>>(notification.metadata, {}) : null,
       },
     })
   } catch (error) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import { authOptions } from '@/lib/auth'
+import { safeJsonParse } from '@/lib/api-utils'
 import { z } from 'zod'
 
 const createSearchSchema = z.object({
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest) {
     // Parse JSON fields
     const searches = savedSearches.map(search => ({
       ...search,
-      filters: JSON.parse(search.filters || '{}'),
+      filters: safeJsonParse<Record<string, unknown>>(search.filters || '{}', {}),
     }))
 
     return NextResponse.json({
